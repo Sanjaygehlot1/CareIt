@@ -14,4 +14,5 @@ export const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!
 export const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL!
 export const SESSION_SECRET = process.env.SESSION_SECRET!
 export const JWT_SECRET = process.env.JWT_SECRET!
+export const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL!
 

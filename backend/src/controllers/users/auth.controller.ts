@@ -1,83 +1,23 @@
 import { Request, Response, NextFunction } from "express"
 import { prisma } from "../../prisma";
 import * as jwt from 'jsonwebtoken'
-import { JWT_SECRET } from "../../secrets";
+import { FRONTEND_BASE_URL, JWT_SECRET } from "../../secrets";
 import { UnauthorizedException } from "../../exceptions/errorExceptions";
 import { ErrorCodes } from "../../exceptions/root";
 import { apiResponse } from "../../utils/apiResponse";
 
-interface UserInterface {
-
-    name: string,
-    email: string,
-    provider: string,
-    providerId: string,
-    profileUrl: string,
-    accessToken: string,
-    refreshToken: string
-
-}
-
-export const signUp = async (req: Request, res: Response, next: NextFunction) => {
-
-    try {
-        const profile = req.user as UserInterface;
-
-        const user = await prisma.user.upsert({
-            where: { providerId: profile.providerId },
-            create: {
-                name: profile.name,
-                email: profile.email,
-                provider: profile.provider,
-                profileUrl: profile.profileUrl,
-                providerId: profile.providerId
-            },
-            update: {
-                profileUrl: profile.profileUrl
-            }
-
-        })
-
-        const data = {
-            providerId: user.providerId,
-            name: user.name,
-            email: user.email
-        }
-
-
-        const token = jwt.sign(data, JWT_SECRET)
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 1000 * 60 * 60 * 24,
-        })
-
-        res.redirect('/auth/profile')
-    } catch (error) {
-        console.log(error)
-        throw error;
-    }
-
-
-
-}
 
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = req.user as UserInterface;
 
-        const data = await prisma.user.findUnique({
-            where: {providerId : user.providerId}
-        })
+        const user = req.user
 
-        if(!data){
-            next(new UnauthorizedException("User not found", ErrorCodes.USER_NOT_FOUND))
+        if (!user) {
+            next(new UnauthorizedException("You must be logged in. please login and try again", ErrorCodes.UNAUTHORIZED_ACCESS));
         }
 
         res.status(200).json(new apiResponse(
-            data,
+            user,
             "user found",
             200
         ))
@@ -86,5 +26,24 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
         console.log(error);
         throw error;
     }
+}
+
+export const logOut = async (req: Request, res: Response, next: NextFunction) => {
+  req.logout((err) => {
+    if (err) { 
+      return next(err); 
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session could not be destroyed.', err);
+        return res.status(500).send('Could not log out.');
+      }
+      
+      res.clearCookie('connect.sid');
+      
+      return res.status(200).send('Logged out successfully.');
+    });
+  });
 }
 

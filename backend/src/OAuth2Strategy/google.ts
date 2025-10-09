@@ -12,14 +12,26 @@ passport.use(new GoogleStrategy.Strategy({
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
-            const user = {
-                name: profile.displayName! || profile.username!,
-                email: profile.emails![0].value,
-                provider: profile.provider,
-                providerId: profile.id,
-                profileUrl: profile.photos?.[0].value,
-                accessToken
-            }
+             const user = await prisma.user.upsert({
+                        where: { providerId: profile.id },
+                        create: {
+                            name: profile.displayName!,
+                            email: profile.emails![0].value,
+                            provider: profile.provider,
+                            profileUrl: profile.photos?.[0].value!,
+                            providerId: profile.id,
+                            googleAccessToken : accessToken,
+                            googleRefreshToken : refreshToken,
+                            calendar : false
+                        },
+                        update: {
+                            profileUrl: profile.photos?.[0].value,
+                            name: profile.displayName,
+                            googleAccessToken : accessToken,
+                            googleRefreshToken : refreshToken
+                        }
+            
+                    })
 
             done(null, user);
 
@@ -31,14 +43,15 @@ passport.use(new GoogleStrategy.Strategy({
 
 passport.serializeUser((user: any, done) => {
     try {
-        done(null, user)
+        done(null, user.id)
     } catch (error) {
         console.log(error)
     }
 })
 
-passport.deserializeUser(async (user: any, done) => {
+passport.deserializeUser(async (id: any, done) => {
     try {
+        const user = await prisma.user.findUnique({where : {id}})
         done(null, user)
     }catch (error) {
         console.log(error)

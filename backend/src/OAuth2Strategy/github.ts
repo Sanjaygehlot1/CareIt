@@ -37,15 +37,24 @@ passport.use(new GitHubStrategy(
         done: (error: any, user?: GitHubUser) => void
     ) => {
         try {
-
-            const user: GitHubUser = {
-                name: profile.displayName! || profile.username!,
-                email: profile.emails![0].value,
-                provider: profile.provider,
-                providerId: profile.id,
-                profileUrl: profile.photos?.[0].value,
-                accessToken
-            };
+             const user = await prisma.user.upsert({
+                        where: { providerId: profile.id },
+                        create: {
+                            name: profile.displayName!,
+                            email: profile.emails![0].value,
+                            provider: profile.provider,
+                            profileUrl: profile.photos?.[0].value!,
+                            providerId: profile.id,
+                            githubAccessToken : accessToken,
+                            calendar : false
+                        },
+                        update: {
+                            profileUrl: profile.photos?.[0].value,
+                            name: profile.displayName,
+                            githubAccessToken : accessToken,
+                        }
+            
+                    })
 
             done(null, user);
 
