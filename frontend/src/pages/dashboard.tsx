@@ -5,7 +5,7 @@ import WellnessCheckin from '../components/dashboard/WellnessCheckin';
 import WeeklyActivityChart from '../components/dashboard/WeeklyActivityChart';
 import WeeklyGoals from '../components/dashboard/WeeklyGoals';
 import TodaysAgenda from '../components/dashboard/TodaysAgenda';
-
+import EventCalendar from '../components/dashboard/EventCalendar';
 const Dashboard: React.FC = () => {
   return (
     <div className="bg-gray-50 flex flex-col h-screen relative">
@@ -15,6 +15,10 @@ const Dashboard: React.FC = () => {
           
           <div className="mb-6">
             <DailyFocusBar />
+          </div>
+
+          <div className="mt-6">
+            <EventCalendar events={[]}  />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

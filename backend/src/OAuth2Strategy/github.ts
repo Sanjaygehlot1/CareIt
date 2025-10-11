@@ -1,9 +1,9 @@
-import passport from 'passport'
-import {Strategy as GitHubStrategy} from 'passport-github2'
-import { prisma } from '../prisma'
-import { GITHUB_CALLBACK_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET} from '../secrets'
-
-
+// In your GitHub OAuth strategy file
+import passport = require("passport");
+import { Strategy as GitHubStrategy } from "passport-github2";
+import { GITHUB_CALLBACK_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from "../secrets";
+import { Request } from "express";
+import { prisma } from "../prisma";
 
 interface GitHubProfile {
     id: string;
@@ -19,51 +19,81 @@ interface GitHubUser {
     email: string;
     provider: string;
     providerId: string;
-    profileUrl?: string;
+    profileUrl?: string | null;
     accessToken?: string;
 }
 
-passport.use(new GitHubStrategy(
-    {
-        clientID: GITHUB_CLIENT_ID,
-        clientSecret: GITHUB_CLIENT_SECRET,
-        callbackURL: GITHUB_CALLBACK_URL,
-        scope: ['user:email']
-    },
-    async (
-        accessToken: string,
-        refreshToken: string,
-        profile: GitHubProfile,
-        done: (error: any, user?: GitHubUser) => void
-    ) => {
+
+
+passport.use(new GitHubStrategy({
+    clientID: GITHUB_CLIENT_ID,
+    clientSecret: GITHUB_CLIENT_SECRET,
+    callbackURL: GITHUB_CALLBACK_URL,
+    passReqToCallback: true,
+},
+    async (req: Request, accessToken: string, refreshToken: string, profile: GitHubProfile, done: (error? : any, user? : GitHubUser) => void) => {
+        console.log("\n=== GITHUB STRATEGY EXECUTING ===");
+        console.log("Profile ID:", profile.id);
+        console.log("Profile Username:", profile.username);
+        console.log("Req.user (existing session):", req.user);
+
         try {
-             const user = await prisma.user.upsert({
-                        where: { providerId: profile.id },
-                        create: {
-                            name: profile.displayName!,
-                            email: profile.emails![0].value,
-                            provider: profile.provider,
-                            profileUrl: profile.photos?.[0].value!,
-                            providerId: profile.id,
-                            githubAccessToken : accessToken,
-                            calendar : false
-                        },
-                        update: {
-                            profileUrl: profile.photos?.[0].value,
-                            name: profile.displayName,
-                            githubAccessToken : accessToken,
-                        }
-            
-                    })
+            if (req.user && (req.user as any).id) {
+                const currentUser = req.user as any;
+                console.log("GitHub connect flow for user:", currentUser.id);
+
+                const existingGithubUser = await prisma.user.findFirst({
+                    where: {
+                        OR: [
+                            { providerId: profile.id },
+                            { githubProviderId: profile.id }
+                        ]
+                    }
+                });
+
+                if (existingGithubUser && existingGithubUser.id !== currentUser.id) {
+                    console.error("CONFLICT: GitHub account already registered to different user");
+                    return done(new Error('This GitHub account is already connected to another account.'));
+                }
+
+                const updatedUser = await prisma.user.update({
+                    where: { id: currentUser.id },
+                    data: {
+                        githubAccessToken: accessToken,
+                        githubProviderId: profile.id,
+                        githubUsername: profile.username,
+                        githubConnected: true
+                    }
+                });
+
+                console.log("GitHub connected successfully");
+                return done(null, updatedUser);
+            }
+
+            console.log("GitHub login flow");
+            const user = await prisma.user.upsert({
+                where: { providerId: profile.id },
+                create: {
+                    name: profile.displayName || profile.username!,
+                    email: profile.emails?.[0].value || `${profile.username}@github.local`,
+                    provider: 'github',
+                    providerId: profile.id,
+                    profileUrl: profile.photos?.[0].value,
+                    githubAccessToken: accessToken,
+                    githubUsername: profile.username,
+                    githubConnected: true
+                },
+                update: {
+                    name: profile.displayName || profile.username,
+                    githubAccessToken: accessToken,
+                    profileUrl: profile.photos?.[0].value
+                }
+            });
 
             done(null, user);
-
         } catch (error) {
-            done(error, undefined);
+            console.error("GitHub strategy error:", error);
+            done(error);
         }
     }
 ));
-
-
-
-export default passport;

@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { getAuth } from '../../context/authContext';
+import { getAuth } from '../context/authContext';
 import type { ReactNode } from 'react';
 
 type childrenType = {

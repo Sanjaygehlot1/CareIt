@@ -14,7 +14,7 @@ function SignIn() {
         <p className="text-gray-600 mb-8">Login with your preferred account</p>
 
         <Link
-         to={'http://localhost:3000/auth/google'}
+         to={`${BACKEND_BASE_URL}/auth/google/login`}
           className="btn-fill-hover w-full mb-4 flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg text-gray-800 transition transform hover:text-white"
         >
           <img src={googleLogo} alt="Google" className="w-5 h-5" />
@@ -22,7 +22,7 @@ function SignIn() {
         </Link>
 
         <Link
-         to={`${BACKEND_BASE_URL}/auth/github`}
+         to={`${BACKEND_BASE_URL}/auth/github/login`}
           className="btn-fill-hover w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg text-gray-800 transition transform hover:text-white"
         >
           <img src={githubLogo} alt="GitHub" className="w-5 h-5" />

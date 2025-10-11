@@ -6,18 +6,20 @@ import SignIn from './pages/signin.tsx'
 import Dashboard from './pages/dashboard.tsx'
 import PrivateRoute from './components/privateRoute.tsx'
 import HomePage from './pages/HomePage.tsx'
-import PublicRoute from './components/dashboard/publicRoute.tsx'
-import SettingsPage from './components/settings/SettingsPage.tsx'
+import PublicRoute from './components/publicRoute.tsx' 
+import SettingsPage from './pages/SettingsPage.tsx'
 import { AuthProvider } from './context/authContext.tsx'
 
 const router = createBrowserRouter([
   {
+  
     element: <App />,
     path: "/",
+    
     children: [
       {
+        index: true, 
         element: <HomePage />,
-        path: '/'
       },
       {
         element: (
@@ -25,7 +27,7 @@ const router = createBrowserRouter([
             <Dashboard />
           </PrivateRoute>
         ),
-        path: '/dashboard'
+        path: 'dashboard' 
       },
       {
         element: (
@@ -33,7 +35,7 @@ const router = createBrowserRouter([
             <SettingsPage />
           </PrivateRoute>
         ),
-        path: '/settings'
+        path: 'settings'
       }
     ]
   },
@@ -45,10 +47,10 @@ const router = createBrowserRouter([
     ),
     path: '/sign-in'
   },
-])
+]);
 
 createRoot(document.getElementById('root')!).render(
   <AuthProvider>
-  <RouterProvider router={router} />
+    <RouterProvider router={router} />
   </AuthProvider>
-)
+);

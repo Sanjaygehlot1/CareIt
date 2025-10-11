@@ -30,7 +30,7 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use('/auth', UserRoutes);
+app.use('/api/v1/auth', UserRoutes);
 
 app.use(errorMiddleware)
 

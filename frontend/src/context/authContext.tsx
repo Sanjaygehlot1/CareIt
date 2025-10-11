@@ -6,7 +6,7 @@ import { AxiosInstance } from "../axios/axiosInstance";
 type AuthContextType = {
     user: any;
     Loading: boolean,
-    logOut: ()=>{}
+    logOut: () => {}
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -18,11 +18,10 @@ type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
 
     const [user, setuser] = useState(null);
-    const [Loading, setLoading] = useState(false);
+    const [Loading, setLoading] = useState(true);
 
     const getUserSession = async () => {
         try {
-            setLoading(true)
             const response = await AxiosInstance.get('/auth/profile')
             console.log(response.data)
             setuser(response.data.data);
@@ -47,9 +46,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     useEffect(() => {
-        if (!user) {
-            getUserSession();
-        }
+
+        getUserSession();
+
     }, [])
 
     const values = {
@@ -69,7 +68,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 export const getAuth = () => {
     const context = useContext(AuthContext);
 
-    console.log(context)
 
     if (!context) {
         throw new Error('getAuth must be used within an AuthProvider')

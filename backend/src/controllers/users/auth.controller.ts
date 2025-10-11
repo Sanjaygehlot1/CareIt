@@ -6,32 +6,41 @@ import { UnauthorizedException } from "../../exceptions/errorExceptions";
 import { ErrorCodes } from "../../exceptions/root";
 import { apiResponse } from "../../utils/apiResponse";
 
-
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
-    try {
+  try {
 
-        const user = req.user
+    const user = req.user as any
 
-        if (!user) {
-            next(new UnauthorizedException("You must be logged in. please login and try again", ErrorCodes.UNAUTHORIZED_ACCESS));
-        }
-
-        res.status(200).json(new apiResponse(
-            user,
-            "user found",
-            200
-        ))
-
-    } catch (error) {
-        console.log(error);
-        throw error;
+    if (!user) {
+      next(new UnauthorizedException("You must be logged in. please login and try again", ErrorCodes.UNAUTHORIZED_ACCESS));
     }
+
+    const safeUserObj = {
+      name: user.name,
+      email:  user.googleEmail || user.email,
+      profileUrl: user.profileUrl,
+      calendar : user.calendar,
+      id : user.providerId,
+      provider : user.provider,
+      githubUsername : user.githubUsername
+    }
+
+    res.status(200).json(new apiResponse(
+      safeUserObj,
+      "user found",
+      200
+    ))
+
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }
 
 export const logOut = async (req: Request, res: Response, next: NextFunction) => {
   req.logout((err) => {
-    if (err) { 
-      return next(err); 
+    if (err) {
+      return next(err);
     }
 
     req.session.destroy((err) => {
@@ -39,9 +48,9 @@ export const logOut = async (req: Request, res: Response, next: NextFunction) =>
         console.error('Session could not be destroyed.', err);
         return res.status(500).send('Could not log out.');
       }
-      
+
       res.clearCookie('connect.sid');
-      
+
       return res.status(200).send('Logged out successfully.');
     });
   });
