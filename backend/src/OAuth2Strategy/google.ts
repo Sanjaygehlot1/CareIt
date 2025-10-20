@@ -3,6 +3,7 @@ import GoogleStrategy from 'passport-google-oauth20'
 import { prisma } from '../prisma'
 import { GOOGLE_CLIENT_ID, GOOGLE_CALLBACK_URL, GOOGLE_CLIENT_SECRET } from '../secrets'
 import { Request } from 'express'
+import { calendar } from 'googleapis/build/src/apis/calendar'
 
 
 class CustomGoogleStrategy extends GoogleStrategy.Strategy {
@@ -36,7 +37,6 @@ passport.use(new CustomGoogleStrategy({
             if (req.user && (req.user as any).id) {
                 const currentUser = req.user as any;
 
-                // Check for conflicts
                 const existingGoogleUser = await prisma.user.findUnique({
                     where: { providerId: profile.id }
                 });
@@ -97,7 +97,7 @@ passport.use(new CustomGoogleStrategy({
                     name: profile.displayName,
                     googleAccessToken: accessToken,
                     ...(refreshToken && { googleRefreshToken: refreshToken }),
-                    calendar: hasCalendarScope
+                    ...(hasCalendarScope && { calendar : true})
                 }
             });
 

@@ -16,23 +16,26 @@ const WeeklyActivityChart: React.FC = () => {
   const maxValue = Math.max(...weeklyData.map(d => d.value));
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
-        <BarChart3 className="mr-3 text-orange-500" size={24} />
+    <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border">
+      <h2 className="text-xl font-semibold mb-4 flex items-center" style={{ color: 'var(--text-primary)' }}>
+        <BarChart3 className="mr-3" style={{ color: 'var(--accent-primary)' }} size={24} />
         Weekly Activity Trend
       </h2>
       <div className="flex justify-between items-end h-48 space-x-2">
         {weeklyData.map((data) => (
           <div key={data.day} className="flex-1 flex flex-col items-center">
             <div
-              className="w-3/4 bg-orange-300 hover:bg-orange-400 rounded-t-md transition-all"
-              style={{ height: `${(data.value / maxValue) * 100}%` }}
+              className="w-3/4 rounded-t-md transition-all hover:opacity-80"
+              style={{ 
+                height: `${(data.value / maxValue) * 100}%`,
+                backgroundColor: 'var(--accent-primary)'
+              }}
             ></div>
-            <span className="text-xs font-medium text-gray-500 mt-2">{data.day}</span>
+            <span className="text-xs font-medium mt-2" style={{ color: 'var(--text-secondary)' }}>{data.day}</span>
           </div>
         ))}
       </div>
-       <p className="text-xs text-gray-400 mt-2 text-center">Your productivity hotspots for the week.</p>
+       <p className="text-xs mt-2 text-center" style={{ color: 'var(--text-tertiary)' }}>Your productivity hotspots for the week.</p>
     </div>
   );
 };

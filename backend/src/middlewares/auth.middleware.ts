@@ -7,5 +7,5 @@ export const authMiddleWare = (req : Request, res: Response, next: NextFunction)
   if (req.isAuthenticated()) {
     return next();
   }
-  return res.status(401).json({ message: "Invalidddd Credentials" });
+  return res.status(401).json({ message: "Auth: Invalid Credentials" });
 };

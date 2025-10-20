@@ -7,11 +7,11 @@ import { authMiddleWare } from "../middlewares/auth.middleware";
 import { FRONTEND_BASE_URL } from "../secrets";
 import { prisma } from "../prisma";
 
-export const route: Router = Router();
+export const router: Router = Router();
 
 //Google Routes
 
-route.get('/google/login', (req, res, next) => {
+router.get('/google/login', (req, res, next) => {
   console.log("\n=== GOOGLE LOGIN INITIATED ===");
   passport.authenticate('google', {
     scope: ['profile', 'email'],
@@ -20,7 +20,7 @@ route.get('/google/login', (req, res, next) => {
   })(req, res, next);
 });
 
-route.get('/google/connect-calendar', authMiddleWare, (req, res, next) => {
+router.get('/google/connect-calendar', authMiddleWare, (req, res, next) => {
   const user = req.user as any;
   const isGoogleUser = user && user.provider === 'google';
   const forceSelect = req.query.force_select === 'true';
@@ -48,7 +48,7 @@ route.get('/google/connect-calendar', authMiddleWare, (req, res, next) => {
 });
 
 
-route.post('/check-google-available', authMiddleWare, async (req, res) => {
+router.post('/check-google-available', authMiddleWare, async (req, res) => {
   try {
     const { googleEmail } = req.body;
 
@@ -77,11 +77,13 @@ route.post('/check-google-available', authMiddleWare, async (req, res) => {
 });
 
 
-route.get('/google/callback', (req, res, next) => {
+router.get('/google/callback', (req, res, next) => {
   passport.authenticate('google', {
     failureRedirect: `${FRONTEND_BASE_URL}/sign-in`,
     session: true
   }, (error, user, info) => {
+
+    const scope = req.query.state as string;
 
     if (error) {
       if (error.message === 'GOOGLE_ACCOUNT_ALREADY_REGISTERED') {
@@ -113,7 +115,7 @@ route.get('/google/callback', (req, res, next) => {
     req.logIn(user, (err) => {
       if (err) return next(err);
 
-      if (user.calendar) {
+      if (user.calendar && scope == 'calendar_connect') {
         return res.redirect(`${FRONTEND_BASE_URL}/settings?status=calendar-connected`);
       }
       return res.redirect(`${FRONTEND_BASE_URL}/dashboard`);
@@ -124,14 +126,14 @@ route.get('/google/callback', (req, res, next) => {
 
 //Github Routes
 
-route.get('/github/login', (req, res, next) => {
+router.get('/github/login', (req, res, next) => {
   passport.authenticate('github', {
     scope: ['user:email'],
     state: 'github_login'
   })(req, res, next);
 })
 
-route.get('/github/connect', authMiddleWare, (req, res, next) => {
+router.get('/github/connect', authMiddleWare, (req, res, next) => {
 
   const user = req.user as any;
   const isGithubUser = user && user.provider === 'github';
@@ -141,17 +143,17 @@ route.get('/github/connect', authMiddleWare, (req, res, next) => {
     return res.redirect(`${FRONTEND_BASE_URL}/settings?status=github-already-connected`);
   }
 
-  const options : passport.AuthenticateOptions = {
-    scope : ['user:email', 'read:user', 'repo'],
-    state : 'github_connect'
+  const options: passport.AuthenticateOptions = {
+    scope: ['user:email', 'read:user', 'repo'],
+    state: 'github_connect'
   }
- 
 
-  passport.authenticate('github',options)(req, res, next);
+
+  passport.authenticate('github', options)(req, res, next);
 });
 
 
-route.get('/github/callback', (req, res, next) => {
+router.get('/github/callback', (req, res, next) => {
   console.log("Query params:", req.query);
 
   passport.authenticate('github', {
@@ -201,5 +203,5 @@ route.get('/github/callback', (req, res, next) => {
   })(req, res, next);
 });
 
-route.get('/profile', authMiddleWare, getProfile);
-route.get('/logout', logOut);
+router.get('/profile', authMiddleWare, getProfile);
+router.get('/logout', logOut);

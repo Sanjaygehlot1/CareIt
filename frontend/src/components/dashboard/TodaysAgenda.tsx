@@ -11,17 +11,17 @@ const events = [
 
 const TodaysAgenda: React.FC = () => {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
-        <CalendarClock className="mr-3 text-orange-500" size={24} />
+    <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border">
+      <h2 className="text-xl font-semibold mb-4 flex items-center" style={{ color: 'var(--text-primary)' }}>
+        <CalendarClock className="mr-3" style={{ color: 'var(--accent-primary)' }} size={24} />
         Today's Agenda
       </h2>
       <div className="space-y-4">
         {events.map((event, index) => (
           <div key={index} className="flex items-center space-x-4">
-            <span className="font-medium text-sm text-gray-600 w-24">{event.time}</span>
-            <div className="w-1 h-1 bg-orange-400 rounded-full"></div>
-            <span className="text-sm text-gray-800 flex-1">{event.title}</span>
+            <span className="font-medium text-sm w-24" style={{ color: 'var(--text-secondary)' }}>{event.time}</span>
+            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--accent-primary)' }}></div>
+            <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{event.title}</span>
           </div>
         ))}
       </div>

@@ -37,17 +37,19 @@ const BottomNavBar: React.FC = () => {
                 "
               >
                 <div 
+                style={{color : 'var(--text-primary)'}}
                   className="
                     absolute
                     text-gray-700
                     transition-transform duration-300 ease-in-out
-                    group-hover:-translate-y-2
+                    group-hover:-translate-y-2 
                   "
                 >
                   {item.icon}
                 </div>
 
                 <span 
+                style={{color : 'var(--text-primary)'}}
                   className="
                     absolute -bottom-0
                     text-xs font-semibold text-gray-800

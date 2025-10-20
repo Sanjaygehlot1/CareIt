@@ -1,7 +1,4 @@
 import { Request, Response, NextFunction } from "express"
-import { prisma } from "../../prisma";
-import * as jwt from 'jsonwebtoken'
-import { FRONTEND_BASE_URL, JWT_SECRET } from "../../secrets";
 import { UnauthorizedException } from "../../exceptions/errorExceptions";
 import { ErrorCodes } from "../../exceptions/root";
 import { apiResponse } from "../../utils/apiResponse";
