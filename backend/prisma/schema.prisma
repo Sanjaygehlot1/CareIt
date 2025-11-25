@@ -17,14 +17,12 @@ model User {
   provider String 
   providerId String
   
-  // Google OAuth
   googleProviderId   String? @unique
   googleAccessToken  String?
   googleRefreshToken String?
   googleEmail        String?
   calendar           Boolean @default(false)
 
-  // GitHub OAuth
   githubProviderId   String? @unique
   githubAccessToken  String?
   githubRefreshToken String?
@@ -34,7 +32,6 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   editorActivities EditorActivity[]
   focusStats       FocusStats[]
 

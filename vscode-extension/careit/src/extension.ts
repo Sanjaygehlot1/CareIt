@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
 
-// small in-memory batch
 let batch: any[] = [];
 let batchTimer: NodeJS.Timeout | null = null;
-const BATCH_INTERVAL = 30_000; // push every 30s
+const BATCH_INTERVAL = 30_000; 
 const MAX_BATCH = 50;
 
 function startBatchTimer(sendFn: () => Promise<void>) {
@@ -26,7 +25,6 @@ async function sendBatch(serverUrl: string, apiKey: string) {
     });
   } catch (err) {
     console.error('Failed to send analytics:', err);
-    // requeue on failure (simple strategy)
     batch.unshift(...payload);
   }
 }
@@ -34,12 +32,10 @@ async function sendBatch(serverUrl: string, apiKey: string) {
 export function activate(context: vscode.ExtensionContext) {
   console.log('DigitalTwin tracker activated');
 
-  // config
   const config = vscode.workspace.getConfiguration('digitaltwin');
   let apiKey = config.get<string>('apiKey') ?? '';
   let serverUrl = config.get<string>('serverUrl') ?? 'http://localhost:3000';
 
-  // update if user changes settings
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
     if (e.affectsConfiguration('digitaltwin.apiKey')) {
       apiKey = vscode.workspace.getConfiguration('digitaltwin').get('apiKey') || '';
@@ -52,10 +48,9 @@ export function activate(context: vscode.ExtensionContext) {
   let currentFile = vscode.window.activeTextEditor?.document.fileName || '';
   let currentStart = Date.now();
 
-  // helper to record a session chunk
   function recordChunk(file: string, durationMs: number, keystrokes = 0) {
     const data = {
-      userId: apiKey || 'anonymous', // recommend using API key or user id mapping
+      userId: apiKey || 'anonymous', 
       project: vscode.workspace.name || 'unknown',
       language: (vscode.window.activeTextEditor?.document.languageId) || 'plain',
       duration: Math.round(durationMs / 1000),
@@ -64,14 +59,12 @@ export function activate(context: vscode.ExtensionContext) {
       timestamp: new Date().toISOString()
     };
     batch.push(data);
-    // auto-send if too large
     if (batch.length >= MAX_BATCH) {
       sendBatch(serverUrl, apiKey);
     }
     startBatchTimer(() => sendBatch(serverUrl, apiKey));
   }
 
-  // on active editor change -> finalize previous file chunk
   context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
     const now = Date.now();
     const duration = now - currentStart;
@@ -80,7 +73,6 @@ export function activate(context: vscode.ExtensionContext) {
     currentStart = now;
   }));
 
-  // on save -> small chunk
   context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
     const now = Date.now();
     const duration = now - currentStart;
@@ -89,11 +81,9 @@ export function activate(context: vscode.ExtensionContext) {
     currentStart = now;
   }));
 
-  // on change -> count keystrokes (approx)
   let keystrokeCount = 0;
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
     keystrokeCount += event.contentChanges.reduce((s, c) => s + (c.text.length || 0), 0);
-    // Push a small event when keystroke threshold reached
     if (keystrokeCount > 200) {
       const now = Date.now();
       const duration = now - currentStart;
@@ -103,7 +93,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }));
 
-  // on extension deactivate / window close -> flush
   context.subscriptions.push({
     dispose: () => {
       const now = Date.now();
@@ -119,7 +108,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  // command: send now (manual)
   const disposable = vscode.commands.registerCommand('digitaltwin.sendNow', async () => {
     await sendBatch(serverUrl, apiKey);
     vscode.window.showInformationMessage('DigitalTwin: Sent analytics batch');
@@ -128,5 +116,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  // nothing; disposables handle flush
 }
