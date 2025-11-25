@@ -1,7 +1,8 @@
 import dotenv from 'dotenv'
 
 dotenv.config({
-    path: '.env'
+    path: '.env',
+    debug : true
 })
 
 export const PORT = process.env.PORT!

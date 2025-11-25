@@ -1,4 +1,3 @@
-// In your GitHub OAuth strategy file
 import passport = require("passport");
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GITHUB_CALLBACK_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from "../secrets";

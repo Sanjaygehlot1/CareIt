@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrainCircuit, Zap } from 'lucide-react';
+import { getFocusPoints } from '../../controllers/reports';
 
 const FocusScore: React.FC = () => {
   const todayScore = 285;
@@ -13,6 +14,10 @@ const FocusScore: React.FC = () => {
 
   const quality = getQualityLabel(todayScore);
   const maxScore = Math.max(...weeklyScores, 1);
+
+  useEffect(()=>{
+    getFocusPoints();
+  },[])
 
   return (
     <div

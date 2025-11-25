@@ -10,6 +10,7 @@ import cors from 'cors'
 //Routes
 import { router as UserRoutes } from './routes/user.routes';
 import { router as CalendarRoutes } from './routes/calendar.routes'
+import { router as ReportRoutes } from './routes/reports.routes'
 const app: Express = express();
 
 app.use(cookieParser());
@@ -34,6 +35,11 @@ app.use(passport.session())
 
 app.use('/api/v1/auth', UserRoutes);
 app.use('/api/v1/calendar', CalendarRoutes);
+app.use('/api/v1/reports', ReportRoutes);
+
+app.get('/',(req,res)=>{
+  res.send("hello")
+})
 
 app.use(errorMiddleware)
 

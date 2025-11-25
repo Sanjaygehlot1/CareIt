@@ -3,7 +3,6 @@ import GoogleStrategy from 'passport-google-oauth20'
 import { prisma } from '../prisma'
 import { GOOGLE_CLIENT_ID, GOOGLE_CALLBACK_URL, GOOGLE_CLIENT_SECRET } from '../secrets'
 import { Request } from 'express'
-import { calendar } from 'googleapis/build/src/apis/calendar'
 
 
 class CustomGoogleStrategy extends GoogleStrategy.Strategy {

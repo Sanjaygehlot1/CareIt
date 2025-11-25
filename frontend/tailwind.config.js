@@ -10,21 +10,21 @@ module.exports = {
         'bg-primary': 'var(--bg-primary)',
         'bg-secondary': 'var(--bg-secondary)',
         'bg-tertiary': 'var(--bg-tertiary)',
-        
+
         // Text colors
         'text-primary': 'var(--text-primary)',
         'text-secondary': 'var(--text-secondary)',
         'text-tertiary': 'var(--text-tertiary)',
-        
+
         // Border colors
         'border-primary': 'var(--border-primary)',
         'border-secondary': 'var(--border-secondary)',
-        
+
         // Accent colors
         'accent': 'var(--accent-primary)',
         'accent-secondary': 'var(--accent-secondary)',
         'accent-light': 'var(--accent-light)',
-        
+
         // Component colors
         'card-bg': 'var(--card-bg)',
         'card-border': 'var(--card-border)',
@@ -50,8 +50,25 @@ module.exports = {
       },
       boxShadow: {
         'card': 'var(--card-shadow)',
+      },
+      shimmer: {
+        "animation": {
+          shimmer: "shimmer 2s linear infinite"
+        },
+        "keyframes": {
+          shimmer: {
+            from: {
+              "backgroundPosition": "0 0"
+            },
+            to: {
+              "backgroundPosition": "-200% 0"
+            }
+          }
+        }
       }
     },
   },
   plugins: [],
 }
+
+// tailwind.config.js code

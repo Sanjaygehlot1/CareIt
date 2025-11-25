@@ -1,4 +1,3 @@
-// helpers/googleAuth.ts
 import passport from 'passport';
 import { Request, Response, NextFunction } from 'express';
 

@@ -7,47 +7,64 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id         Int     @id @default(autoincrement())
-  name       String
-  email      String  @unique
-  provider   String
-  providerId String  @unique
-  profileUrl String?
 
+
+model User {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+  profileUrl String?
+  provider String 
+  providerId String
+  
+  // Google OAuth
+  googleProviderId   String? @unique
   googleAccessToken  String?
   googleRefreshToken String?
-  googleProviderId   String? @unique
   googleEmail        String?
   calendar           Boolean @default(false)
 
+  // GitHub OAuth
+  githubProviderId   String? @unique
   githubAccessToken  String?
   githubRefreshToken String?
-  githubProviderId   String? @unique
   githubUsername     String?
   githubConnected    Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
+  editorActivities EditorActivity[]
+  focusStats       FocusStats[]
+
   @@map("users")
 }
 
-model Stats {
-  id         Int          @id @default(autoincrement())
-  userId     String       @unique
-  focusStats FocusStats[] 
+model EditorActivity {
+  id          Int      @id @default(autoincrement())
+  duration    Int
+  language    String?
+  projectName String?
+  file        String?
+  keystrokes  Int?
+  recordedAt  DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  @@index([userId, recordedAt])
 }
 
 model FocusStats {
   id        Int      @id @default(autoincrement())
-  userId    String
+  userId    Int
   duration  Int      @default(0)
   date      DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  stats Stats? @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
 }
