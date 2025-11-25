@@ -40,18 +40,15 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
         if (!user) {
             return next(new UnauthorizedException("User not authenticated.", ErrorCodes.UNAUTHORIZED_ACCESS));
         }
-        // Check if at least one service is connected
         if (!user.googleRefreshToken && !user.githubAccessToken) {
             return next(new BadRequestExceptions("Connect Google Calendar or GitHub to calculate focus.", ErrorCodes.BAD_REQUEST));
         }
 
 
         const timeMin = new Date(day);
-        timeMin.setHours(0, 0, 0, 0); // Start of the day
-
+        timeMin.setHours(0, 0, 0, 0);
         const timeMax = new Date(timeMin);
-        timeMax.setDate(timeMin.getDate() + 1); // Start of the next day
-
+        timeMax.setDate(timeMin.getDate() + 1); 
         // Define Workday Boundaries (e.g., 9 AM to 5 PM - adjust as needed)
         const workDayStart = new Date(day);
         workDayStart.setHours(9, 0, 0, 0);
@@ -59,7 +56,6 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
         workDayEnd.setHours(17, 0, 0, 0);
 
 
-        // --- 3. Fetch Google Calendar Events ---
         let allEvents: calendar_v3.Schema$Event[] = [];
         let response: any = null;
         if (user.googleRefreshToken) {
@@ -83,7 +79,6 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
                     pageToken = response.data.nextPageToken;
                 } catch (calendarError) {
                     console.warn("Could not fetch Google Calendar events:", calendarError);
-                    // Decide if you want to proceed without calendar data or throw an error
                     pageToken = null; // Stop pagination on error
                 }
             } while (pageToken);
@@ -91,7 +86,6 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
             console.log("Google Refresh Token not found, skipping calendar fetch.");
         }
 
-        // --- 4. Calculate Free Time Blocks ---
         const sortedEvents = allEvents
             .filter(event => event.start?.dateTime && event.end?.dateTime) // Filter out all-day events without specific times
             .map(event => ({
