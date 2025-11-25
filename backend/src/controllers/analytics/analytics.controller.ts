@@ -14,9 +14,11 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
             where : { apiKey }
         })
 
+
         if(!user){
              next(new UnauthorizedException("Unautorized : Invalid ApiKey", 401));
         }
+        
 
         await prisma.
     } catch (error) {

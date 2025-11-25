@@ -17,7 +17,6 @@ interface GitHubUser {
     name: string;
     email: string;
     provider: string;
-    providerId: string;
     profileUrl?: string | null;
     accessToken?: string;
 }
@@ -30,7 +29,7 @@ passport.use(new GitHubStrategy({
     callbackURL: GITHUB_CALLBACK_URL,
     passReqToCallback: true,
 },
-    async (req: Request, accessToken: string, refreshToken: string, profile: GitHubProfile, done: (error? : any, user? : GitHubUser) => void) => {
+    async (req: Request, accessToken: string, refreshToken: string, profile: GitHubProfile, done: (error?: any, user?: GitHubUser) => void) => {
         console.log("\n=== GITHUB STRATEGY EXECUTING ===");
         console.log("Profile ID:", profile.id);
         console.log("Profile Username:", profile.username);
@@ -42,12 +41,7 @@ passport.use(new GitHubStrategy({
                 console.log("GitHub connect flow for user:", currentUser.id);
 
                 const existingGithubUser = await prisma.user.findFirst({
-                    where: {
-                        OR: [
-                            { providerId: profile.id },
-                            { githubProviderId: profile.id }
-                        ]
-                    }
+                    where: { githubProviderId: profile.id }
                 });
 
                 if (existingGithubUser && existingGithubUser.id !== currentUser.id) {
@@ -71,12 +65,11 @@ passport.use(new GitHubStrategy({
 
             console.log("GitHub login flow");
             const user = await prisma.user.upsert({
-                where: { providerId: profile.id },
+                where: { githubProviderId: profile.id },
                 create: {
                     name: profile.displayName || profile.username!,
                     email: profile.emails?.[0].value || `${profile.username}@github.local`,
                     provider: 'github',
-                    providerId: profile.id,
                     profileUrl: profile.photos?.[0].value,
                     githubAccessToken: accessToken,
                     githubUsername: profile.username,

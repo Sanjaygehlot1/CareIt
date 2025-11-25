@@ -37,7 +37,7 @@ passport.use(new CustomGoogleStrategy({
                 const currentUser = req.user as any;
 
                 const existingGoogleUser = await prisma.user.findUnique({
-                    where: { providerId: profile.id }
+                    where: { googleProviderId: profile.id }
                 });
 
                 if (existingGoogleUser && existingGoogleUser.id !== currentUser.id) {
@@ -80,15 +80,15 @@ passport.use(new CustomGoogleStrategy({
             }
 
             const user = await prisma.user.upsert({
-                where: { providerId: profile.id },
+                where: { googleProviderId: profile.id },
                 create: {
                     name: profile.displayName!,
                     email: profile.emails![0].value,
                     provider: 'google',
                     profileUrl: profile.photos?.[0].value || '',
-                    providerId: profile.id,
                     googleAccessToken: accessToken,
                     googleRefreshToken: refreshToken || null,
+                    googleProviderId : profile.id,
                     calendar: hasCalendarScope
                 },
                 update: {
@@ -100,7 +100,7 @@ passport.use(new CustomGoogleStrategy({
                 }
             });
 
-            console.log("User upserted successfully:", user.id);
+            console.log("User upserted successfully:", user);
             done(null, user);
 
         } catch (error) {
@@ -112,7 +112,7 @@ passport.use(new CustomGoogleStrategy({
 ));
 
 passport.serializeUser((user: any, done) => {
-    console.log("Serializing user:", user.id);
+    console.log("Serializing user:", user);
     try {
         done(null, user.id)
     } catch (error) {
@@ -129,7 +129,7 @@ passport.deserializeUser(async (id: any, done) => {
             console.log("User not found in database");
             return done(null, false);
         }
-        console.log("User deserialized:", user.id);
+        console.log("User deserialized:", user);
         done(null, user);
     } catch (error) {
         console.error("Deserialize error:", error);

@@ -15,12 +15,11 @@ model User {
   email String @unique
   profileUrl String?
   provider String 
-  providerId String
+  apiKey String? @unique
   
   googleProviderId   String? @unique
   googleAccessToken  String?
   googleRefreshToken String?
-  googleEmail        String?
   calendar           Boolean @default(false)
 
   githubProviderId   String? @unique

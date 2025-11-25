@@ -6,6 +6,7 @@ import '../OAuth2Strategy/github'
 import { authMiddleWare } from "../middlewares/auth.middleware";
 import { FRONTEND_BASE_URL } from "../secrets";
 import { prisma } from "../prisma";
+import { generateApiKey, getApiKey } from "../controllers/users/apikey.controller";
 
 export const router: Router = Router();
 
@@ -57,12 +58,7 @@ router.post('/check-google-available', authMiddleWare, async (req, res) => {
     }
 
     const existing = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: googleEmail, provider: 'google' },
-          { googleEmail: googleEmail }
-        ]
-      }
+      where: { email: googleEmail, provider: 'google' },
     });
 
     return res.json({
@@ -205,3 +201,5 @@ router.get('/github/callback', (req, res, next) => {
 
 router.get('/profile', authMiddleWare, getProfile);
 router.get('/logout', logOut);
+router.get('/generate-api-key', authMiddleWare, generateApiKey);
+router.get('/get-api-key', authMiddleWare, getApiKey);
