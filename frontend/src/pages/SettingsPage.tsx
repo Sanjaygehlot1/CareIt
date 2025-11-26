@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, Trash2, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Trash2, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw } from 'lucide-react';
 import { getAuth } from '../context/authContext';
 import { useSearchParams } from 'react-router-dom';
-import { BACKEND_BASE_URL } from '../utils/secrets'; 
-import Modal from '../components/settings/Modal';
+import { BACKEND_BASE_URL } from '../utils/secrets';
+import Modal from '../components/Modals/EventDetailsModal' 
+import { generateApiKey, getApiKey } from '../controllers/apiKey';
 
 const SettingsPage: React.FC = () => {
   const { user } = getAuth();
@@ -12,10 +13,36 @@ const SettingsPage: React.FC = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
   const status = searchParams.get('status');
   const error = searchParams.get('error');
   const message = searchParams.get('message');
   const googleEmail = searchParams.get('google_email');
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      try {
+        const data = await getApiKey();
+        if (data.data.apiKey) {
+          setApiKey(data.data.apiKey)
+        };
+
+      } catch (err) {
+        console.error('Failed to fetch API key', err);
+      }
+    };
+    fetchApiKey();
+  }, []);
 
   useEffect(() => {
     if (status || error) {
@@ -71,9 +98,46 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleGenerateKey = async () => {
+    if (window.confirm("Generating a new key will invalidate the old one. Any connected extensions will need to be updated. Continue?")) {
+      try {
+
+        const data = await generateApiKey();
+        if (data.data.apiKey) {
+          setApiKey(data.data.apiKey);
+          showToast(data.message);
+        }
+      } catch (e) {
+        console.error("Failed to generate key", e);
+        showToast("Failed to generate key.", 'error');
+      }
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
+      showToast("API Key copied to clipboard!");
+    }
+  };
+
   return (
     <div style={{ backgroundColor: 'var(--bg-secondary)' }} className="min-h-screen p-4 sm:p-6 lg:p-8 relative">
       <div className="max-w-3xl mx-auto space-y-8">
+
+        {toast && (
+          <div className="fixed bottom-2 right-6 z-50 animate-slide-up">
+            <div className={`flex items-center gap-3 px-6 py-3 rounded-lg shadow-lg text-white ${toast.type === 'error' ? 'bg-red-600' : 'bg-black'
+              }`}>
+              {toast.type === 'success' ? (
+                <CheckCircle size={20} className="text-green-400" />
+              ) : (
+                <AlertCircle size={20} className="text-white" />
+              )}
+              <span className="font-medium">{toast.message}</span>
+            </div>
+          </div>
+        )}
 
         {showNotification && status === 'calendar-connected' && (
           <div className="border-l-4 border-green-500 p-4 rounded-lg shadow-sm animate-slide-in-top" style={{ backgroundColor: 'var(--card-bg)' }}>
@@ -128,7 +192,7 @@ const SettingsPage: React.FC = () => {
 
                 <div className="rounded-lg p-4 space-y-3" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}>
                   <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>To connect a different account:</p>
-                  
+
                   <div className="text-sm space-y-4" style={{ color: 'var(--text-secondary)' }}>
                     <ol className="list-decimal list-inside space-y-2 pl-2">
                       <li>
@@ -184,7 +248,6 @@ const SettingsPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Integrations</h1>
           <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
-            {/* GitHub Integration */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Github size={28} style={{ color: 'var(--text-primary)' }} />
@@ -219,6 +282,7 @@ const SettingsPage: React.FC = () => {
               )}
             </div>
             <hr style={{ borderColor: 'var(--border-primary)' }} />
+            {/* Health Data Integration */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <HeartPulse size={28} className="text-red-500" />
@@ -229,6 +293,49 @@ const SettingsPage: React.FC = () => {
               </div>
               <button style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }} className="px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed" disabled>
                 Coming Soon
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Developer Settings - API Key */}
+        <div>
+          <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Developer Settings</h1>
+          <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--accent-primary)' }}>
+                  <Key size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>VS Code Extension Key</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Use this key to track your coding activity in VS Code.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-4">
+              <div className="flex-1 p-3 rounded-lg font-mono text-sm truncate border" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}>
+                {apiKey || "No API Key generated yet"}
+              </div>
+
+              <button
+                onClick={copyToClipboard}
+                disabled={!apiKey}
+                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }}
+                className="p-3 border rounded-lg hover:bg-hover-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Copy Key"
+              >
+                <Copy size={20} />
+              </button>
+
+              <button
+                onClick={handleGenerateKey}
+                style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
+                className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold hover:opacity-90 transition-colors"
+              >
+                <RefreshCw size={16} />
+                {apiKey ? "Regenerate" : "Generate Key"}
               </button>
             </div>
           </div>
@@ -269,6 +376,12 @@ const SettingsPage: React.FC = () => {
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-slide-in-top { animation: slide-in-top 0.3s ease-out; }
+
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
       `}</style>
     </div>
   );
