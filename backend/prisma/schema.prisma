@@ -7,16 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  id         Int     @id @default(autoincrement())
+  name       String
+  email      String  @unique
   profileUrl String?
-  provider String 
-  apiKey String? @unique
-  
+  provider   String
+  apiKey     String? @unique
+
   googleProviderId   String? @unique
   googleAccessToken  String?
   googleRefreshToken String?
@@ -39,17 +37,17 @@ model User {
 
 model EditorActivity {
   id          Int      @id @default(autoincrement())
-  duration    Int
+  duration    Int      @default(0)
   language    String?
   projectName String?
   file        String?
-  keystrokes  Int?
-  recordedAt  DateTime @default(now())
+  keystrokes  Int?     @default(0)
+  date        DateTime 
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
-  @@index([userId, recordedAt])
+  @@unique([userId, projectName, file, date])
 }
 
 model FocusStats {

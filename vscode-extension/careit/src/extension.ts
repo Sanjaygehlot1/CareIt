@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import axios from 'axios';
 
 interface ActivityPayload {
-    userId: string;
     project: string;
     language: string;
     duration: number;
@@ -15,9 +14,9 @@ let batch: ActivityPayload[] = [];
 let batchTimer: NodeJS.Timeout | null = null;
 let statusBarItem: vscode.StatusBarItem;
 
-const BATCH_INTERVAL = 30_000; 
+const BATCH_INTERVAL = 30_000;
 const MAX_BATCH_SIZE = 50;
-const IDLE_THRESHOLD = 60 * 2 * 1000; 
+const IDLE_THRESHOLD = 60 * 2 * 1000;
 let currentFile = '';
 let currentStartTime = Date.now();
 let lastActivityTime = Date.now();
@@ -30,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
     statusBarItem.text = "$(pulse) CareIt";
     statusBarItem.tooltip = "Tracking your coding activity";
     statusBarItem.show();
+    console.log('--> 2. Status Bar Created');
     context.subscriptions.push(statusBarItem);
 
     const config = vscode.workspace.getConfiguration('careit');
@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push({
         dispose: () => {
-            processActivityAndReset(); 
+            processActivityAndReset();
             if (batch.length > 0) sendBatch(serverUrl, apiKey);
             if (batchTimer) clearInterval(batchTimer);
         }
@@ -106,26 +106,25 @@ function processActivityAndReset() {
     const now = Date.now();
     let durationMs = now - currentStartTime;
 
-    
+
     const timeSinceLastActivity = now - lastActivityTime;
     if (timeSinceLastActivity > IDLE_THRESHOLD) {
         durationMs = durationMs - timeSinceLastActivity;
     }
 
     if (durationMs > 1000) {
-        const project = vscode.workspace.workspaceFolders 
-            ? vscode.workspace.workspaceFolders[0].name 
+        const project = vscode.workspace.workspaceFolders
+            ? vscode.workspace.workspaceFolders[0].name
             : 'No Project';
 
-        const languageId = vscode.window.activeTextEditor 
-            ? vscode.window.activeTextEditor.document.languageId 
+        const languageId = vscode.window.activeTextEditor
+            ? vscode.window.activeTextEditor.document.languageId
             : 'plain';
 
         const payload: ActivityPayload = {
-            userId: 'dynamic-key', 
             project,
             language: languageId,
-            duration: Math.round(durationMs / 1000), 
+            duration: Math.round(durationMs / 1000),
             file: currentFile,
             keystrokes: keystrokeCount,
             timestamp: new Date().toISOString()
@@ -143,8 +142,8 @@ function processActivityAndReset() {
 function startBatchTimer(sendFn: () => Promise<void>) {
     if (batchTimer) return;
     batchTimer = setInterval(async () => {
-        processActivityAndReset(); 
-        
+        processActivityAndReset();
+
         if (batch.length > 0) {
             await sendFn();
         }
@@ -154,24 +153,25 @@ function startBatchTimer(sendFn: () => Promise<void>) {
 async function sendBatch(serverUrl: string, apiKey: string) {
     if (batch.length === 0) return;
 
-    const payloadToSend = [...batch];
+    const data = [...batch];
     batch = [];
     statusBarItem.text = "$(sync~spin) CareIt: Sending...";
 
     try {
-        await axios.post(`${serverUrl.replace(/\/$/, '')}/analytics/editor-activity`, payloadToSend, {
-            headers: { 'careit-api-key': apiKey },
-            timeout: 10000,
-        });
+        await axios.post(`${serverUrl.replace(/\/$/, '')}/analytics/editor-activity`, data,
+            {
+                headers: { 'careit-api-key': apiKey },
+                timeout: 10000,
+            });
         statusBarItem.text = "$(check) CareIt";
         setTimeout(() => { statusBarItem.text = "$(pulse) CareIt"; }, 3000);
-        
+
     } catch (err) {
         console.error('Failed to send analytics:', err);
         statusBarItem.text = "$(alert) CareIt: Error";
-        
-        batch.unshift(...payloadToSend);
-        
+
+        batch.unshift(...data);
+
         if (batch.length > 500) {
             batch = batch.slice(0, 500);
         }

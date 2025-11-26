@@ -1,7 +1,7 @@
 {
-  "name": "careit",
-  "displayName": "careIt",
-  "description": "An extension for developers to track their coding activity and stats",
+  "name": "careit-tracker",
+  "displayName": "CareIt Productivity Tracker",
+  "description": "Tracks your coding activity for the CareIt dashboard",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.106.1"
@@ -9,15 +9,32 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "*"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "careit.helloWorld",
-        "title": "Hello World"
+        "command": "careit.sendNow",
+        "title": "CareIt: Force Send Analytics"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "CareIt",
+      "properties": {
+        "careit.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your CareIt Personal API Key (Get it from http://localhost:5173/settings)"
+        },
+        "careit.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "The URL of the CareIt backend server"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -36,5 +53,8 @@
     "typescript": "^5.9.3",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
   }
 }

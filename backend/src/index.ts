@@ -11,8 +11,10 @@ import cors from 'cors'
 import { router as UserRoutes } from './routes/user.routes';
 import { router as CalendarRoutes } from './routes/calendar.routes'
 import { router as ReportRoutes } from './routes/reports.routes'
+import { router as AnalyticsRoutes } from './routes/analytics.routes'
 const app: Express = express();
 
+app.use(express.json())
 app.use(cookieParser());
 app.use(cors({
   credentials: true,
@@ -36,6 +38,7 @@ app.use(passport.session())
 app.use('/api/v1/auth', UserRoutes);
 app.use('/api/v1/calendar', CalendarRoutes);
 app.use('/api/v1/reports', ReportRoutes);
+app.use('/api/v1/analytics', AnalyticsRoutes);
 
 app.get('/',(req,res)=>{
   res.send("hello")
