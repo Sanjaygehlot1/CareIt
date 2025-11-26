@@ -2,20 +2,16 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Calendar from 'react-calendar';
 import { Tooltip } from 'react-tooltip';
 import { getEvents } from '../../controllers/calendar';
-import type { Events, ExtendedEvents } from '../../types/calendar';
+import type {  ExtendedEvents } from '../../types/calendar';
 import EventDetailsModal from '../Modals/EventDetailsModal';
 
 
 
-interface EventCalendarProps {
-  events: Events[];
-}
 
 
 const EventCalendar: React.FC = () => {
 
   const [events, setEvents] = useState<ExtendedEvents[]>([]);
-  const [viewingEvent,] = useState<any | null>(null);
   const [modalDate, setModalDate] = useState<Date | null>(null);
 
   const eventsForModal = useMemo(() => {

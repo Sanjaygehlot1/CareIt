@@ -1,8 +1,9 @@
 import { AxiosInstance } from "../axios/axiosInstance";
 
-export const getEvents = async () => {
+export const getEditorStats = async () => {
     try {
-        const response = await AxiosInstance.get('/calendar/get-events');
+        const response = await AxiosInstance.get('/analytics/get-editor-analytics');
+        console.log(response.data)
         if (response) {
             return response.data.data;
         }

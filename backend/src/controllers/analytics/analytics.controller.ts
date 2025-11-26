@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express"
-import { InternalServerError, UnauthorizedException } from "../../exceptions/errorExceptions";
+import {  UnauthorizedException } from "../../exceptions/errorExceptions";
 import { prisma } from "../../prisma";
 import { ErrorCodes } from "../../exceptions/root";
 import { apiResponse } from "../../utils/apiResponse";
@@ -87,5 +87,81 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
     }
 
 }
+
+export const getEditorStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user as any;
+
+        if (!user) {
+            return next(new UnauthorizedException("Unauthorized : Please Login to continue", ErrorCodes.UNAUTHORIZED_ACCESS));
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 6);
+
+        const endOfToday = new Date(today);
+        endOfToday.setHours(23, 59, 59, 999);
+
+        const rawStats = await prisma.editorActivity.groupBy({
+            by: ['date'],
+            where: {
+                userId: user.id,
+                date: { gte: sevenDaysAgo, lte: endOfToday }
+            },
+            _sum: {
+                keystrokes: true,
+                duration: true
+            },
+            orderBy: { date: 'asc' }
+        });
+
+        const filledStats = [];
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(sevenDaysAgo);
+            d.setDate(d.getDate() + i);
+
+            const dateString = d.toISOString().split('T')[0];
+            console.log(dateString)
+
+            const foundStat = rawStats.find(stat => {
+                console.log(stat.date.toISOString().split('T')[0])
+                return stat.date.toISOString().split('T')[0] === dateString
+            }
+                
+            );
+
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const formattedDate = `${day}/${month}`;
+
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+            filledStats.push({
+                date: formattedDate,        
+                day: dayName,               
+                duration: foundStat?._sum.duration || 0,
+                keystrokes: foundStat?._sum.keystrokes || 0
+            });
+        }
+
+        const message = rawStats.length === 0
+            ? "No stats found! Please connect your VS Code extension."
+            : "Stats retrieved successfully.";
+
+        return res.status(200).json(new apiResponse(
+            filledStats,
+            message,
+            200
+        ));
+
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
 
 
