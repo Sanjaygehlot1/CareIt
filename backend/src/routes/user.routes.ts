@@ -246,7 +246,7 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
 
       if (!user) {
         console.log(`User not found: ${username}`);
-        return res.status(200).json({ message: 'User not in system' });
+        throw new Error("User not in system")
       }
 
       function formatDate(date: Date): string {
@@ -265,9 +265,14 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
         return res.status(200).json({ message: 'Old commits, skipped' });
       }
 
+      console.log(today)
+      console.log(commitDates)
+      console.log(hasTodayCommits)
+
       const existingRecord = await prisma.streakStats.findUnique({
         where: { userId_date: { userId: user.id, date: today } }
       });
+      console.log(existingRecord)
 
       if (existingRecord) {
         await prisma.streakStats.update({
@@ -291,6 +296,8 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
         where: { id: user.id },
         select: { longestStreak: true, currentStreak: true }
       });
+
+      console.log(userStats)
 
       const updatedUser = await prisma.user.update({
         where: { id: user.id },

@@ -19,7 +19,8 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
       calendar : user.calendar,
       id : user.providerId,
       provider : user.provider,
-      githubUsername : user.githubUsername
+      githubUsername : user.githubUsername,
+      githubAppConnected : user.githubAppInstalled
     }
 
     res.status(200).json(new apiResponse(

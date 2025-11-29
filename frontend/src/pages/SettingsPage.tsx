@@ -22,6 +22,7 @@ const SettingsPage: React.FC = () => {
   const message = searchParams.get('message');
   const googleEmail = searchParams.get('google_email');
 
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => {
@@ -355,13 +356,13 @@ const SettingsPage: React.FC = () => {
               </div>
 
               <a
-                href={'https://github.com/settings/apps/careit-tracker/installations'}
+                href={'https://github.com/apps/careit-tracker'}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }}
                 className="flex items-center gap-2 border px-4 py-2 rounded-lg text-sm font-semibold hover:bg-hover-bg transition-colors"
               >
-                Install App
+                {user.githubAppConnected ? "Uninstall App" : "Install App"}
                 <ExternalLink size={14} />
               </a>
             </div>

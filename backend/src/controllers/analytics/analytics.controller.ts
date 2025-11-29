@@ -126,8 +126,7 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
             const d = new Date(sevenDaysAgo);
             d.setDate(d.getDate() + i);
 
-            const dateString = d.toISOString().split('T')[0];
-            console.log(dateString)
+            
 
             const foundStat = rawStats.find(stat => {
                 const statDate = new Date(stat.date);
@@ -135,9 +134,7 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
                     statDate.getMonth() === d.getMonth() &&
                     statDate.getDate() === d.getDate();
             });
-            if (foundStat) {
-                console.log("Stats found: ", foundStat)
-            }
+            
 
             const day = String(d.getDate()).padStart(2, '0');
             const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -152,10 +149,8 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
                 keystrokes: foundStat?._sum.keystrokes || 0
             });
 
-            console.log(filledStats)
         }
 
-        console.log(filledStats)
 
         const message = rawStats.length === 0
             ? "No stats found! Please connect your VS Code extension."
