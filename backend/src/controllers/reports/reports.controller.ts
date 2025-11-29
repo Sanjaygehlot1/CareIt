@@ -5,7 +5,7 @@ import { calendar_v3, google } from 'googleapis';
 import { GOOGLE_CALLBACK_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '../../secrets';
 import { apiResponse } from '../../utils/apiResponse';
 import { Octokit } from '@octokit/rest';
-import { getCommitsfromDB } from '../../helper/commitStats';
+import { getMonthStreakfromDB } from '../../helper/streakCal';
 
 
 type AuthType = {
@@ -241,24 +241,30 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
     }
 };
 
-export const getCommitStreaks = async (req: Request, res: Response, next: NextFunction) => {
+export const getStreakInfo = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user as AuthType
+        const { year, month } = req.body;
         if (!user) {
             next(new UnauthorizedException("Unauthorized : Please Login to continue!", ErrorCodes.UNAUTHORIZED_ACCESS))
         }
 
-        const today = new Date().toISOString().split('T')[0];
 
-        const date = new Date(today);
+        const cachedData = await getMonthStreakfromDB(year, month, user.id);
+        let message = "streak data retrieved successfully!"
 
-        const cachedData = await getCommitsfromDB(date, user.id);
+        if (cachedData?.data.length! == 0) {
+            message = "no streak data in this month!"
+        }
 
-        
+        res.status(200).json(new apiResponse(cachedData, message, 200))
+
+
 
 
     } catch (error) {
-        
+        console.log(error),
+            next(error)
     }
 }
 

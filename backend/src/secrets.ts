@@ -16,4 +16,8 @@ export const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL!
 export const SESSION_SECRET = process.env.SESSION_SECRET!
 export const JWT_SECRET = process.env.JWT_SECRET!
 export const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL!
+export const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET!
+export const GITHUB_APP_CLIENT_SECRET = process.env.GITHUB_APP_CLIENT_SECRET!
+export const GITHUB_APP_ID = process.env.GITHUB_APP_ID!
+export const GITHUB_APP_CLIENT_ID = process.env.GITHUB_APP_CLIENT_ID!
 

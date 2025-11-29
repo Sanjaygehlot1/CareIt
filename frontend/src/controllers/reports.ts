@@ -12,3 +12,11 @@ export const getFocusPoints = async() =>{
         console.error(error)
     }
 }
+export const getStreakInfo = async(data: {year: number, month : number}) =>{
+    try {
+        const response = await AxiosInstance.post('/reports/streak-info',data);
+        console.log(response.data);
+    } catch (error) {
+        console.error(error)
+    }
+}

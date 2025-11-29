@@ -8,12 +8,14 @@ datasource db {
 }
 
 model User {
-  id         Int     @id @default(autoincrement())
-  name       String
-  email      String  @unique
-  profileUrl String?
-  provider   String
-  apiKey     String? @unique
+  id                Int     @id @default(autoincrement())
+  name              String
+  email             String  @unique
+  profileUrl        String?
+  provider          String
+  apiKey            String? @unique
+  currentStreak     Int     @default(0)
+  longestStreak     Int     @default(0)
 
   googleProviderId   String? @unique
   googleAccessToken  String?
@@ -25,6 +27,9 @@ model User {
   githubRefreshToken String?
   githubUsername     String?
   githubConnected    Boolean @default(false)
+  githubWebHookConfig Boolean @default(false)
+  githubAppInstalled Boolean @default(false)
+  githubAppInstallationId Int? 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,36 +1,48 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Flame, ChevronLeft, ChevronRight, Info } from 'lucide-react';
-import { 
-  format, 
-  startOfMonth, 
-  startOfWeek, 
-  isSameMonth, 
-  isSameDay, 
-  addMonths, 
-  subMonths, 
+import {
+  format,
+  startOfMonth,
+  startOfWeek,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths,
   isWithinInterval,
   subDays,
   addDays
 } from 'date-fns';
+import { getStreakInfo } from '../../controllers/reports';
 
 const FocusStreakWidget: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const currentStreak = 1475;
   const previousStreak = 120;
-  
-  const streakEnd = new Date();
-  const streakStart = subDays(streakEnd, 5); 
 
-  
+  const streakEnd = new Date();
+  const streakStart = subDays(streakEnd, 5);
+
+
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
   const monthStart = startOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
-  
+
 
   const calendarDays = Array.from({ length: 42 }, (_, i) => addDays(calendarStart, i));
+
+  useEffect(() => {
+    const fetchStreak = async () => {
+      try {
+        await getStreakInfo({year: 2025,month : 11})
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    fetchStreak()
+  }, [])
 
   const isStreakDate = (date: Date) => {
     return isWithinInterval(date, { start: streakStart, end: streakEnd });
@@ -40,10 +52,10 @@ const FocusStreakWidget: React.FC = () => {
   const isStreakEnd = (date: Date) => isSameDay(date, streakEnd);
 
   return (
-    <div 
+    <div
       className="rounded-3xl p-6 shadow-sm border relative font-sans w-full"
-      style={{ 
-        backgroundColor: 'var(--card-bg)', 
+      style={{
+        backgroundColor: 'var(--card-bg)',
         borderColor: 'var(--card-border)',
         maxWidth: '800px',
         margin: '0 auto'
@@ -52,7 +64,7 @@ const FocusStreakWidget: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Daily Streak</h2>
-          
+
           <div className="group relative flex items-center">
             <Info size={18} className="text-gray-400 cursor-help hover:text-orange-500 transition-colors" />
             <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max p-3 bg-gray-800 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
@@ -66,14 +78,14 @@ const FocusStreakWidget: React.FC = () => {
           </div>
         </div>
 
-       
+
       </div>
 
       <div className="flex flex-col md:flex-row gap-6 items-stretch">
-        
-        <div 
+
+        <div
           className="flex-1 rounded-2xl flex flex-col items-center justify-center py-8 px-6 relative overflow-hidden min-h-[250px]"
-          style={{ backgroundColor: 'var(--bg-tertiary)' }} 
+          style={{ backgroundColor: 'var(--bg-tertiary)' }}
         >
           <div className="flex items-center gap-3 mb-2 relative z-10">
             <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center shadow-sm">
@@ -83,7 +95,7 @@ const FocusStreakWidget: React.FC = () => {
               {currentStreak}
             </span>
           </div>
-          
+
           <p className="font-medium mb-8 text-center" style={{ color: 'var(--text-secondary)' }}>
             Days of studying
           </p>
@@ -124,28 +136,28 @@ const FocusStreakWidget: React.FC = () => {
 
               return (
                 <div key={idx} className="relative h-8 sm:h-9 flex items-center justify-center">
-                  
+
                   {inStreak && inMonth && (
-                    <div 
+                    <div
                       className={`absolute top-1 bottom-1 bg-red-100 z-0
                         ${isStart ? 'left-1 rounded-l-full' : 'left-0'}
                         ${isEnd ? 'right-1 rounded-r-full' : 'right-0'}
                       `}
-                      style={{ 
-                        left: isStart ? '15%' : '0', 
+                      style={{
+                        left: isStart ? '15%' : '0',
                         right: isEnd ? '15%' : '0',
-                        backgroundColor: 'rgba(254, 202, 202, 0.5)' 
+                        backgroundColor: 'rgba(254, 202, 202, 0.5)'
                       }}
                     />
                   )}
 
-                  <span 
+                  <span
                     className={`relative z-10 text-sm font-medium w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-all
                       ${!inMonth ? 'text-gray-300 opacity-50' : ''}
                       ${inStreak && inMonth ? 'text-blue-600 font-bold' : ''}
                       ${!inStreak && inMonth ? 'text-gray-600' : ''}
                     `}
-                    style={{ 
+                    style={{
                       color: !inMonth ? 'var(--text-tertiary)' : inStreak ? '#DC2626' : 'var(--text-primary)'
                     }}
                   >
