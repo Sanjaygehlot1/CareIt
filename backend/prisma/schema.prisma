@@ -27,7 +27,6 @@ model User {
   githubRefreshToken String?
   githubUsername     String?
   githubConnected    Boolean @default(false)
-  githubWebHookConfig Boolean @default(false)
   githubAppInstalled Boolean @default(false)
   githubAppInstallationId Int? 
 
