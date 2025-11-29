@@ -400,7 +400,7 @@ export default function HomePage() {
               className="text-sm"
               style={{ color: 'var(--text-secondary)' }}
             >
-              © 2025 ProductivFlow. All rights reserved.
+              © 2025 CareIt. All rights reserved.
             </p>
           </div>
         </div>

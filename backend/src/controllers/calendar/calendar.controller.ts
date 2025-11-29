@@ -45,7 +45,6 @@ export const getCalendarEvents = async (req: Request, res: Response, next: NextF
             fields : 'nextPageToken,items(id,summary,description,location,start,end,creator,organizer,attendees,status,hangoutLink,conferenceData,colorId,recurrence,transparency,attachments,source,extendedProperties)'
         });
 
-        console.log("Response::", response)
 
         allEvents = allEvents.concat(response.data.items);
         pageToken = response.data.nextPageToken!;

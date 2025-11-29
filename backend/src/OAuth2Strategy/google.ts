@@ -112,7 +112,6 @@ passport.use(new CustomGoogleStrategy({
 ));
 
 passport.serializeUser((user: any, done) => {
-    console.log("Serializing user:", user);
     try {
         done(null, user.id)
     } catch (error) {
@@ -129,10 +128,8 @@ passport.deserializeUser(async (id: any, done) => {
             console.log("User not found in database");
             return done(null, false);
         }
-        console.log("User deserialized:", user);
         done(null, user);
     } catch (error) {
-        console.error("Deserialize error:", error);
         done(error, null);
     }
 })

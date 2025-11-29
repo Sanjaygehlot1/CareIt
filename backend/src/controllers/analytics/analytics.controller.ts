@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express"
-import {  UnauthorizedException } from "../../exceptions/errorExceptions";
+import { UnauthorizedException } from "../../exceptions/errorExceptions";
 import { prisma } from "../../prisma";
 import { ErrorCodes } from "../../exceptions/root";
 import { apiResponse } from "../../utils/apiResponse";
@@ -97,10 +97,10 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
         }
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0); 
+        today.setHours(0, 0, 0, 0);
 
         const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 6);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
@@ -118,6 +118,8 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
             orderBy: { date: 'asc' }
         });
 
+        console.log(rawStats)
+
         const filledStats = [];
 
         for (let i = 0; i < 7; i++) {
@@ -128,11 +130,14 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
             console.log(dateString)
 
             const foundStat = rawStats.find(stat => {
-                console.log(stat.date.toISOString().split('T')[0])
-                return stat.date.toISOString().split('T')[0] === dateString
+                const statDate = new Date(stat.date);
+                return statDate.getFullYear() === d.getFullYear() &&
+                    statDate.getMonth() === d.getMonth() &&
+                    statDate.getDate() === d.getDate();
+            });
+            if (foundStat) {
+                console.log("Stats found: ", foundStat)
             }
-                
-            );
 
             const day = String(d.getDate()).padStart(2, '0');
             const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -141,12 +146,16 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
             const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
 
             filledStats.push({
-                date: formattedDate,        
-                day: dayName,               
+                date: formattedDate,
+                day: dayName,
                 duration: foundStat?._sum.duration || 0,
                 keystrokes: foundStat?._sum.keystrokes || 0
             });
+
+            console.log(filledStats)
         }
+
+        console.log(filledStats)
 
         const message = rawStats.length === 0
             ? "No stats found! Please connect your VS Code extension."

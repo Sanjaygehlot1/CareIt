@@ -3,7 +3,7 @@ import '../index.css'
 
 import DailyFocusBar from '../components/dashboard/DailyFocusBar';
 import WellnessCheckin from '../components/dashboard/WellnessCheckin';
-import WeeklyActivityChart from '../components/dashboard/WeeklyActivityChart';
+import ActivityTrendChart from '../components/dashboard/WeeklyActivityChart';
 import WeeklyGoals from '../components/dashboard/WeeklyGoals';
 import TodaysAgenda from '../components/dashboard/TodaysAgenda';
 import EventCalendar from '../components/dashboard/EventCalendar';
@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <WeeklyActivityChart />
+              <ActivityTrendChart />
               <WeeklyGoals />
             </div>
 

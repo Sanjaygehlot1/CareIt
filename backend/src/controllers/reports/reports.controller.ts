@@ -5,13 +5,15 @@ import { calendar_v3, google } from 'googleapis';
 import { GOOGLE_CALLBACK_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '../../secrets';
 import { apiResponse } from '../../utils/apiResponse';
 import { Octokit } from '@octokit/rest';
+import { getCommitsfromDB } from '../../helper/commitStats';
 
 
 type AuthType = {
-    id: string;
+    id: number;
     googleRefreshToken?: string | null;
     githubAccessToken?: string | null;
     githubUsername?: string | null;
+    googleProviderId?: string
 };
 
 interface FreeBlock {
@@ -48,7 +50,7 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
         const timeMin = new Date(day);
         timeMin.setHours(0, 0, 0, 0);
         const timeMax = new Date(timeMin);
-        timeMax.setDate(timeMin.getDate() + 1); 
+        timeMax.setDate(timeMin.getDate() + 1);
         // Define Workday Boundaries (e.g., 9 AM to 5 PM - adjust as needed)
         const workDayStart = new Date(day);
         workDayStart.setHours(9, 0, 0, 0);
@@ -134,7 +136,7 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
             try {
                 const { data: repos } = await octokit.repos.listForAuthenticatedUser({
                     sort: 'pushed',
-                    per_page: 100, 
+                    per_page: 100,
                 });
 
                 for (const repo of repos) {
@@ -238,3 +240,25 @@ export const calculateFocusPoints = async (req: Request, res: Response, next: Ne
         next(error);
     }
 };
+
+export const getCommitStreaks = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user as AuthType
+        if (!user) {
+            next(new UnauthorizedException("Unauthorized : Please Login to continue!", ErrorCodes.UNAUTHORIZED_ACCESS))
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const date = new Date(today);
+
+        const cachedData = await getCommitsfromDB(date, user.id);
+
+        
+
+
+    } catch (error) {
+        
+    }
+}
+

@@ -42,27 +42,13 @@ const ActivityTrendChart: React.FC<ActivityTrendChartProps> = ({ data }) => {
     fetchStats()
   }, [])
 
-  const dateToDay = (e: string) => {
-    const date = new Date(e);
 
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-    return dayName;
-  }
 
-  const chartData = data || [
-    { date: 'Mon', duration: 3600, keystrokes: 1200 },
-    { date: 'Tue', duration: 7200, keystrokes: 4500 },
-    { date: 'Wed', duration: 5400, keystrokes: 3000 },
-    { date: 'Thu', duration: 9000, keystrokes: 6000 },
-    { date: 'Fri', duration: 1800, keystrokes: 800 },
-    { date: 'Sat', duration: 4500, keystrokes: 2000 },
-    { date: 'Sun', duration: 0, keystrokes: 0 },
-  ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-800 text-white text-xs p-3 rounded-lg shadow-xl border border-gray-700">
+        <div className="bg-black text-white text-xs p-3 rounded-lg shadow-xl border border-gray-700">
           <p className="font-bold text-base mb-2 border-b border-gray-600 pb-1">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="mb-1" style={{ color: entry.color }}>
@@ -141,7 +127,7 @@ const ActivityTrendChart: React.FC<ActivityTrendChartProps> = ({ data }) => {
             <Area
               yAxisId="left"
               type="monotone"
-              dataKey="_sum.duration"
+              dataKey="duration"
               name="Time"
               stroke="var(--accent-primary)"
               fillOpacity={1}
@@ -155,7 +141,7 @@ const ActivityTrendChart: React.FC<ActivityTrendChartProps> = ({ data }) => {
             <Area
               yAxisId="right"
               type="monotone"
-              dataKey="_sum.keystrokes"
+              dataKey="keystrokes"
               name="Keystrokes"
               stroke="#3b82f6"
               fillOpacity={1}

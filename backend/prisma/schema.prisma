@@ -31,6 +31,7 @@ model User {
 
   editorActivities EditorActivity[]
   focusStats       FocusStats[]
+  streakStats      StreakStats[]
 
   @@map("users")
 }
@@ -42,7 +43,7 @@ model EditorActivity {
   projectName String?
   file        String?
   keystrokes  Int?     @default(0)
-  date        DateTime 
+  date        DateTime
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
@@ -55,6 +56,19 @@ model FocusStats {
   userId    Int
   duration  Int      @default(0)
   date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+}
+
+model StreakStats {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      DateTime @db.Date
+  hasStreak Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
