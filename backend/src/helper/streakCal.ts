@@ -37,15 +37,18 @@ export const getMonthStreakfromDB = async (year: number, month: number, userId: 
 
         const userData = await prisma.user.findFirst({
             where: { id: userId },
-            select: { currentStreak: true },
+            select: { currentStreak: true, longestStreak: true },
         })
 
         const currentStreak = userData?.currentStreak;
+        const longestStreak = userData?.longestStreak;
 
+        console.log(longestStreak)
 
         if (dbCache) {
             return {
                 current_streak: currentStreak,
+                longest_streak: longestStreak,
                 data: dbCache
             }
         }
@@ -58,31 +61,31 @@ export const getMonthStreakfromDB = async (year: number, month: number, userId: 
 
 }
 
-export const getCommitsfromGithubOnaDate = async (username: string, date: string, accessToken: string) => {
-    try {
-        const octakit = new Octokit({ auth: accessToken })
-        const commit = await octakit.rest.search.commits({
-            q: `author : ${username} committer-date: ${date}`,
-            per_page: 1
-        })
+// export const getCommitsfromGithubOnaDate = async (username: string, date: string, accessToken: string) => {
+//     try {
+//         const octakit = new Octokit({ auth: accessToken })
+//         const commit = await octakit.rest.search.commits({
+//             q: `author : ${username} committer-date: ${date}`,
+//             per_page: 1
+//         })
 
-        const hasCommit = commit.data.total_count > 0
+//         const hasCommit = commit.data.total_count > 0
 
-        if (hasCommit) {
-            return {
-                hasCommit,
-                totalCommits: commit.data.total_count,
-                firstCommit: hasCommit ? commit.data.items[0] : null
-            };
-        }
-        return {
-            hasCommit
-        }
-    } catch (error) {
-        console.log(error)
-        throw error;
-    }
-}
+//         if (hasCommit) {
+//             return {
+//                 hasCommit,
+//                 totalCommits: commit.data.total_count,
+//                 firstCommit: hasCommit ? commit.data.items[0] : null
+//             };
+//         }
+//         return {
+//             hasCommit
+//         }
+//     } catch (error) {
+//         console.log(error)
+//         throw error;
+//     }
+// }
 
 
 

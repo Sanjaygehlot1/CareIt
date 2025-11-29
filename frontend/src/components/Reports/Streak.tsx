@@ -1,59 +1,114 @@
-import React, { useEffect, useState } from 'react';
-import { Flame, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Flame, ChevronLeft, ChevronRight, Info, Loader2 } from 'lucide-react';
 import {
   format,
   startOfMonth,
   startOfWeek,
   isSameMonth,
-  isSameDay,
   addMonths,
   subMonths,
-  isWithinInterval,
+  addDays,
   subDays,
-  addDays
 } from 'date-fns';
 import { getStreakInfo } from '../../controllers/reports';
 
+interface StreakDay {
+  hasStreak: boolean;
+  date: string;
+}
+
+interface StreakResponse {
+  current_streak: number;
+  longest_streak: number;
+  data: StreakDay[];
+}
+
 const FocusStreakWidget: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-
-  const currentStreak = 1475;
-  const previousStreak = 120;
-
-  const streakEnd = new Date();
-  const streakStart = subDays(streakEnd, 5);
-
+  
+  const [streakData, setStreakData] = useState<StreakDay[]>([]);
+  const [streakStats, setStreakStats] = useState({ longest: 0, current: 0 });
+  
+  const [loading, setLoading] = useState(false);
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
   const monthStart = startOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
-
-
   const calendarDays = Array.from({ length: 42 }, (_, i) => addDays(calendarStart, i));
 
   useEffect(() => {
     const fetchStreak = async () => {
-      try {
-        await getStreakInfo({year: 2025,month : 11})
-      } catch (error) {
-        console.log(error)
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      
+      
+      const cacheKey = `streak_${year}_${month}`;
+      const cachedString = localStorage.getItem(cacheKey);
+      
+      let shouldFetch = true;
+
+      if (cachedString) {
+        const cached: StreakResponse = JSON.parse(cachedString);
+        setStreakData(cached.data || []);
+        setStreakStats({ 
+          current: cached.current_streak || 0, 
+          longest: cached.longest_streak || 0 
+        });
+
+    
+
       }
-    }
-    fetchStreak()
-  }, [])
 
-  const isStreakDate = (date: Date) => {
-    return isWithinInterval(date, { start: streakStart, end: streakEnd });
-  };
+      if (!shouldFetch) return;
 
-  const isStreakStart = (date: Date) => isSameDay(date, streakStart);
-  const isStreakEnd = (date: Date) => isSameDay(date, streakEnd);
+      setLoading(true);
+
+      try {
+        const response: any = await getStreakInfo({ year, month });
+        const serverData = response?.data; 
+
+        if (!serverData) return;
+
+        
+        if (JSON.stringify(serverData) !== cachedString) {
+       
+          
+          setStreakData(serverData.data || []);
+          setStreakStats({ 
+            current: serverData.current_streak || 0, 
+            longest: serverData.longest_streak || 0 
+          });
+          
+          localStorage.setItem(cacheKey, JSON.stringify(serverData));
+        }
+      } catch (error) {
+        console.error("Failed to fetch streaks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStreak();
+  }, [currentDate]);
+
+  const streakSet = useMemo(() => {
+    const set = new Set<string>();
+    streakData.forEach(d => {
+      if (d.hasStreak) {
+        const dateStr = d.date.split('T')[0];
+        set.add(dateStr);
+      }
+    });
+    return set;
+  }, [streakData]);
+
+  const hasStreak = (date: Date) => streakSet.has(format(date, 'yyyy-MM-dd'));
 
   return (
     <div
-      className="rounded-3xl p-6 shadow-sm border relative font-sans w-full"
+      className="rounded-3xl p-6 shadow-sm border relative font-sans w-full transition-all duration-300"
       style={{
         backgroundColor: 'var(--card-bg)',
         borderColor: 'var(--card-border)',
@@ -64,101 +119,108 @@ const FocusStreakWidget: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Daily Streak</h2>
-
+          
           <div className="group relative flex items-center">
             <Info size={18} className="text-gray-400 cursor-help hover:text-orange-500 transition-colors" />
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max p-3 bg-gray-800 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-              <p className="font-semibold mb-1 text-orange-300">Streak Criteria (Daily):</p>
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max p-3 bg-gray-900 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none transform translate-y-2 group-hover:translate-y-0">
+              <p className="font-semibold mb-1 text-orange-300">Streak Rules:</p>
               <ul className="list-disc pl-3 space-y-1 text-gray-300">
                 <li>Coding Duration &gt; 30 mins</li>
                 <li><span className="text-gray-500 text-[10px] uppercase font-bold mr-1">OR</span> Commits &gt; 0</li>
               </ul>
-              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-[6px] border-t-gray-800"></div>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-[6px] border-t-gray-900"></div>
             </div>
           </div>
         </div>
-
-
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 items-stretch">
+      <div className="flex flex-col md:flex-row gap-8 items-stretch">
 
         <div
           className="flex-1 rounded-2xl flex flex-col items-center justify-center py-8 px-6 relative overflow-hidden min-h-[250px]"
           style={{ backgroundColor: 'var(--bg-tertiary)' }}
         >
           <div className="flex items-center gap-3 mb-2 relative z-10">
-            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center shadow-sm">
-              <Flame size={28} className="text-orange-500 fill-orange-500" />
+            <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center shadow-sm">
+              <Flame size={32} className="text-orange-500 fill-orange-500 animate-pulse" />
             </div>
-            <span className="text-5xl sm:text-6xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              {currentStreak}
+            <span className="text-6xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              {streakStats.current}
             </span>
           </div>
 
           <p className="font-medium mb-8 text-center" style={{ color: 'var(--text-secondary)' }}>
-            Days of studying
+            Current Streak
           </p>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 rounded-lg border border-gray-200/50 backdrop-blur-sm mt-auto">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Previous Best</span>
-            <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{previousStreak} Days</span>
+          <div className="flex items-center gap-3 px-4 py-2 bg-white/50 rounded-xl border border-gray-200/50 backdrop-blur-sm mt-auto shadow-sm">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Best</span>
+            <div className="w-px h-3 bg-gray-300"></div>
+            <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{streakStats.longest} Days</span>
           </div>
         </div>
 
         <div className="flex-1 pt-2">
-          <div className="flex justify-between items-center mb-4 px-2">
-            <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+          <div className="flex justify-between items-center mb-6 px-1">
+            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 transition-colors">
               <ChevronLeft size={20} />
             </button>
-            <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {format(currentDate, 'MMMM yyyy')}
-            </span>
-            <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+            
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                {format(currentDate, 'MMMM yyyy')}
+              </span>
+              {loading && <Loader2 size={14} className="animate-spin text-orange-500" />}
+            </div>
+
+            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 transition-colors">
               <ChevronRight size={20} />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 mb-2 text-center">
+          <div className="grid grid-cols-7 mb-3 text-center">
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-              <div key={day} className="text-xs font-medium text-gray-400 h-8 flex items-center justify-center">
+              <div key={day} className="text-xs font-bold text-gray-400 h-8 flex items-center justify-center">
                 {day}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-y-1 sm:gap-y-2">
+          <div className="grid grid-cols-7 gap-y-2">
             {calendarDays.map((day, idx) => {
               const inMonth = isSameMonth(day, currentDate);
-              const inStreak = isStreakDate(day);
-              const isStart = isStreakStart(day);
-              const isEnd = isStreakEnd(day);
+              const isStreakDay = hasStreak(day);
+
+              const isPrevStreak = hasStreak(subDays(day, 1));
+              const isNextStreak = hasStreak(addDays(day, 1));
+
+              const isStart = isStreakDay && !isPrevStreak;
+              const isEnd = isStreakDay && !isNextStreak;
+              const isSingle = isStreakDay && !isPrevStreak && !isNextStreak;
 
               return (
-                <div key={idx} className="relative h-8 sm:h-9 flex items-center justify-center">
+                <div key={idx} className="relative h-9 flex items-center justify-center">
 
-                  {inStreak && inMonth && (
+                  {isStreakDay && inMonth && !isSingle && (
                     <div
-                      className={`absolute top-1 bottom-1 bg-red-100 z-0
-                        ${isStart ? 'left-1 rounded-l-full' : 'left-0'}
-                        ${isEnd ? 'right-1 rounded-r-full' : 'right-0'}
-                      `}
+                      className="absolute top-1/2 -translate-y-1/2 h-7 bg-red-100 z-0"
                       style={{
-                        left: isStart ? '15%' : '0',
-                        right: isEnd ? '15%' : '0',
-                        backgroundColor: 'rgba(254, 202, 202, 0.5)'
+                        backgroundColor: 'rgba(239, 68, 68, 0.15)', 
+                        left: isStart ? '50%' : '0',
+                        right: isEnd ? '50%' : '0',
+                        borderRadius: isStart ? '8px 0 0 8px' : isEnd ? '0 8px 8px 0' : '0'
                       }}
                     />
                   )}
 
                   <span
-                    className={`relative z-10 text-sm font-medium w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-all
-                      ${!inMonth ? 'text-gray-300 opacity-50' : ''}
-                      ${inStreak && inMonth ? 'text-blue-600 font-bold' : ''}
-                      ${!inStreak && inMonth ? 'text-gray-600' : ''}
+                    className={`relative z-10 text-sm font-medium w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300
+                      ${!inMonth ? 'text-gray-300 opacity-30' : ''}
+                      ${isStreakDay && inMonth ? 'scale-110 shadow-sm' : 'hover:bg-gray-50'} 
                     `}
                     style={{
-                      color: !inMonth ? 'var(--text-tertiary)' : inStreak ? '#DC2626' : 'var(--text-primary)'
+                      color: !inMonth ? 'var(--text-tertiary)' : isStreakDay ? '#FFFFFF' : 'var(--text-primary)',
+                      backgroundColor: isStreakDay && inMonth ? '#EF4444' : 'transparent'
                     }}
                   >
                     {format(day, 'd')}

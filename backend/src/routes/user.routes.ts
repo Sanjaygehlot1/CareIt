@@ -258,61 +258,62 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
 
       const today = formatDate(new Date());
 
+
       const commitDates = commits.map((c: any) => new Date(c.timestamp));
       const hasTodayCommits = commitDates.some((d: Date) => formatDate(d) === today);
-
+      console.log(today)
+      console.log(commitDates)
+      console.log(hasTodayCommits)
       if (!hasTodayCommits) {
         return res.status(200).json({ message: 'Old commits, skipped' });
       }
 
-      console.log(today)
-      console.log(commitDates)
-      console.log(hasTodayCommits)
+
+      function formatDateDB(date: string): string {
+        const [day, month, year] = date.split('-');
+        return `${year}-${month}-${day}`;
+      }
 
       const existingRecord = await prisma.streakStats.findUnique({
-        where: { userId_date: { userId: user.id, date: today } }
+        where: { userId_date: { userId: user.id, date: new Date(formatDateDB(today)) }, hasStreak: true }
       });
       console.log(existingRecord)
 
-      if (existingRecord) {
-        await prisma.streakStats.update({
-          where: { userId_date: { userId: user.id, date: today } },
-          data: {
-            hasStreak: true,
-            updatedAt: new Date()
-          }
-        });
-      } else {
+      if (!existingRecord) {
         await prisma.streakStats.create({
           data: {
             userId: user.id,
-            date: today,
+            date: new Date(formatDateDB(today)),
             hasStreak: true,
           }
         });
+
+        const userStats = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { longestStreak: true, currentStreak: true }
+        });
+
+        console.log(userStats)
+
+        const updatedUser = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            currentStreak: userStats?.currentStreak! + 1,
+            longestStreak: Math.max(userStats?.longestStreak || 0, userStats?.currentStreak! + 1)
+          }
+        });
+
+        return res.status(200).json(new apiResponse({
+          currentStreak: updatedUser.currentStreak!
+        },
+          "Yayy!! Streak maintained : A commit was made just now",
+          200));
       }
 
-      const userStats = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { longestStreak: true, currentStreak: true }
-      });
-
-      console.log(userStats)
-
-      const updatedUser = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          currentStreak: userStats?.currentStreak! + 1,
-          longestStreak: Math.max(userStats?.longestStreak || 0, userStats?.currentStreak!)
-        }
-      });
-
-
-      return res.status(200).json(new apiResponse({
-        currentStreak: updatedUser.currentStreak!
-      },
-        "Yayy!! Streak mainitained : A commit was made just now",
+      return res.status(200).json(new apiResponse({},
+        "Streak already marked as done!",
         200));
+
     }
 
     if (event === 'installation' && req.body.action === 'deleted') {

@@ -260,8 +260,6 @@ export const getStreakInfo = async (req: Request, res: Response, next: NextFunct
         res.status(200).json(new apiResponse(cachedData, message, 200))
 
 
-
-
     } catch (error) {
         console.log(error),
             next(error)
