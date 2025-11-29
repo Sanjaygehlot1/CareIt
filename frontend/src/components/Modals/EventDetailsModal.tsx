@@ -22,7 +22,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
         className="relative rounded-lg shadow-xl max-w-2xl w-full m-4 max-h-[90vh] flex flex-col"
         style={{ backgroundColor: 'var(--modal-bg)' }}
       >
-        {/* Header */}
         <div className="p-6 flex-shrink-0">
           <button
             onClick={onClose}
@@ -42,7 +41,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
           <hr style={{ borderColor: 'var(--border-primary)' }} />
         </div>
 
-        {/* Events List */}
         <div className="px-6 pb-6 overflow-y-auto flex-1">
           <div className="space-y-6">
             {events.length > 0 ? (
@@ -55,7 +53,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
                     backgroundColor: 'var(--card-bg)',
                   }}
                 >
-                  {/* Time and Title */}
                   <div className="flex items-start gap-4 mb-3">
                     <div className="text-center flex-shrink-0 w-20">
                       <Clock
@@ -82,7 +79,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
                         {event.summary}
                       </h3>
 
-                      {/* Description */}
                       {event.description && (
                         <div className="flex items-start gap-2 mb-2">
                           <FileText
@@ -114,7 +110,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
                         </div>
                       )}
 
-                      {/* Source (Email link) */}
                       {event.source?.url && (
                         <div className="flex items-start gap-2 mb-2">
                           <Link2
@@ -134,7 +129,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
                         </div>
                       )}
 
-                      {/* Creator */}
                       {event.creator?.email && (
                         <div className="flex items-start gap-2 mb-2">
                           <User
@@ -149,7 +143,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
                         </div>
                       )}
 
-                      {/* Attendees */}
                       {event.attendees && event.attendees.length > 0 && (
                         <div className="flex items-start gap-2 mb-2">
                           <User
@@ -168,7 +161,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
                         </div>
                       )}
 
-                      {/* Conference Data */}
                       {event.conferenceData && (
                         <div className="flex items-start gap-2 mb-2">
                           {event.conferenceData.conferenceSolution?.iconUri && (
@@ -197,7 +189,6 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
                         </div>
                       )}
 
-                      {/* Attachments */}
                       {event.attachments && event.attachments.length > 0 && (
                         <div className="flex items-start gap-2 mb-2">
                           <Paperclip

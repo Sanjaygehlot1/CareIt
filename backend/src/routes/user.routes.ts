@@ -200,130 +200,134 @@ router.get('/github/callback', (req, res, next) => {
   })(req, res, next);
 });
 
-router.get('/github/webhooks/github-app', authMiddleWare, async (req, res, next) => {
+router.post('/github/webhooks/github-app', async (req, res, next) => {
 
-  const event = req.headers['x-github-event'] as string;
+  try {
+    const event = req.headers['x-github-event'] as string;
 
-  if (event == 'installation' && req.body.action == "created") {
-    const { installation, sender, repositories } = req.body;
+    if (event == 'installation' && req.body.action == "created") {
+      const { installation, sender, repositories } = req.body;
 
-    console.log(`🎉 Installation Event Received!`);
-    console.log(`User: ${sender.login}`);
-    console.log(`Installation ID: ${installation.id}`);
-    console.log(`Repos: ${repositories?.length || 'All'}`);
+      console.log(`🎉 Installation Event Received!`);
+      console.log(`User: ${sender.login}`);
+      console.log(`Installation ID: ${installation.id}`);
+      console.log(`Repos: ${repositories?.length || 'All'}`);
 
-    await prisma.user.updateMany({
-      where: { githubUsername: sender.login },
-      data: {
-        githubAppInstallationId: installation.id,
-        githubAppInstalled: true
-
-      }
-    })
-
-    console.log(`User ${sender.login} - App installed successfully!`);
-
-    return res.status(200).json(new apiResponse({},
-      "CareIt github App installation successful",
-      200));
-
-  }
-
-  if (event === 'push') {
-    const { pusher, commits, repository, sender } = req.body;
-
-    const commitCount = commits.length;
-    const username = sender.login;
-
-    console.log(`📩 ${username} pushed ${commitCount} commits to ${repository.name}`);
-
-    const user = await prisma.user.findFirst({
-      where: {
-        githubUsername: username,
-      }
-    });
-
-    if (!user) {
-      console.log(`User not found: ${username}`);
-      return res.status(200).json({ message: 'User not in system' });
-    }
-
-    function formatDate(date: Date): string {
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}-${month}-${year}`;
-    }
-
-    const today = formatDate(new Date());
-
-    const commitDates = commits.map((c: any) => new Date(c.timestamp));
-    const hasTodayCommits = commitDates.some((d: Date) => formatDate(d) === today);
-
-    if (!hasTodayCommits) {
-      return res.status(200).json({ message: 'Old commits, skipped' });
-    }
-
-    const existingRecord = await prisma.streakStats.findUnique({
-      where: { userId_date: { userId: user.id, date: today } }
-    });
-
-    if (existingRecord) {
-      await prisma.streakStats.update({
-        where: { userId_date: { userId: user.id, date: today } },
+      await prisma.user.updateMany({
+        where: { githubUsername: sender.login },
         data: {
-          hasStreak: true,
-          updatedAt: new Date()
+          githubAppInstallationId: installation.id,
+          githubAppInstalled: true
+
+        }
+      })
+
+      console.log(`User ${sender.login} - App installed successfully!`);
+
+      return res.status(200).json(new apiResponse({},
+        "CareIt github App installation successful",
+        200));
+
+    }
+
+    if (event === 'push') {
+      const { pusher, commits, repository, sender } = req.body;
+
+      const commitCount = commits.length;
+      const username = sender.login;
+
+      console.log(`📩 ${username} pushed ${commitCount} commits to ${repository.name}`);
+
+      const user = await prisma.user.findFirst({
+        where: {
+          githubUsername: username,
         }
       });
-    } else {
-      await prisma.streakStats.create({
+
+      if (!user) {
+        console.log(`User not found: ${username}`);
+        return res.status(200).json({ message: 'User not in system' });
+      }
+
+      function formatDate(date: Date): string {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      }
+
+      const today = formatDate(new Date());
+
+      const commitDates = commits.map((c: any) => new Date(c.timestamp));
+      const hasTodayCommits = commitDates.some((d: Date) => formatDate(d) === today);
+
+      if (!hasTodayCommits) {
+        return res.status(200).json({ message: 'Old commits, skipped' });
+      }
+
+      const existingRecord = await prisma.streakStats.findUnique({
+        where: { userId_date: { userId: user.id, date: today } }
+      });
+
+      if (existingRecord) {
+        await prisma.streakStats.update({
+          where: { userId_date: { userId: user.id, date: today } },
+          data: {
+            hasStreak: true,
+            updatedAt: new Date()
+          }
+        });
+      } else {
+        await prisma.streakStats.create({
+          data: {
+            userId: user.id,
+            date: today,
+            hasStreak: true,
+          }
+        });
+      }
+
+      const userStats = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { longestStreak: true, currentStreak: true }
+      });
+
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
         data: {
-          userId: user.id,
-          date: today,
-          hasStreak: true,
+          currentStreak: userStats?.currentStreak! + 1,
+          longestStreak: Math.max(userStats?.longestStreak || 0, userStats?.currentStreak!)
         }
       });
+
+
+      return res.status(200).json(new apiResponse({
+        currentStreak: updatedUser.currentStreak!
+      },
+        "Yayy!! Streak mainitained : A commit was made just now",
+        200));
     }
 
-    const userStats = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { longestStreak: true, currentStreak: true }
-    });
+    if (event === 'installation' && req.body.action === 'deleted') {
+      const { installation } = req.body;
 
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        currentStreak: userStats?.currentStreak! + 1,
-        longestStreak: Math.max(userStats?.longestStreak || 0, userStats?.currentStreak!)
-      }
-    });
+      await prisma.user.updateMany({
+        where: { githubAppInstallationId: installation.id },
+        data: {
+          githubAppInstalled: false,
+          githubAppInstallationId: null
+        }
+      });
 
+      console.log(`App uninstalled`);
+      res.status(200).json(new apiResponse({},
+        "CareIt Github App uninstalled!",
+        200));
+    }
 
-    return res.status(200).json(new apiResponse({
-      currentStreak: updatedUser.currentStreak!
-    },
-      "Yayy!! Streak mainitained : A commit was made just now",
-      200));
+  } catch (error) {
+    next(error)
   }
-
-  if (event === 'installation' && req.body.action === 'deleted') {
-    const { installation } = req.body;
-
-    await prisma.user.updateMany({
-      where: { githubAppInstallationId: installation.id },
-      data: {
-        githubAppInstalled: false,
-        githubAppInstallationId: null
-      }
-    });
-
-    console.log(`App uninstalled`);
-    res.status(200).json(new apiResponse({},
-      "CareIt Github App uninstalled!",
-      200));
-  }
-
 
 })
 

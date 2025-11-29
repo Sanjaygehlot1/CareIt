@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, Trash2, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw } from 'lucide-react';
+import { Mail, Trash2, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw, ExternalLink } from 'lucide-react';
 import { getAuth } from '../context/authContext';
 import { useSearchParams } from 'react-router-dom';
 import { BACKEND_BASE_URL } from '../utils/secrets';
-import Modal from '../components/Modals/EventDetailsModal' 
+import Modal from '../components/settings/Modal';
 import { generateApiKey, getApiKey } from '../controllers/apiKey';
 
 const SettingsPage: React.FC = () => {
@@ -298,10 +298,10 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Developer Settings - API Key */}
         <div>
           <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Developer Settings</h1>
           <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--accent-primary)' }}>
@@ -338,6 +338,34 @@ const SettingsPage: React.FC = () => {
                 {apiKey ? "Regenerate" : "Generate Key"}
               </button>
             </div>
+
+            <hr className="my-6 border-t" style={{ borderColor: 'var(--border-primary)' }} />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>
+                  <Github size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Install GitHub App</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Install the app on your repositories to enable webhook tracking.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={'https://github.com/settings/apps/careit-tracker/installations'}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }}
+                className="flex items-center gap-2 border px-4 py-2 rounded-lg text-sm font-semibold hover:bg-hover-bg transition-colors"
+              >
+                Install App
+                <ExternalLink size={14} />
+              </a>
+            </div>
+
           </div>
         </div>
 
