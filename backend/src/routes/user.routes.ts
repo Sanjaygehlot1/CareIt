@@ -7,8 +7,8 @@ import { authMiddleWare } from "../middlewares/auth.middleware";
 import { FRONTEND_BASE_URL } from "../secrets";
 import { prisma } from "../prisma";
 import { generateApiKey, getApiKey } from "../controllers/users/apikey.controller";
-import crypto from 'crypto'
 import { apiResponse } from "../utils/apiResponse";
+import { formatDate } from "../utils/formatDate";
 
 export const router: Router = Router();
 
@@ -249,12 +249,7 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
         throw new Error("User not in system")
       }
 
-      function formatDate(date: Date): string {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-      }
+      
 
       const today = formatDate(new Date());
 

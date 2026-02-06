@@ -277,13 +277,12 @@ const SettingsPage: React.FC = () => {
               {user?.calendar ? (
                 <button className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold" disabled>Connected</button>
               ) : (
-                <button onClick={handleConnectCalendar} style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} className="border px-4 py-2 rounded-lg text-sm font-semibold hover:bg-hover-bg transition-colors">
+                <button onClick={handleConnectCalendar} style={{ backgroundColor: 'var(--accent-primary)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} className="border px-4 py-2 hover:opacity-90 rounded-lg text-sm font-semibold hover:bg-hover-bg cursor-pointer transition-colors">
                   Connect
                 </button>
               )}
             </div>
             <hr style={{ borderColor: 'var(--border-primary)' }} />
-            {/* Health Data Integration */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <HeartPulse size={28} className="text-red-500" />

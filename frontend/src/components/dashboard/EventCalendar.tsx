@@ -6,9 +6,6 @@ import type {  ExtendedEvents } from '../../types/calendar';
 import EventDetailsModal from '../Modals/EventDetailsModal';
 
 
-
-
-
 const EventCalendar: React.FC = () => {
 
   const [events, setEvents] = useState<ExtendedEvents[]>([]);
@@ -31,8 +28,6 @@ const EventCalendar: React.FC = () => {
     setModalDate(date);
   };
 
-
-
   useEffect(() => {
     eventHandler();
   }, [])
@@ -48,12 +43,6 @@ const EventCalendar: React.FC = () => {
     return `
       <div class="flex items-center justify-between py-1 px-2">
         <span class="text-xs font-semibold">${dayEvents.length} event(s)</span>
-        <button 
-          class="text-blue-500 text-xs font-bold hover:underline ml-3"
-          onclick="viewDayDetails('${date.toISOString()}')"
-        >
-          View details
-        </button>
       </div>
     `;
   };
@@ -67,7 +56,6 @@ const EventCalendar: React.FC = () => {
 
   const tileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view === 'month' && dayHasEvents(date)) {
-      console.log(date, view)
       return (
         <>
           <a
@@ -92,6 +80,7 @@ const EventCalendar: React.FC = () => {
         className="w-full border-none space-y-0"
         tileClassName={tileClassName}
         tileContent={tileContent}
+        onClickDay={onViewDayDetails}
       />
       <Tooltip
         id="calendar-tooltip"

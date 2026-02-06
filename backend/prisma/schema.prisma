@@ -8,27 +8,28 @@ datasource db {
 }
 
 model User {
-  id                Int     @id @default(autoincrement())
-  name              String
-  email             String  @unique
-  profileUrl        String?
-  provider          String
-  apiKey            String? @unique
-  currentStreak     Int     @default(0)
-  longestStreak     Int     @default(0)
+  id            Int     @id @default(autoincrement())
+  name          String
+  email         String  @unique
+  profileUrl    String?
+  provider      String
+  apiKey        String? @unique
+  currentStreak Int     @default(0)
+  longestStreak Int     @default(0)
+  streakUpdatedAt   DateTime?
 
   googleProviderId   String? @unique
   googleAccessToken  String?
   googleRefreshToken String?
   calendar           Boolean @default(false)
 
-  githubProviderId   String? @unique
-  githubAccessToken  String?
-  githubRefreshToken String?
-  githubUsername     String?
-  githubConnected    Boolean @default(false)
-  githubAppInstalled Boolean @default(false)
-  githubAppInstallationId Int? 
+  githubProviderId        String? @unique
+  githubAccessToken       String?
+  githubRefreshToken      String?
+  githubUsername          String?
+  githubConnected         Boolean @default(false)
+  githubAppInstalled      Boolean @default(false)
+  githubAppInstallationId Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -47,7 +48,7 @@ model EditorActivity {
   projectName String?
   file        String?
   keystrokes  Int?     @default(0)
-  date        DateTime
+  date        DateTime @db.Date
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
@@ -69,12 +70,14 @@ model FocusStats {
 }
 
 model StreakStats {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  date      DateTime @db.Date
-  hasStreak Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  date            DateTime  @db.Date
+  commitCount     Int       @default(0)
+  codingDuration  Int       @default(0)
+  hasStreak       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 

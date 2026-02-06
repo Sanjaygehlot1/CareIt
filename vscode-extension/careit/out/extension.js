@@ -40,23 +40,21 @@ exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const axios_1 = __importDefault(require("axios"));
-let batch = [];
-let batchTimer = null;
+let projectSessions = new Map();
 let statusBarItem;
-const BATCH_INTERVAL = 30_000;
-const MAX_BATCH_SIZE = 50;
-const IDLE_THRESHOLD = 60 * 2 * 1000;
-let currentFile = '';
-let currentStartTime = Date.now();
+let isSending = false;
+let batchTimer = null;
+const BATCH_INTERVAL = 60_000 * 5; // Send every 5 minutes
+const IDLE_THRESHOLD = 2 * 60 * 1000; // 2 minutes idle = new session
+let currentProject = '';
+let currentSessionStart = Date.now();
 let lastActivityTime = Date.now();
-let keystrokeCount = 0;
 function activate(context) {
     console.log('CareIt tracker activated');
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = "$(pulse) CareIt";
-    statusBarItem.tooltip = "Tracking your coding activity";
+    statusBarItem.text = '$(pulse) CareIt';
+    statusBarItem.tooltip = 'Tracking your coding activity';
     statusBarItem.show();
-    console.log('--> 2. Status Bar Created');
     context.subscriptions.push(statusBarItem);
     const config = vscode.workspace.getConfiguration('careit');
     let apiKey = config.get('apiKey') ?? '';
@@ -69,115 +67,142 @@ function activate(context) {
             vscode.window.showInformationMessage('CareIt configuration updated.');
         }
     }));
-    if (vscode.window.activeTextEditor) {
-        currentFile = vscode.window.activeTextEditor.document.fileName;
-        currentStartTime = Date.now();
+    // Initialize current project
+    if (vscode.workspace.workspaceFolders) {
+        currentProject = vscode.workspace.workspaceFolders[0].name;
+        currentSessionStart = Date.now();
         lastActivityTime = Date.now();
     }
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
-        processActivityAndReset();
-        if (editor) {
-            currentFile = editor.document.fileName;
-            currentStartTime = Date.now();
-            lastActivityTime = Date.now();
-        }
-        else {
-            currentFile = '';
-        }
-    }));
-    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
-        if (doc.fileName === currentFile) {
-            processActivityAndReset();
-        }
-    }));
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
-        if (vscode.window.activeTextEditor && event.document === vscode.window.activeTextEditor.document) {
-            lastActivityTime = Date.now();
-            keystrokeCount += event.contentChanges.reduce((acc, change) => acc + change.text.length, 0);
-        }
+    // Track any activity (typing, selection, etc.)
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(() => {
+        lastActivityTime = Date.now();
     }));
     context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(() => {
         lastActivityTime = Date.now();
     }));
+    // Track workspace changes (switching projects)
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        recordCurrentSession();
+        if (vscode.workspace.workspaceFolders) {
+            currentProject = vscode.workspace.workspaceFolders[0].name;
+            currentSessionStart = Date.now();
+            lastActivityTime = Date.now();
+        }
+    }));
+    // Start periodic batch sending
     startBatchTimer(() => sendBatch(serverUrl, apiKey));
+    // Cleanup on deactivation
     context.subscriptions.push({
         dispose: () => {
-            processActivityAndReset();
-            if (batch.length > 0)
-                sendBatch(serverUrl, apiKey);
+            recordCurrentSession();
+            if (projectSessions.size > 0) {
+                sendBatch(serverUrl, apiKey).catch(err => console.error('Final send failed', err));
+            }
             if (batchTimer)
                 clearInterval(batchTimer);
         }
     });
+    // Manual send command
     const disposable = vscode.commands.registerCommand('careit.sendNow', async () => {
-        await processActivityAndReset();
+        recordCurrentSession();
         await sendBatch(serverUrl, apiKey);
         vscode.window.showInformationMessage('CareIt: Analytics sent');
     });
     context.subscriptions.push(disposable);
 }
-function processActivityAndReset() {
-    if (!currentFile)
+function recordCurrentSession() {
+    if (!currentProject)
         return;
     const now = Date.now();
-    let durationMs = now - currentStartTime;
     const timeSinceLastActivity = now - lastActivityTime;
-    if (timeSinceLastActivity > IDLE_THRESHOLD) {
-        durationMs = durationMs - timeSinceLastActivity;
+    // If user was idle, don't count this session
+    if (timeSinceLastActivity >= IDLE_THRESHOLD) {
+        currentSessionStart = now;
+        return;
     }
-    if (durationMs > 1000) {
-        const project = vscode.workspace.workspaceFolders
-            ? vscode.workspace.workspaceFolders[0].name
-            : 'No Project';
-        const languageId = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.document.languageId
-            : 'plain';
-        const payload = {
-            project,
-            language: languageId,
-            duration: Math.round(durationMs / 1000),
-            file: currentFile,
-            keystrokes: keystrokeCount,
-            timestamp: new Date().toISOString()
-        };
-        batch.push(payload);
-        console.log(`Recorded: ${payload.duration}s in ${payload.file}`);
+    const durationMs = now - currentSessionStart;
+    // Ignore very short sessions (< 5 seconds)
+    if (durationMs < 5000) {
+        currentSessionStart = now;
+        return;
     }
-    currentStartTime = now;
-    lastActivityTime = now;
-    keystrokeCount = 0;
+    const durationSeconds = Math.round(durationMs / 1000);
+    // Aggregate into project sessions
+    const existing = projectSessions.get(currentProject);
+    if (existing) {
+        existing.totalDuration += durationSeconds;
+    }
+    else {
+        projectSessions.set(currentProject, {
+            startTime: currentSessionStart,
+            totalDuration: durationSeconds
+        });
+    }
+    console.log(`Recorded ${durationSeconds}s on project: ${currentProject}`);
+    currentSessionStart = now;
 }
 function startBatchTimer(sendFn) {
     if (batchTimer)
         return;
     batchTimer = setInterval(async () => {
-        processActivityAndReset();
-        if (batch.length > 0) {
+        const now = Date.now();
+        const idleTime = now - lastActivityTime;
+        // Don't send if user is idle
+        if (idleTime >= IDLE_THRESHOLD) {
+            console.log('User idle — skipping batch send.');
+            return;
+        }
+        recordCurrentSession();
+        if (projectSessions.size > 0) {
             await sendFn();
         }
     }, BATCH_INTERVAL);
 }
 async function sendBatch(serverUrl, apiKey) {
-    if (batch.length === 0)
+    if (projectSessions.size === 0)
         return;
-    const data = [...batch];
-    batch = [];
-    statusBarItem.text = "$(sync~spin) CareIt: Sending...";
+    if (isSending)
+        return;
+    isSending = true;
+    // Convert Map to array of activities
+    const activities = Array.from(projectSessions.entries()).map(([project, session]) => ({
+        project,
+        duration: session.totalDuration,
+        timestamp: new Date(session.startTime).toISOString()
+    }));
+    // Clear sessions after copying
+    projectSessions.clear();
+    statusBarItem.text = '$(sync~spin) CareIt: Sending...';
+    console.log('Sending batch', activities);
     try {
-        await axios_1.default.post(`${serverUrl.replace(/\/$/, '')}/analytics/editor-activity`, data, {
+        await axios_1.default.post(`${serverUrl.replace(/\/$/, '')}/analytics/editor-activity`, activities, {
             headers: { 'careit-api-key': apiKey },
-            timeout: 10000,
+            timeout: 10000
         });
-        statusBarItem.text = "$(check) CareIt";
-        setTimeout(() => { statusBarItem.text = "$(pulse) CareIt"; }, 3000);
+        statusBarItem.text = '$(check) CareIt';
+        setTimeout(() => {
+            statusBarItem.text = '$(pulse) CareIt';
+        }, 3000);
     }
     catch (err) {
         console.error('Failed to send analytics:', err);
-        statusBarItem.text = "$(alert) CareIt: Error";
-        batch.unshift(...data);
-        if (batch.length > 500) {
-            batch = batch.slice(0, 500);
-        }
+        statusBarItem.text = '$(alert) CareIt: Error';
+        // Restore failed sessions (merge back)
+        activities.forEach(activity => {
+            const existing = projectSessions.get(activity.project);
+            if (existing) {
+                existing.totalDuration += activity.duration;
+            }
+            else {
+                projectSessions.set(activity.project, {
+                    startTime: new Date(activity.timestamp).getTime(),
+                    totalDuration: activity.duration
+                });
+            }
+        });
+    }
+    finally {
+        isSending = false;
     }
 }
 function deactivate() {

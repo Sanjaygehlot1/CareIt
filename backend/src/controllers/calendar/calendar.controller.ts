@@ -36,7 +36,7 @@ export const getCalendarEvents = async (req: Request, res: Response, next: NextF
        do {
          const response = await calendar.events.list({
             calendarId: 'primary',
-            timeMin: new Date(oneYearBefore).toISOString(),
+            timeMin: new Date().toISOString(),
             timeMax: new Date(oneYearAfter).toISOString(),
             maxResults: 1000,
             singleEvents: true,
@@ -56,7 +56,7 @@ export const getCalendarEvents = async (req: Request, res: Response, next: NextF
             200
         ));
     } catch (error: any) {
-        console.error("Failed to fetch calendar events");
+        console.error("Failed to fetch calendar events", error);
         next(error);
     }
 }
