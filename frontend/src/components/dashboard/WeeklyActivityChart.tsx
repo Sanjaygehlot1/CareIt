@@ -6,12 +6,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer
 } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { getEditorStats } from '../../controllers/analytics';
-import { daysToWeeks } from 'date-fns';
 
 interface ActivityData {
   date: string;

@@ -8,31 +8,31 @@ datasource db {
 }
 
 model User {
-  id            Int     @id @default(autoincrement())
-  name          String
-  email         String  @unique
-  profileUrl    String?
-  provider      String
-  apiKey        String? @unique
-  currentStreak Int     @default(0)
-  longestStreak Int     @default(0)
-  streakUpdatedAt   DateTime?
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String   @unique
+  provider   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  profileUrl String?
+  calendar   Boolean  @default(false)
 
-  googleProviderId   String? @unique
   googleAccessToken  String?
   googleRefreshToken String?
-  calendar           Boolean @default(false)
+  googleProviderId   String? @unique
 
-  githubProviderId        String? @unique
-  githubAccessToken       String?
   githubRefreshToken      String?
-  githubUsername          String?
+  githubAccessToken       String?
   githubConnected         Boolean @default(false)
-  githubAppInstalled      Boolean @default(false)
+  githubProviderId        String? @unique
+  githubUsername          String?
   githubAppInstallationId Int?
+  githubAppInstalled      Boolean @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  apiKey          String?   @unique
+  currentStreak   Int       @default(0)
+  longestStreak   Int       @default(0)
+  streakUpdatedAt DateTime?
 
   editorActivities EditorActivity[]
   focusStats       FocusStats[]
@@ -44,42 +44,36 @@ model User {
 model EditorActivity {
   id          Int      @id @default(autoincrement())
   duration    Int      @default(0)
-  language    String?
   projectName String?
-  file        String?
-  keystrokes  Int?     @default(0)
+  userId      Int
   date        DateTime @db.Date
+  user        User     @relation(fields: [userId], references: [id])
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
-  @@unique([userId, projectName, file, date])
+  @@unique([userId, projectName, date])
 }
 
 model FocusStats {
   id        Int      @id @default(autoincrement())
-  userId    Int
   duration  Int      @default(0)
   date      DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
 }
 
 model StreakStats {
-  id              Int       @id @default(autoincrement())
-  userId          Int
-  date            DateTime  @db.Date
-  commitCount     Int       @default(0)
-  codingDuration  Int       @default(0)
-  hasStreak       Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  date           DateTime @db.Date
+  hasStreak      Boolean  @default(false)
+  codingDuration Int      @default(0)
+  commitCount    Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
 }

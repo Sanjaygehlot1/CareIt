@@ -3,21 +3,9 @@ import { UnauthorizedException } from "../../exceptions/errorExceptions";
 import { prisma } from "../../prisma";
 import { ErrorCodes } from "../../exceptions/root";
 import { apiResponse } from "../../utils/apiResponse";
-import { formatDateDB } from "../../utils/formatDate";
 import { Prisma } from "@prisma/client";
 
-interface ActivityPayload {
-    userId: number;
-    project: string;
-    language: string;
-    duration: number;
-    file: string;
-    keystrokes: number;
-    timestamp: string;
-}
-
 const userCache = new Map<string, { id: number; expires: number }>();
-const streakCache = new Map<string, boolean>();
 
 export const saveEditorActivity = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -40,58 +28,131 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
         const userId = cached.id;
 
         const activities = Array.isArray(req.body) ? req.body : [req.body];
-
         const values = activities.map(a => {
             const d = new Date(a.timestamp);
-            d.setMinutes(0, 0, 0);
+            d.setHours(0, 0, 0, 0); 
 
-            return Prisma.sql`(${userId}, ${a.project}, ${a.file}, ${a.language}, ${d}, ${a.duration}, ${a.keystrokes})`;
+            return Prisma.sql`(${userId}, ${a.project}, ${d}, ${a.duration})`;  
         });
 
+            
         await prisma.$executeRaw`
-      INSERT INTO "EditorActivity"
-        ("userId", "projectName", "file", "language", "date", "duration", "keystrokes")
-      VALUES 
-        ${Prisma.join(values)}
-      ON CONFLICT ("userId", "projectName", "file", "date")
-      DO UPDATE SET
-        duration = "EditorActivity".duration + EXCLUDED.duration,
-        keystrokes = "EditorActivity".keystrokes + EXCLUDED.keystrokes,
-        language = EXCLUDED.language;
-    `;
+            INSERT INTO "EditorActivity"
+                ("userId", "projectName", "date", "duration")
+            VALUES 
+                ${Prisma.join(values)}
+            ON CONFLICT ("userId", "projectName", "date")
+            DO UPDATE SET
+                duration = "EditorActivity".duration + EXCLUDED.duration
+        `;
 
-        const today = new Date(formatDateDB(new Date()));
-        const streakKey = `${userId}-${today}`;
-
-        if (!streakCache.get(streakKey)) {
-
-            const agg = await prisma.editorActivity.aggregate({
-                where: { userId, date: new Date(today) },
-                _sum: { duration: true }
-            });
-
-            const totalToday = agg._sum.duration ?? 0;
-            const streakRequirement = 30 * 60;
-
-            if (totalToday >= streakRequirement) {
-
-                await prisma.streakStats.upsert({
-                    where: { userId_date: { userId, date: new Date(today) } },
-                    update: { hasStreak: true },
-                    create: { userId, date: new Date(today), hasStreak: true }
-                });
-
-                streakCache.set(streakKey, true);
-            }
-        }
+        
+        await updateUserStreak(userId);
 
         return res.status(200).json(new apiResponse({}, "Editor activity saved!", 200));
-
-    } catch (err) {
+    }
+    catch (err) {
         console.error(err);
         next(err);
     }
 };
+
+            
+async function updateUserStreak(userId: number) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    
+    const todayActivity = await prisma.editorActivity.aggregate({
+        where: { 
+            userId, 
+            date: today 
+        },
+        _sum: { duration: true }
+    });
+
+    const totalToday = todayActivity._sum.duration ?? 0;
+    const streakRequirement = 30 * 60;  
+
+    const hasStreakToday = totalToday >= streakRequirement;
+
+        
+    await prisma.streakStats.upsert({
+        where: { 
+            userId_date: { userId, date: today } 
+        },
+        update: { 
+            hasStreak: hasStreakToday,
+            codingDuration: totalToday 
+        },
+        create: { 
+            userId, 
+            date: today, 
+            hasStreak: hasStreakToday, 
+            codingDuration: totalToday 
+        }
+    });
+
+        
+    if (!hasStreakToday) {
+        return;     
+    }
+
+        
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const yesterdayStreak = await prisma.streakStats.findUnique({
+        where: {
+            userId_date: { userId, date: yesterday }
+        }
+    });
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { 
+            currentStreak: true, 
+            longestStreak: true,
+            streakUpdatedAt: true 
+        }
+    });
+
+    if (!user) return;
+
+        
+    const lastUpdate = user.streakUpdatedAt ? new Date(user.streakUpdatedAt) : null;
+    const alreadyUpdatedToday = lastUpdate && 
+        lastUpdate.getFullYear() === today.getFullYear() &&
+        lastUpdate.getMonth() === today.getMonth() &&
+        lastUpdate.getDate() === today.getDate();
+
+    if (alreadyUpdatedToday) {
+        return;     
+    }
+
+    let newCurrentStreak: number;
+
+         
+    if (yesterdayStreak?.hasStreak) {
+            
+        newCurrentStreak = user.currentStreak + 1;
+    } else {
+        
+        newCurrentStreak = 1;
+    }
+
+    const newLongestStreak = Math.max(user.longestStreak, newCurrentStreak);
+
+        
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            currentStreak: newCurrentStreak,
+            longestStreak: newLongestStreak,
+            streakUpdatedAt: new Date()
+        }
+    });
+}
 
 export const getEditorStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -117,7 +178,6 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
                 date: { gte: sevenDaysAgo, lte: endOfToday }
             },
             _sum: {
-                keystrokes: true,
                 duration: true
             },
             orderBy: { date: 'asc' }
@@ -148,8 +208,7 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
             filledStats.push({
                 date: formattedDate,
                 day: dayName,
-                duration: foundStat?._sum.duration || 0,
-                keystrokes: foundStat?._sum.keystrokes || 0
+                duration: foundStat?._sum.duration || 0
             });
 
         }
@@ -170,5 +229,6 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
         next(error);
     }
 };
+
 
 

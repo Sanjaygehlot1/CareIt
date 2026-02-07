@@ -1,268 +1,188 @@
 import { Request, Response, NextFunction } from 'express';
-import { UnauthorizedException, BadRequestExceptions } from '../../exceptions/errorExceptions';
+import { UnauthorizedException } from '../../exceptions/errorExceptions';
 import { ErrorCodes } from '../../exceptions/root';
-import { calendar_v3, google } from 'googleapis';
-import { GOOGLE_CALLBACK_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '../../secrets';
+import { prisma } from "../../prisma";
 import { apiResponse } from '../../utils/apiResponse';
-import { Octokit } from '@octokit/rest';
-import { getMonthStreakfromDB } from '../../helper/streakCal';
 
 
-type AuthType = {
-    id: number;
-    googleRefreshToken?: string | null;
-    githubAccessToken?: string | null;
-    githubUsername?: string | null;
-    googleProviderId?: string
-};
-
-interface FreeBlock {
-    start: Date;
-    end: Date;
-    durationMinutes: number;
-    commits: CommitInfo[];
-    score: number;
-    contextSwitches: number;
-    repositories: Set<string>;
-}
-
-interface CommitInfo {
-    timestamp: Date;
-    repository: string;
-}
-
-export const calculateFocusPoints = async (req: Request, res: Response, next: NextFunction) => {
+export const getStreak = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { day } = req.query;
-        const user = req.user as AuthType;
+        const user = req.user as any;
 
-        if (!day || typeof day !== 'string' || isNaN(Date.parse(day))) {
-            return next(new BadRequestExceptions("A valid 'day' query parameter (YYYY-MM-DD) is required.", ErrorCodes.BAD_REQUEST));
-        }
         if (!user) {
-            return next(new UnauthorizedException("User not authenticated.", ErrorCodes.UNAUTHORIZED_ACCESS));
-        }
-        if (!user.googleRefreshToken && !user.githubAccessToken) {
-            return next(new BadRequestExceptions("Connect Google Calendar or GitHub to calculate focus.", ErrorCodes.BAD_REQUEST));
+            return next(new UnauthorizedException("Unauthorized", ErrorCodes.UNAUTHORIZED_ACCESS));
         }
 
-
-        const timeMin = new Date(day);
-        timeMin.setHours(0, 0, 0, 0);
-        const timeMax = new Date(timeMin);
-        timeMax.setDate(timeMin.getDate() + 1);
-        // Define Workday Boundaries (e.g., 9 AM to 5 PM - adjust as needed)
-        const workDayStart = new Date(day);
-        workDayStart.setHours(9, 0, 0, 0);
-        const workDayEnd = new Date(day);
-        workDayEnd.setHours(17, 0, 0, 0);
-
-
-        let allEvents: calendar_v3.Schema$Event[] = [];
-        let response: any = null;
-        if (user.googleRefreshToken) {
-            const OAuth2 = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL);
-            OAuth2.setCredentials({ refresh_token: user.googleRefreshToken });
-            const calendar = google.calendar({ version: "v3", auth: OAuth2 });
-            let pageToken: string | null | undefined = null;
-            do {
-                try {
-                    response = await calendar.events.list({
-                        calendarId: 'primary',
-                        timeMin: timeMin.toISOString(),
-                        timeMax: timeMax.toISOString(),
-                        maxResults: 250,
-                        singleEvents: true,
-                        orderBy: 'startTime',
-                        pageToken: pageToken!,
-                        fields: 'nextPageToken,items(id, summary, start, end)'
-                    });
-                    allEvents = allEvents.concat(response.data.items || []);
-                    pageToken = response.data.nextPageToken;
-                } catch (calendarError) {
-                    console.warn("Could not fetch Google Calendar events:", calendarError);
-                    pageToken = null; // Stop pagination on error
-                }
-            } while (pageToken);
-        } else {
-            console.log("Google Refresh Token not found, skipping calendar fetch.");
-        }
-
-        const sortedEvents = allEvents
-            .filter(event => event.start?.dateTime && event.end?.dateTime) // Filter out all-day events without specific times
-            .map(event => ({
-                start: new Date(event.start!.dateTime!),
-                end: new Date(event.end!.dateTime!),
-            }))
-            .sort((a, b) => a.start.getTime() - b.start.getTime());
-
-        let freeBlocks: FreeBlock[] = [];
-        let lastEventEndTime = workDayStart; // Start tracking from the beginning of the workday
-
-        sortedEvents.forEach(event => {
-            // Ensure the event starts after the last known busy time and within the workday
-            if (event.start > lastEventEndTime && event.start < workDayEnd) {
-                const blockEnd = event.start > workDayEnd ? workDayEnd : event.start; // Cap block at workday end
-                if (blockEnd > lastEventEndTime) { // Ensure block has positive duration
-                    freeBlocks.push({
-                        start: lastEventEndTime,
-                        end: blockEnd,
-                        durationMinutes: Math.round((blockEnd.getTime() - lastEventEndTime.getTime()) / 60000),
-                        commits: [], score: 0, contextSwitches: 0, repositories: new Set()
-                    });
-                }
-            }
-            // Update the last known busy time, but don't go past workday end
-            lastEventEndTime = event.end > lastEventEndTime ? (event.end > workDayEnd ? workDayEnd : event.end) : lastEventEndTime;
-        });
-
-        // Add the final block from the last event's end to the workday end
-        if (workDayEnd > lastEventEndTime) {
-            freeBlocks.push({
-                start: lastEventEndTime,
-                end: workDayEnd,
-                durationMinutes: Math.round((workDayEnd.getTime() - lastEventEndTime.getTime()) / 60000),
-                commits: [], score: 0, contextSwitches: 0, repositories: new Set()
-            });
-        }
-
-        freeBlocks = freeBlocks.filter(block => block.durationMinutes >= 15);
-
-
-        let allCommits: CommitInfo[] = [];
-        if (user.githubAccessToken && user.githubUsername) {
-            console.log("ACCESSTOKEN::", user.githubAccessToken)
-            const octokit = new Octokit({ auth: user.githubAccessToken });
-            try {
-                const { data: repos } = await octokit.repos.listForAuthenticatedUser({
-                    sort: 'pushed',
-                    per_page: 100,
-                });
-
-                for (const repo of repos) {
-                    // Fetch commits for this repo within the specified day
-                    // Use `listCommits` which seems more appropriate than iterating through events
-                    const { data: commits } = await octokit.repos.listCommits({
-                        owner: repo.owner.login,
-                        repo: repo.name,
-                        author: user.githubUsername,
-                        since: timeMin.toISOString(),
-                        until: timeMax.toISOString(), // Use 'until' for the end date
-                    });
-
-                    commits.forEach(commit => {
-                        if (commit.commit.author?.date) {
-                            allCommits.push({
-                                timestamp: new Date(commit.commit.author.date),
-                                repository: repo.name // Store repo name
-                            });
-                        }
-                    });
-                }
-                // Sort commits chronologically
-                allCommits.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-            } catch (githubError) {
-                console.warn("Could not fetch GitHub data:", githubError);
-                // Proceed without GitHub data if it fails
-            }
-        } else {
-            console.log("GitHub Token or Username not found, skipping commit fetch.");
-        }
-
-
-        // --- 6. Assign Commits to Free Blocks ---
-        allCommits.forEach(commit => {
-            for (const block of freeBlocks) {
-                if (commit.timestamp >= block.start && commit.timestamp < block.end) {
-                    block.commits.push(commit);
-                    block.repositories.add(commit.repository); // Track unique repos
-                    break; // Assign commit to the first matching block
-                }
+        const userStreak = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+                currentStreak: true,
+                longestStreak: true,
+                streakUpdatedAt: true
             }
         });
 
+        if (!userStreak) {
+            return res.status(404).json(new apiResponse({}, "User not found", 404));
+        }
 
-        // --- 7. Calculate Score for Each Block ---
-        const CONTEXT_SWITCH_PENALTY = 0.20; // 20% penalty
-        freeBlocks.forEach(block => {
-            if (block.durationMinutes > 0) {
-                // Base score (reward longer blocks exponentially)
-                let baseScore = Math.pow(block.durationMinutes, 1.2);
+        // Get week status (always fresh, lightweight query)
+        const weekStatus = await getWeekStatus(user.id);
 
-                // Check for context switches only if there are commits
-                if (block.commits.length > 0) {
-                    block.contextSwitches = block.repositories.size - 1; // Switches = unique repos - 1
-                    if (block.contextSwitches > 0) {
-                        baseScore *= (1 - CONTEXT_SWITCH_PENALTY);
-                    }
-                } else {
-                    // Optional: Penalize blocks with no commits? Or give zero score?
-                    baseScore = 0; // Or adjust as needed - maybe a small score for just being free?
-                }
+        const now = new Date();
+        const lastUpdate = userStreak.streakUpdatedAt;
+        const cacheAge = lastUpdate ? now.getTime() - lastUpdate.getTime() : Infinity;
+        const ONE_HOUR = 60 * 60 * 1000;
 
+        // If cache is fresh, return cached streak + fresh weekStatus
+        if (cacheAge < ONE_HOUR) {
+            return res.status(200).json(new apiResponse({
+                currentStreak: userStreak.currentStreak,
+                longestStreak: userStreak.longestStreak,
+                weekStatus
+            }, "Streak retrieved", 200));
+        }
 
-                block.score = Math.round(baseScore);
-            } else {
-                block.score = 0;
+        // Cache is stale, recalculate
+        await recalculateStreak(user.id);
+
+        const updatedStreak = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+                currentStreak: true,
+                longestStreak: true
             }
         });
 
-        // --- 8. Calculate Total Score and Prepare Response ---
-        const totalScore = freeBlocks.reduce((sum, block) => sum + block.score, 0);
-
-        const getQualityLabel = (score: number) => {
-            if (score > 300) return 'Deep Focus';
-            if (score > 150) return 'Productive Flow';
-            if (score > 0) return 'Light Work';
-            return 'Scattered';
-        };
-
-        const responsePayload = {
-            date: day,
-            score: totalScore,
-            qualityLabel: getQualityLabel(totalScore),
-            analysis: {
-                totalFocusMinutes: freeBlocks.reduce((sum, block) => sum + block.durationMinutes, 0),
-                totalMeetingMinutes: sortedEvents.reduce((sum, event) => sum + (event.end.getTime() - event.start.getTime()) / 60000, 0),
-                focusBlockCount: freeBlocks.length,
-                totalCommits: allCommits.length,
-                contextSwitches: freeBlocks.reduce((sum, block) => sum + block.contextSwitches, 0),
-            },
-            // Optional: Include detailed blocks in response for frontend visualization
-            // blocks: freeBlocks.map(b => ({ start: b.start, end: b.end, duration: b.durationMinutes, score: b.score, commits: b.commits.length, repos: Array.from(b.repositories) }))
-        };
-
-        res.status(200).json(new apiResponse(responsePayload, "Focus score calculated successfully", 200));
+        return res.status(200).json(new apiResponse({
+            ...updatedStreak,
+            weekStatus
+        }, "Streak recalculated", 200));
 
     } catch (error) {
-        console.error("Error in calculateFocusPoints:", error);
+        console.log(error);
         next(error);
     }
 };
 
-export const getStreakInfo = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const user = req.user as AuthType
-        const { year, month } = req.body;
-        if (!user) {
-            next(new UnauthorizedException("Unauthorized : Please Login to continue!", ErrorCodes.UNAUTHORIZED_ACCESS))
-        }
+async function getWeekStatus(userId: number): Promise<boolean[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    const currentDay = today.getDay(); 
+    const mondayOffset = currentDay === 0 ? -6 : -(currentDay - 1); 
+    
+    const monday = new Date(today);
+    monday.setDate(monday.getDate() + mondayOffset);
 
-        const cachedData = await getMonthStreakfromDB(year, month, user.id);
-        let message = "streak data retrieved successfully!"
-
-        if (cachedData?.data.length! == 0) {
-            message = "no streak data in this month!"
-        }
-
-        res.status(200).json(new apiResponse(cachedData, message, 200))
-
-
-    } catch (error) {
-        console.log(error),
-            next(error)
+    const weekDates: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+        const day = new Date(monday);
+        day.setDate(monday.getDate() + i);
+        weekDates.push(day);
     }
+
+    const weekStreaks = await prisma.streakStats.findMany({
+        where: {
+            userId,
+            date: {
+                gte: weekDates[0],
+                lte: weekDates[6]
+            }
+        },
+        select: {
+            date: true,
+            hasStreak: true
+        }
+    });
+
+    const weekStatus = weekDates.map(date => {
+        const dateTime = date.getTime();
+        const streak = weekStreaks.find(s => {
+            const streakDate = new Date(s.date);
+            streakDate.setHours(0, 0, 0, 0);
+            return streakDate.getTime() === dateTime;
+        });
+        return streak?.hasStreak || false;
+    });
+
+    return weekStatus; 
 }
 
+async function recalculateStreak(userId: number) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const activeDates = await prisma.streakStats.findMany({
+        where: {
+            userId,
+            hasStreak: true
+        },
+        select: { date: true },
+        orderBy: { date: 'desc' }
+    });
+
+    if (activeDates.length === 0) {
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                currentStreak: 0,
+                longestStreak: 0,
+                streakUpdatedAt: new Date()
+            }
+        });
+        return;
+    }
+
+    const dates = activeDates.map(d => {
+        const date = new Date(d.date);
+        date.setHours(0, 0, 0, 0);
+        return date.getTime();
+    });
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    // Calculate current streak
+    let currentStreak = 0;
+    const mostRecentDate = dates[0];
+    
+    if (mostRecentDate >= yesterday.getTime()) {
+        let checkDate = mostRecentDate;
+        
+        for (const date of dates) {
+            if (date === checkDate) {
+                currentStreak++;
+                checkDate -= oneDayMs;
+            } else if (date < checkDate) {
+                break;
+            }
+        }
+    }
+
+    // Calculate longest streak
+    let longestStreak = 0;
+    let tempStreak = 1;
+
+    for (let i = 1; i < dates.length; i++) {
+        const diff = dates[i - 1] - dates[i];
+        
+        if (diff === oneDayMs) {
+            tempStreak++;
+            longestStreak = Math.max(longestStreak, tempStreak);
+        } else {
+            longestStreak = Math.max(longestStreak, tempStreak);
+            tempStreak = 1;
+        }
+    }
+    longestStreak = Math.max(longestStreak, tempStreak);
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            currentStreak,
+            longestStreak,
+            streakUpdatedAt: new Date()
+        }
+    });
+}

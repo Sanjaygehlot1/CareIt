@@ -1,6 +1,5 @@
 import React from 'react';
 import '../index.css'
-import FocusScore from '../components/Reports/FocusScore';
 import Streak from '../components/Reports/Streak';
 
 
@@ -14,12 +13,6 @@ const ReportsPage: React.FC = () => {
                     <div className="mt-6 max-w-2/3">
                         <Streak />
                     </div>
-                    <div className="mt-6">
-                        <FocusScore />
-                    </div>
-
-
-
                 </div>
             </main>
         </div>
