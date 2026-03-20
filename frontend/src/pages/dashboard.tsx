@@ -4,11 +4,17 @@ import '../index.css'
 import DailyFocusBar from '../components/dashboard/DailyFocusBar';
 import WellnessCheckin from '../components/dashboard/WellnessCheckin';
 import ActivityTrendChart from '../components/dashboard/WeeklyActivityChart';
-import WeeklyGoals from '../components/dashboard/WeeklyGoals';
+import GoalsMiniCard from '../components/dashboard/GoalsMiniCard';
 import TodaysAgenda from '../components/dashboard/TodaysAgenda';
 import EventCalendar from '../components/dashboard/EventCalendar';
+import BurnoutBanner from '../components/dashboard/BurnoutBanner';
+import { getAuth } from '../context/authContext';
 
 const Dashboard: React.FC = () => {
+  const { user } = getAuth();
+  const burnoutLevel = (user as any)?.burnoutLevel ?? 'NONE';
+  const burnoutScore = (user as any)?.burnoutScore ?? 0;
+
   return (
     <div style={{ backgroundColor: 'var(--bg-secondary)' }} className="flex flex-col h-screen relative">
       <main className="flex-1 overflow-y-auto">
@@ -18,13 +24,17 @@ const Dashboard: React.FC = () => {
             <DailyFocusBar />
           </div>
 
-          <div className="mt-6">
-          </div>
+        
+          {burnoutLevel !== 'NONE' && (
+            <div className="mb-6">
+              <BurnoutBanner level={burnoutLevel} score={burnoutScore} />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <ActivityTrendChart />
-              <WeeklyGoals />
+              <GoalsMiniCard />
             </div>
 
             <div className="space-y-6">

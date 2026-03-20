@@ -9,6 +9,7 @@ import { prisma } from "../prisma";
 import { generateApiKey, getApiKey } from "../controllers/users/apikey.controller";
 import { apiResponse } from "../utils/apiResponse";
 import { formatDate } from "../utils/formatDate";
+import { triggerGoalSync } from "../utils/goalSync";
 
 export const router: Router = Router();
 
@@ -303,6 +304,8 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
         },
           "Yayy!! Streak maintained : A commit was made just now",
           200));
+
+        triggerGoalSync(user!.id, ['STREAK', 'COMMITS']);
       }
 
       return res.status(200).json(new apiResponse({},
@@ -338,3 +341,25 @@ router.get('/profile', authMiddleWare, getProfile);
 router.get('/logout', logOut);
 router.get('/generate-api-key', authMiddleWare, generateApiKey);
 router.get('/get-api-key', authMiddleWare, getApiKey);
+
+
+router.patch('/preferences', authMiddleWare, async (req, res, next) => {
+  try {
+    const user = req.user as any;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { dailyDigestEnabled } = req.body;
+
+    console.log(dailyDigestEnabled)
+    await (prisma.user.update as any)({
+      where: { id: user.id },
+      data: {
+        ...(typeof dailyDigestEnabled === 'boolean' ? { dailyDigestEnabled } : {}),
+      },
+    });
+
+    res.status(200).json(new apiResponse({ dailyDigestEnabled }, 'Preferences updated', 200));
+  } catch (err) {
+    next(err);
+  }
+});

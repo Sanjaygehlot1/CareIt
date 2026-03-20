@@ -10,3 +10,12 @@ export const getStreakInfo = async() =>{
         console.error(error)
     }
 }
+
+export const toggleStreakReminder = async(enabled: boolean) =>{
+    try {
+        const response = await AxiosInstance.post('/reports/toggle-streak-reminder', { enabled });
+        return response.data
+    } catch (error) {
+        console.error(error)
+    }
+}

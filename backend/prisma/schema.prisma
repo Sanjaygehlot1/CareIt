@@ -30,13 +30,25 @@ model User {
   githubAppInstalled      Boolean @default(false)
 
   apiKey          String?   @unique
-  currentStreak   Int       @default(0)
-  longestStreak   Int       @default(0)
-  streakUpdatedAt DateTime?
+  currentStreak        Int       @default(0)
+  longestStreak        Int       @default(0)
+  streakUpdatedAt      DateTime?
+  streakEmailReminder  Boolean   @default(true)
+  dailyDigestEnabled   Boolean   @default(true)  
+
+
+  burnoutScore         Int       @default(0)      
+  burnoutLevel         BurnoutLevel @default(NONE)
+  burnoutAlertedAt     DateTime?                 
+
+
+  streakCoachAlertedAt DateTime?                  
+  streakCoachType      String?                    
 
   editorActivities EditorActivity[]
   focusStats       FocusStats[]
   streakStats      StreakStats[]
+  goals            Goal[]
 
   @@map("users")
 }
@@ -76,4 +88,43 @@ model StreakStats {
   user           User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
+}
+
+model Goal {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  title       String
+  description String?
+  type        GoalType   @default(CUSTOM)
+  period      GoalPeriod @default(WEEKLY)
+  targetValue Float      
+  currentValue Float     @default(0)
+  unit        String     @default("") 
+  completed   Boolean    @default(false)
+  isAiGenerated Boolean  @default(false)
+  weekStart   DateTime?  @db.Date 
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id])
+}
+
+enum GoalType {
+  CODING_TIME
+  STREAK
+  COMMITS
+  FOCUS_TIME
+  CUSTOM
+}
+
+enum GoalPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum BurnoutLevel {
+  NONE
+  MILD
+  MODERATE
+  SEVERE
 }

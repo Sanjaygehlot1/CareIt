@@ -11,6 +11,7 @@ import SettingsPage from './pages/SettingsPage.tsx'
 import { AuthProvider } from './context/authContext.tsx'
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import ReportsPage from './pages/ReportsPage.tsx'
+import GoalsPage from './pages/GoalsPage.tsx'
 
 const router = createBrowserRouter([
 
@@ -37,6 +38,14 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
         path: 'reports'
+      },
+      {
+        element: (
+          <PrivateRoute>
+            <GoalsPage />
+          </PrivateRoute>
+        ),
+        path: 'goals'
       },
       {
         element: (

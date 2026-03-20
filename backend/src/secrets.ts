@@ -21,3 +21,11 @@ export const GITHUB_APP_CLIENT_SECRET = process.env.GITHUB_APP_CLIENT_SECRET!
 export const GITHUB_APP_ID = process.env.GITHUB_APP_ID!
 export const GITHUB_APP_CLIENT_ID = process.env.GITHUB_APP_CLIENT_ID!
 
+
+export const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com'
+export const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587')
+export const SMTP_USER = process.env.SMTP_USER || ''
+export const SMTP_PASS = process.env.SMTP_PASS || ''
+export const SMTP_FROM = process.env.SMTP_FROM || 'CareIt <noreply@careit.dev>'
+
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''

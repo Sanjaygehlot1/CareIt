@@ -19,6 +19,8 @@
     "@types/express-session": "^1.18.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.6.2",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^7.0.11",
     "@types/passport": "^1.0.17",
     "@types/passport-github2": "^1.2.9",
     "@types/passport-google-oauth20": "^2.0.16",
@@ -28,6 +30,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@google/genai": "^1.46.0",
     "@octokit/rest": "^22.0.0",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^6.16.3",
@@ -39,6 +42,8 @@
     "express-session": "^1.18.2",
     "googleapis": "^162.0.0",
     "jsonwebtoken": "^9.0.2",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.3",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",

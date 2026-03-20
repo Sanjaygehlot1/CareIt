@@ -20,7 +20,10 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
       id : user.providerId,
       provider : user.provider,
       githubUsername : user.githubUsername,
-      githubAppConnected : user.githubAppInstalled
+      githubAppConnected : user.githubAppInstalled,
+      burnoutScore : user.burnoutScore ?? 0,
+      burnoutLevel : user.burnoutLevel ?? 'NONE',
+      dailyDigestEnabled : user.dailyDigestEnabled ?? true,
     }
 
     res.status(200).json(new apiResponse(

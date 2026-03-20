@@ -10,6 +10,7 @@ const EventCalendar: React.FC = () => {
 
   const [events, setEvents] = useState<ExtendedEvents[]>([]);
   const [modalDate, setModalDate] = useState<Date | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const eventsForModal = useMemo(() => {
     if (!modalDate) return [];
@@ -19,9 +20,12 @@ const EventCalendar: React.FC = () => {
   }, [modalDate, events]);
 
   const eventHandler = async () => {
-    const response = await getEvents();
-    console.log(response)
-    setEvents(response);
+    try {
+      const response = await getEvents();
+      setEvents(response);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const onViewDayDetails = (date: any) => {
@@ -31,6 +35,34 @@ const EventCalendar: React.FC = () => {
   useEffect(() => {
     eventHandler();
   }, [])
+
+  if (loading) {
+    return (
+      <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }}
+        className="bg-white items-center w-auto p-4 rounded-xl shadow-sm">
+       
+        <div className="flex items-center justify-between mb-4">
+          <div className="skeleton w-6 h-6 rounded" />
+          <div className="skeleton h-4 w-28" />
+          <div className="skeleton w-6 h-6 rounded" />
+        </div>
+       
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="skeleton h-3 rounded mx-auto" style={{ width: 20 }} />
+          ))}
+        </div>
+       
+        {Array.from({ length: 5 }).map((_, row) => (
+          <div key={row} className="grid grid-cols-7 gap-1 mb-1">
+            {Array.from({ length: 7 }).map((_, col) => (
+              <div key={col} className="skeleton h-8 rounded-lg" />
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const dayHasEvents = (date: Date) => {
     return events.some(event => new Date(event.start.dateTime || event.start.date).toDateString() === date.toDateString());

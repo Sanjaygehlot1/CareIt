@@ -18,7 +18,8 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
             select: {
                 currentStreak: true,
                 longestStreak: true,
-                streakUpdatedAt: true
+                streakUpdatedAt: true,
+                streakEmailReminder: true
             }
         });
 
@@ -26,24 +27,35 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
             return res.status(404).json(new apiResponse({}, "User not found", 404));
         }
 
-        // Get week status (always fresh, lightweight query)
+        
         const weekStatus = await getWeekStatus(user.id);
+
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStats = await prisma.streakStats.findUnique({
+            where: { userId_date: { userId: user.id, date: today } },
+            select: { codingDuration: true }
+        });
+        const todayCodingDuration = todayStats?.codingDuration ?? 0;
 
         const now = new Date();
         const lastUpdate = userStreak.streakUpdatedAt;
         const cacheAge = lastUpdate ? now.getTime() - lastUpdate.getTime() : Infinity;
         const ONE_HOUR = 60 * 60 * 1000;
 
-        // If cache is fresh, return cached streak + fresh weekStatus
+        
         if (cacheAge < ONE_HOUR) {
             return res.status(200).json(new apiResponse({
                 currentStreak: userStreak.currentStreak,
                 longestStreak: userStreak.longestStreak,
-                weekStatus
+                weekStatus,
+                todayCodingDuration,
+                streakEmailReminder: userStreak.streakEmailReminder
             }, "Streak retrieved", 200));
         }
 
-        // Cache is stale, recalculate
+       
         await recalculateStreak(user.id);
 
         const updatedStreak = await prisma.user.findUnique({
@@ -56,7 +68,9 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
 
         return res.status(200).json(new apiResponse({
             ...updatedStreak,
-            weekStatus
+            weekStatus,
+            todayCodingDuration,
+            streakEmailReminder: userStreak.streakEmailReminder
         }, "Streak recalculated", 200));
 
     } catch (error) {
@@ -143,7 +157,7 @@ async function recalculateStreak(userId: number) {
     });
     const oneDayMs = 24 * 60 * 60 * 1000;
 
-    // Calculate current streak
+    
     let currentStreak = 0;
     const mostRecentDate = dates[0];
     
@@ -160,7 +174,7 @@ async function recalculateStreak(userId: number) {
         }
     }
 
-    // Calculate longest streak
+    
     let longestStreak = 0;
     let tempStreak = 1;
 
@@ -186,3 +200,34 @@ async function recalculateStreak(userId: number) {
         }
     });
 }
+
+
+export const toggleStreakReminder = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user as any;
+
+        if (!user) {
+            return next(new UnauthorizedException("Unauthorized", ErrorCodes.UNAUTHORIZED_ACCESS));
+        }
+
+        const { enabled } = req.body;
+
+        if (typeof enabled !== 'boolean') {
+            return res.status(400).json(new apiResponse({}, "Invalid value for 'enabled'", 400));
+        }
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { streakEmailReminder: enabled }
+        });
+
+        return res.status(200).json(new apiResponse(
+            { streakEmailReminder: enabled },
+            `Streak email reminders ${enabled ? 'enabled' : 'disabled'}`,
+            200
+        ));
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};

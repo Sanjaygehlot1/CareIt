@@ -4,6 +4,7 @@ import { prisma } from "../../prisma";
 import { ErrorCodes } from "../../exceptions/root";
 import { apiResponse } from "../../utils/apiResponse";
 import { Prisma } from "@prisma/client";
+import { triggerGoalSync } from "../../utils/goalSync";
 
 const userCache = new Map<string, { id: number; expires: number }>();
 
@@ -48,6 +49,8 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
 
         
         await updateUserStreak(userId);
+
+        triggerGoalSync(userId, ['CODING_TIME', 'STREAK']);
 
         return res.status(200).json(new apiResponse({}, "Editor activity saved!", 200));
     }

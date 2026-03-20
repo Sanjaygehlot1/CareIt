@@ -21,20 +21,21 @@ interface ActivityTrendChartProps {
   data?: ActivityData[];
 }
 
-const ActivityTrendChart: React.FC<ActivityTrendChartProps> = ({ data }) => {
+const ActivityTrendChart: React.FC = () => {
 
   const [Stats, setStats] = useState<ActivityTrendChartProps[] | []>([])
+  const [loading, setLoading] = useState(true)
 
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const res = await getEditorStats();
-        console.log(res)
         setStats(res);
-
       } catch (error) {
         console.log(error)
+      } finally {
+        setLoading(false);
       }
     }
     fetchStats()
@@ -74,6 +75,29 @@ const ActivityTrendChart: React.FC<ActivityTrendChartProps> = ({ data }) => {
       <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
     </linearGradient>
   </defs>
+  if (loading) {
+    return (
+      <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', minHeight: 320 }}
+        className="p-6 rounded-xl shadow-sm border flex flex-col">
+    
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="skeleton w-5 h-5 rounded" />
+            <div className="skeleton h-5 w-36" />
+          </div>
+        </div>
+        <div className="flex items-end justify-between gap-3 flex-1 min-h-[250px] px-2 pb-4">
+          {[60, 80, 45, 95, 70, 55, 85].map((h, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 flex-1">
+              <div className="skeleton w-full rounded-lg" style={{ height: `${h * 2.2}px` }} />
+              <div className="skeleton h-2.5 w-6" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -89,7 +113,6 @@ const ActivityTrendChart: React.FC<ActivityTrendChartProps> = ({ data }) => {
         </h2>
       </div>
 
-      {/* ✅ Fixed container height */}
       <div className="flex-1 w-full min-h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart

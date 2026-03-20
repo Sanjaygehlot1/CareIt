@@ -7,7 +7,8 @@
     "vscode": "^1.106.1"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Visualization"
   ],
   "activationEvents": [
     "*"
@@ -32,6 +33,13 @@
           "type": "string",
           "default": "http://localhost:3000",
           "description": "The URL of the CareIt backend server"
+        },
+        "careit.breakReminderMinutes": {
+          "type": "number",
+          "default": 90,
+          "minimum": 1,
+          "maximum": 480,
+          "description": "Minutes of continuous coding before showing a break reminder (0 to disable)"
         }
       }
     }

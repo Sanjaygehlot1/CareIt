@@ -12,6 +12,11 @@ import { router as UserRoutes } from './routes/user.routes';
 import { router as CalendarRoutes } from './routes/calendar.routes'
 import { router as ReportRoutes } from './routes/reports.routes'
 import { router as AnalyticsRoutes } from './routes/analytics.routes'
+import { router as GoalRoutes } from './routes/goals.routes'
+import { startStreakReminderJob } from './utils/streakReminderJob'
+import { startDailyDigestJob } from './utils/dailyDigestJob'
+import { startBurnoutDetectionJob } from './utils/burnoutDetectionJob'
+import { startStreakCoachJob } from './utils/streakCoachJob'
 const app: Express = express();
 
 app.use(express.json())
@@ -39,6 +44,7 @@ app.use('/api/v1/auth', UserRoutes);
 app.use('/api/v1/calendar', CalendarRoutes);
 app.use('/api/v1/reports', ReportRoutes);
 app.use('/api/v1/analytics', AnalyticsRoutes);
+app.use('/api/v1/goals', GoalRoutes);
 
 app.get('/',(req,res)=>{
   res.send("hello")
@@ -49,4 +55,9 @@ app.use(errorMiddleware)
 
 app.listen(PORT, () => {
   console.log('Server is running on port 3000')
+
+  startStreakReminderJob();
+  startDailyDigestJob();
+  startBurnoutDetectionJob();
+  startStreakCoachJob();
 })

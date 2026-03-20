@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { BACKEND_BASE_URL } from '../utils/secrets';
 import Modal from '../components/settings/Modal';
 import { generateApiKey, getApiKey } from '../controllers/apiKey';
+import { AxiosInstance } from '../axios/axiosInstance';
 
 const SettingsPage: React.FC = () => {
   const { user } = getAuth();
@@ -14,6 +15,11 @@ const SettingsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [apiKey, setApiKey] = useState<string | null>(null);
+  const [apiKeyLoading, setApiKeyLoading] = useState(true);
+
+  const [digestEnabled, setDigestEnabled] = useState<boolean>(
+    (user as any)?.dailyDigestEnabled ?? true
+  );
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -22,47 +28,172 @@ const SettingsPage: React.FC = () => {
   const message = searchParams.get('message');
   const googleEmail = searchParams.get('google_email');
 
-
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 3000);
+    setTimeout(() => { setToast(null); }, 3000);
   };
 
   useEffect(() => {
     const fetchApiKey = async () => {
       try {
         const data = await getApiKey();
-        if (data.data.apiKey) {
-          setApiKey(data.data.apiKey)
-        };
-
+        if (data.data.apiKey) setApiKey(data.data.apiKey);
       } catch (err) {
         console.error('Failed to fetch API key', err);
+      } finally {
+        setApiKeyLoading(false);
       }
     };
     fetchApiKey();
   }, []);
 
+
+  const handleCloseNotification = () => {
+    setShowNotification(false);
+    setTimeout(() => { setSearchParams({}); }, 300);
+  };
+
   useEffect(() => {
     if (status || error) {
       setShowNotification(true);
       if (status === 'calendar-connected') {
-        const timer = setTimeout(() => {
-          handleCloseNotification();
-        }, 5000);
+        const timer = setTimeout(() => { handleCloseNotification(); }, 5000);
         return () => clearTimeout(timer);
       }
     }
   }, [status, error]);
 
-  const handleCloseNotification = () => {
-    setShowNotification(false);
-    setTimeout(() => {
-      setSearchParams({});
-    }, 300);
-  };
+  if (!user || apiKeyLoading) {
+    return (
+      <div style={{ backgroundColor: 'var(--bg-secondary)' }} className="min-h-screen p-4 sm:p-6 lg:p-8">
+        <div className="max-w-3xl mx-auto space-y-8 pb-24">
+
+      
+          <div>
+            <div className="skeleton h-7 w-40 mb-4 rounded-lg" />
+            <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+              className="p-6 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center gap-5">
+             
+              <div className="skeleton w-20 h-20 rounded-full flex-shrink-0" />
+           
+              <div className="flex-1 flex flex-col gap-2.5 w-full">
+                <div className="skeleton h-5 w-36" />
+                <div className="skeleton h-4 w-52" />
+                <div className="skeleton h-4 w-40" />
+                <div className="skeleton h-3 w-28" />
+              </div>
+           
+              <div className="skeleton h-9 w-24 rounded-lg flex-shrink-0" />
+            </div>
+          </div>
+
+         
+          <div>
+            <div className="skeleton h-7 w-32 mb-4 rounded-lg" />
+            <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+              className="p-6 rounded-xl border space-y-5">
+              {[
+                { iconW: 28, labelW: 80, descW: 200 },
+                { iconW: 28, labelW: 120, descW: 220 },
+                { iconW: 28, labelW: 160, descW: 190 },
+              ].map((row, i) => (
+                <React.Fragment key={i}>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="skeleton flex-shrink-0 rounded" style={{ width: row.iconW, height: row.iconW }} />
+                      <div className="flex flex-col gap-1.5 min-w-0">
+                        <div className="skeleton h-4 rounded" style={{ width: row.labelW }} />
+                        <div className="skeleton h-3 rounded" style={{ width: row.descW, maxWidth: '100%' }} />
+                      </div>
+                    </div>
+                    <div className="skeleton h-9 w-24 rounded-lg flex-shrink-0" />
+                  </div>
+                  {i < 2 && <hr style={{ borderColor: 'var(--border-primary)' }} />}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+      
+          <div>
+            <div className="skeleton h-7 w-48 mb-4 rounded-lg" />
+            <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+              className="p-6 rounded-xl border space-y-5">
+           
+              <div className="flex items-center gap-4">
+                <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <div className="skeleton h-4 w-44" />
+                  <div className="skeleton h-3 w-64 max-w-full" />
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <div className="skeleton h-11 flex-1 rounded-lg min-w-0" />
+                <div className="skeleton h-11 w-11 rounded-lg flex-shrink-0" />
+                <div className="skeleton h-11 w-36 rounded-lg flex-shrink-0" />
+              </div>
+              <hr style={{ borderColor: 'var(--border-primary)' }} />
+           
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="skeleton h-4 w-32" />
+                    <div className="skeleton h-3 w-56 max-w-full" />
+                  </div>
+                </div>
+                <div className="skeleton h-9 w-28 rounded-lg flex-shrink-0" />
+              </div>
+            </div>
+          </div>
+
+       
+          <div>
+            <div className="skeleton h-7 w-56 mb-4 rounded-lg" />
+            <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+              className="p-6 rounded-xl border space-y-5">
+           
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="skeleton h-4 w-36" />
+                    <div className="skeleton h-3 w-60 max-w-full" />
+                  </div>
+                </div>
+                <div className="skeleton w-11 h-6 rounded-full flex-shrink-0" />
+              </div>
+    
+              <div className="flex items-start gap-4">
+                <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
+                <div className="flex flex-col gap-2 flex-1">
+                  <div className="skeleton h-4 w-28" />
+                  <div className="skeleton h-3 w-36" />
+                  <div className="skeleton h-3 w-52 max-w-full" />
+                  <div className="skeleton h-1.5 w-40 rounded-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div>
+            <div className="skeleton h-7 w-36 mb-4 rounded-lg" />
+            <div style={{ backgroundColor: 'var(--card-bg)' }}
+              className="p-6 rounded-xl border-2 border-red-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col gap-2 flex-1">
+                <div className="skeleton h-4 w-40" />
+                <div className="skeleton h-3 w-72 max-w-full" />
+              </div>
+              <div className="skeleton h-9 w-36 rounded-lg flex-shrink-0" />
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   const handleConnectCalendar = () => {
     if (user?.provider === 'google') {
@@ -119,6 +250,21 @@ const SettingsPage: React.FC = () => {
     if (apiKey) {
       navigator.clipboard.writeText(apiKey);
       showToast("API Key copied to clipboard!");
+    }
+  };
+
+  const toggleDailyDigest = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    
+    setDigestEnabled(newValue);
+    try {
+      
+      await AxiosInstance.patch('/auth/preferences', { dailyDigestEnabled: newValue });
+      showToast(newValue ? 'Daily digest enabled ✓' : 'Daily digest disabled');
+    } catch {
+     
+      setDigestEnabled(!newValue);
+      showToast('Failed to update preference', 'error');
     }
   };
 
@@ -298,10 +444,88 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
 
+       
+        <div>
+          <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Notifications &amp; Wellbeing</h1>
+          <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
+
+          
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(139,92,246,0.1)', color: '#8b5cf6' }}>
+                  <MessageSquarePlus size={22} />
+                </div>
+                <div>
+                  <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Daily Digest Email</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Get a 2-line AI summary of your day at 9 PM — stays in your memory.
+                  </p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={digestEnabled}
+                  onChange={toggleDailyDigest}
+                />
+                <div className="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-500"
+                  style={{ backgroundColor: 'var(--border-secondary)' }} />
+              </label>
+            </div>
+
+            <hr style={{ borderColor: 'var(--border-primary)' }} />
+
+      
+            {(() => {
+              const level: string = (user as any)?.burnoutLevel ?? 'NONE';
+              const score: number = (user as any)?.burnoutScore ?? 0;
+              const burnoutCfg: Record<string, { label: string; desc: string; color: string; bg: string }> = {
+                NONE: { label: '✅ Looking great', desc: 'Your coding activity is consistent with your baseline.', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
+                MILD: { label: '😴 Mild dip detected', desc: 'Your pace is slightly below baseline. A gentle nudge email has been sent.', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+                MODERATE: { label: '⚠️ Moderate decline', desc: 'Noticeable drop in activity. We\'ve emailed you with suggestions.', color: '#f97316', bg: 'rgba(249,115,22,0.08)' },
+                SEVERE: { label: '🔴 Burnout risk', desc: 'Activity is significantly below your baseline. Please take care of yourself.', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+              };
+              const cfg = burnoutCfg[level] ?? burnoutCfg['NONE'];
+              return (
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex items-start gap-4 min-w-0">
+                    <div className="p-2 rounded-lg flex-shrink-0" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
+                      <HeartPulse size={22} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Burnout Status</h3>
+                      <p className="text-sm mt-0.5" style={{ color: cfg.color, fontWeight: 600 }}>{cfg.label}</p>
+                      <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{cfg.desc}</p>
+                      {/* Score bar */}
+                      {score > 0 && (
+                        <div className="mt-2 w-48 max-w-full">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Burnout index</span>
+                            <span className="text-[10px] font-semibold" style={{ color: cfg.color }}>{score}/100</span>
+                          </div>
+                          <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                            <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${score}%`, backgroundColor: cfg.color }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs px-3 py-1.5 rounded-full font-semibold flex-shrink-0" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
+                    Updated weekly
+                  </span>
+                </div>
+              );
+            })()}
+
+          </div>
+        </div>
+
         <div>
           <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Developer Settings</h1>
+
           <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
-            
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--accent-primary)' }}>
