@@ -136,40 +136,62 @@ const StreakCard = () => {
           <Divider />
 
           <div className="flex items-center gap-2 flex-1 justify-center">
-            {WEEK_DAYS.map((day, i) => (
-              <div key={day} className="flex flex-col items-center gap-1.5">
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-                  style={{
-                    backgroundColor: streakStats.weekStatus[i]
-                      ? 'var(--color-success-bg, #d1fae5)'
-                      : 'var(--color-muted-bg, #f3f4f6)',
-                  }}
-                >
-                  {streakStats.weekStatus[i] && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <polyline
-                        points="2,6 5,9 10,3"
-                        stroke="var(--color-success, #10b981)"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
+            {WEEK_DAYS.map((day, i) => {
+              const todayIndex = (new Date().getDay() + 6) % 7;
+              const hasStreak = streakStats.weekStatus[i];
+              const isPastOrToday = i <= todayIndex;
+              const isMissed = isPastOrToday && !hasStreak;
+
+              const bgColor = hasStreak
+                ? 'var(--color-success-bg, #d1fae5)'
+                : isMissed
+                  ? '#fee2e2' 
+                  : 'var(--color-muted-bg, #f3f4f6)';
+
+              const textColor = hasStreak
+                ? 'var(--color-success, #10b981)'
+                : isMissed
+                  ? '#ef4444'
+                  : 'var(--text-muted)';
+
+              return (
+                <div key={day} className="flex flex-col items-center gap-1.5">
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                    style={{ backgroundColor: bgColor }}
+                  >
+                    {hasStreak && (
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <polyline
+                          points="2,6 5,9 10,3"
+                          stroke="var(--color-success, #10b981)"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                    {isMissed && (
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <path
+                          d="M2,2 L10,10 M10,2 L2,10"
+                          stroke="#ef4444"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <span
+                    className="text-[10px] font-medium"
+                    style={{ color: textColor }}
+                  >
+                    {day}
+                  </span>
                 </div>
-                <span
-                  className="text-[10px] font-medium"
-                  style={{
-                    color: streakStats.weekStatus[i]
-                      ? 'var(--color-success, #10b981)'
-                      : 'var(--text-muted)',
-                  }}
-                >
-                  {day}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <Divider />

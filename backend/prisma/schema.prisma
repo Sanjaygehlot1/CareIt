@@ -49,6 +49,7 @@ model User {
   focusStats       FocusStats[]
   streakStats      StreakStats[]
   goals            Goal[]
+  notes            Note[]
 
   @@map("users")
 }
@@ -83,6 +84,7 @@ model StreakStats {
   hasStreak      Boolean  @default(false)
   codingDuration Int      @default(0)
   commitCount    Int      @default(0)
+  todayPriority  String?              // user-set or AI-generated priority for the day
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id])
@@ -127,4 +129,15 @@ enum BurnoutLevel {
   MILD
   MODERATE
   SEVERE
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String   @default("Untitled")
+  content   String   @default("")
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 }

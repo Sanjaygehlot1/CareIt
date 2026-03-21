@@ -1,83 +1,64 @@
-import { createContext, useContext, useEffect } from "react";
-import { useState } from "react";
-import { type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { AxiosInstance } from "../axios/axiosInstance";
 
 type AuthContextType = {
     user: any;
-    Loading: boolean,
-    logOut: () => {}
+    Loading: boolean;
+    logOut: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 type AuthProviderProps = {
-    children: ReactNode
-}
+    children: ReactNode;
+};
 
 export function AuthProvider({ children }: AuthProviderProps) {
-
-    const [user, setuser] = useState(null);
-    const [Loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const getUserSession = async () => {
         try {
-            const response = await AxiosInstance.get('/auth/profile')
-            console.log(response.data)
-            setuser(response.data.data);
-            console.log(user)
-
+            const response = await AxiosInstance.get('/auth/profile');
+            setUser(response.data.data);
         } catch (error) {
-
-            setuser(null)
-            console.log(error);
+            setUser(null);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const logOut = async () => {
         try {
+            sessionStorage.removeItem('careit_ai_coach_summary');
             await AxiosInstance.get('/auth/logout');
-            setuser(null);
+            setUser(null);
         } catch (error) {
-            console.log(error);
+            console.log("Logout error:", error);
         }
-    }
+    };
 
     useEffect(() => {
-
         getUserSession();
-
-    }, [])
+    }, []);
 
     const values = {
         user,
-        Loading,
+        Loading: loading,
         logOut
-    }
-
+    };
 
     return (
         <AuthContext.Provider value={values}>
-            {!Loading && children}
+            {!loading && children}
         </AuthContext.Provider>
-    )
+    );
 }
 
 export const getAuth = () => {
     const context = useContext(AuthContext);
-
-
     if (!context) {
-        throw new Error('getAuth must be used within an AuthProvider')
+        throw new Error('getAuth must be used within an AuthProvider');
     }
-
     return context;
-}
-
-
-
-
-
-
+};

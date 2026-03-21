@@ -8,89 +8,81 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Zap } from 'lucide-react';
 import { getEditorStats } from '../../controllers/analytics';
 
 interface ActivityData {
   date: string;
+  day: string;
   duration: number;
-  keystrokes: number;
-}
-
-interface ActivityTrendChartProps {
-  data?: ActivityData[];
+  focusDuration: number; 
 }
 
 const ActivityTrendChart: React.FC = () => {
-
-  const [Stats, setStats] = useState<ActivityTrendChartProps[] | []>([])
-  const [loading, setLoading] = useState(true)
-
+  const [stats, setStats] = useState<ActivityData[]>([]);
+  const [range, setRange] = useState(7);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       try {
-        const res = await getEditorStats();
+        const res = await getEditorStats(range);
         setStats(res);
       } catch (error) {
-        console.log(error)
+        console.error("Failed to fetch activity stats:", error);
       } finally {
         setLoading(false);
       }
     }
-    fetchStats()
-  }, [])
-
-
-
+    fetchStats();
+  }, [range]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const seconds = payload[0].value;
-      const hours = Math.floor(seconds / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-
-      let timeDisplay;
-      if (hours > 0) {
-        timeDisplay = `${hours}h ${minutes}m`;
-      } else {
-        timeDisplay = `${minutes}m`;
-      }
-
       return (
-        <div className="bg-black text-white text-xs p-3 rounded-lg shadow-xl border border-gray-700">
-          <p className="font-bold text-base mb-2 border-b border-gray-600 pb-1">{label}</p>
-          <p className="mb-1" style={{ color: payload[0].color }}>
-            ⏱️ {timeDisplay}
+        <div className="p-4 rounded-xl shadow-2xl border" 
+             style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+          <p className="font-bold text-sm mb-3 border-b pb-2 flex items-center justify-between" style={{ color: 'var(--text-primary)', borderColor: 'var(--card-border)' }}>
+            <span>{label}</span>
+            <span  className="text-xs opacity-50 font-medium">Daily Split</span>
           </p>
+          <div className="space-y-3">
+            {payload.map((p: any, i: number) => {
+              const seconds = p.value;
+              const hrs = Math.floor(seconds / 3600);
+              const mins = Math.floor((seconds % 3600) / 60);
+              const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+              
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                  <div className="flex-1">
+                    <p style={{color: 'var(--text-primary)'}}  className="text-[10px] uppercase tracking-wider opacity-60 font-bold leading-none mb-1">{p.name}</p>
+                    <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{timeStr}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       );
     }
     return null;
   };
 
-  <defs>
-    <linearGradient id="colorTime" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3} />
-      <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
-    </linearGradient>
-  </defs>
   if (loading) {
     return (
-      <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', minHeight: 320 }}
-        className="p-6 rounded-xl shadow-sm border flex flex-col">
-    
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="skeleton w-5 h-5 rounded" />
-            <div className="skeleton h-5 w-36" />
-          </div>
+      <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', minHeight: 400 }}
+        className="p-6 rounded-2xl shadow-sm border flex flex-col">
+        <div className="flex items-center justify-between mb-8">
+           <div className="skeleton h-6 w-48 rounded" />
         </div>
-        <div className="flex items-end justify-between gap-3 flex-1 min-h-[250px] px-2 pb-4">
-          {[60, 80, 45, 95, 70, 55, 85].map((h, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 flex-1">
-              <div className="skeleton w-full rounded-lg" style={{ height: `${h * 2.2}px` }} />
-              <div className="skeleton h-2.5 w-6" />
+        <div className="flex-1 flex items-end gap-3 px-2 pb-8">
+          {[40, 70, 45, 90, 65, 50, 80].map((h, i) => (
+            <div key={i} className="flex-1 flex flex-col gap-2">
+              <div className="skeleton w-full rounded-t-lg opacity-20" style={{ height: `${h}%` }} />
+              <div className="skeleton h-3 w-8 mx-auto" />
             </div>
           ))}
         </div>
@@ -98,74 +90,121 @@ const ActivityTrendChart: React.FC = () => {
     );
   }
 
+ 
+  const maxFocus = stats.reduce((max, s) => s.focusDuration > max.focusDuration ? s : max, stats[0] || {day: 'N/A', focusDuration: 0});
+
   return (
-    <div
-      style={{
-        backgroundColor: 'var(--card-bg)',
-        borderColor: 'var(--card-border)'
-      }}
-      className="p-6 rounded-xl shadow-sm border h-[45%] flex flex-col"
+    <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+      className="p-6 rounded-2xl shadow-sm border relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/5"
     >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center" style={{ color: 'var(--text-primary)' }}>
-          <TrendingUp className="mr-3" style={{ color: 'var(--accent-primary)' }} size={20} />
-          VS Code Activity
-        </h2>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col">
+          <h2 className="text-lg font-bold flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+            <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
+               <TrendingUp size={18} />
+            </div>
+            Activity Trends
+          </h2>
+          <p style={{color: 'var(--text-primary)'}}  className="text-xs font-semibold opacity-50 ml-11 -mt-1 uppercase tracking-widest">
+            Last {range} days performance
+          </p>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex bg-black/5 dark:bg-white/5 p-1 rounded-xl gap-1 border border-black/5 dark:border-white/5">
+            {[7, 15, 30].map(r => (
+              <button 
+                key={r}
+                onClick={() => setRange(r)}
+                className={`px-3 py-1 rounded-lg text-[10px] uppercase font-black transition-all duration-300 ${range === r 
+                  ? 'bg-white dark:bg-zinc-800 text-orange-500 shadow-lg shadow-orange-500/10' 
+                  : 'text-zinc-500 hover:text-orange-400 opacity-60 hover:opacity-100'}`}
+              >
+                {r}D
+              </button>
+            ))}
+          </div>
+           <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+              <span style={{color: 'var(--text-primary)'}}  className="text-[10px] uppercase font-bold opacity-60 tracking-wider">Deep Work</span>
+           </div>
+           <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
+              <span style={{color: 'var(--text-primary)'}} className="text-[10px] uppercase font-bold opacity-60 tracking-wider">Total Coding</span>
+           </div>
+        </div>
       </div>
 
-      <div className="flex-1 w-full min-h-[250px]">
+      <div className="w-full h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={Stats}
-            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
-          >
+          <AreaChart data={stats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorFocus" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#f97316" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
 
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="var(--border-primary)"
-              opacity={0.4}
+            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--card-border)" opacity={0.3} />
+
+            <XAxis 
+              dataKey={range > 7 ? "date" : "day"} 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fill: 'var(--text-secondary)', fontSize: 10, fontWeight: 600 }}
+              dy={15}
+              minTickGap={20}
             />
 
-            <XAxis
-              dataKey="date"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
-              dy={5}
-            />
-
-            <YAxis
-              yAxisId="left"
-              axisLine={false}
-              tickLine={false}
+            <YAxis 
+              axisLine={false} 
+              tickLine={false} 
               tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-              tickFormatter={(val) => `${(val / 3600).toFixed(1)}h`}
-              width={45}
-              domain={[0, 'auto']}
+              tickFormatter={(v) => `${(v / 3600).toFixed(0)}h`}
             />
 
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip  content={<CustomTooltip />} cursor={{ stroke: 'var(--card-border)', strokeWidth: 1 }} />
 
             <Area
-              yAxisId="left"
               type="monotone"
               dataKey="duration"
-              name="Time"
-              stroke="var(--accent-primary)"
-              fillOpacity={1}
-              fill="url(#colorTime)"
+              name="Total Coding"
+              stroke="#8b5cf6"
               strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5, fill: 'var(--accent-primary)' }}
+              fillOpacity={1}
+              fill="url(#colorTotal)"
+              animationDuration={2000}
+            />
+
+            <Area
+              type="monotone"
+              dataKey="focusDuration"
+              name="Deep Work"
+              stroke="#f97316"
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorFocus)"
+              dot={{ r: 4, fill: '#f97316', strokeWidth: 2, stroke: 'var(--card-bg)' }}
+              activeDot={{ r: 6, strokeWidth: 0 }}
+              animationDuration={1500}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      <p className="text-[10px] mt-2 text-center" style={{ color: 'var(--text-tertiary)' }}>
-        Coding Activity Over Time
-      </p>
+      <div className="mt-8 flex items-center justify-between border-t pt-4" style={{ borderColor: 'var(--card-border)' }}>
+         <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            <Zap size={14} className="text-orange-500" />
+            <span>Highest flow day: <span className="text-orange-500">{maxFocus?.day || 'N/A'}</span></span>
+         </div>
+         <div style={{color: 'var(--primary)'}}  className="text-[10px]  uppercase font-black tracking-widest">
+            CareIt Multi-Stream Activity
+         </div>
+      </div>
     </div>
   );
 };

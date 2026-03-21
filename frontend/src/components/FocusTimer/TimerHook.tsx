@@ -1,20 +1,38 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { AxiosInstance } from "../../axios/axiosInstance";
+
+const MIN_SAVE_SECONDS = 60; 
+
+async function saveFocusSession(durationSeconds: number) {
+  if (durationSeconds < MIN_SAVE_SECONDS) return;
+  try {
+    await AxiosInstance.post('/analytics/focus-session', { durationSeconds });
+  } catch {
+    
+  }
+}
 
 export function useTimer() {
   const [totalTime, setTotalTime] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
   const intervalRef = useRef<number | null>(null);
+  
+  const totalTimeRef = useRef(0);
 
-  const startTimer = () => {
+  useEffect(() => {
+    totalTimeRef.current = totalTime;
+  }, [totalTime]);
+
+  const startTimer = useCallback(() => {
     if (isFocused) return;
     setIsFocused(true);
 
     intervalRef.current = window.setInterval(() => {
       setTotalTime((prev) => prev + 1);
     }, 1000);
-  };
+  }, [isFocused]);
 
-  const stopTimer = () => {
+  const stopTimer = useCallback(() => {
     if (!isFocused) return;
     setIsFocused(false);
 
@@ -22,16 +40,24 @@ export function useTimer() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  };
 
-  const resetTimer = () => {
+    saveFocusSession(totalTimeRef.current);
+  }, [isFocused]);
+
+  const resetTimer = useCallback(() => {
+    const elapsed = totalTimeRef.current;
+
     if (intervalRef.current !== null) clearInterval(intervalRef.current);
     intervalRef.current = null;
     setIsFocused(false);
     setTotalTime(0);
-  };
+    totalTimeRef.current = 0;
 
-  // Auto stop if tab is hidden
+   
+    saveFocusSession(elapsed);
+  }, []);
+
+ 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && isFocused) {
@@ -40,11 +66,16 @@ export function useTimer() {
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [isFocused]);
+  }, [isFocused, stopTimer]);
 
-  // Cleanup on unmount
-  useEffect(() => () => {
-    if (intervalRef.current !== null) clearInterval(intervalRef.current);
+ 
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        saveFocusSession(totalTimeRef.current);
+      }
+    };
   }, []);
 
   return { isFocused, totalTime, startTimer, stopTimer, resetTimer };

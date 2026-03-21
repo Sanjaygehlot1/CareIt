@@ -2,12 +2,12 @@ import React from 'react';
 import '../index.css'
 
 import DailyFocusBar from '../components/dashboard/DailyFocusBar';
-import WellnessCheckin from '../components/dashboard/WellnessCheckin';
 import ActivityTrendChart from '../components/dashboard/WeeklyActivityChart';
 import GoalsMiniCard from '../components/dashboard/GoalsMiniCard';
 import TodaysAgenda from '../components/dashboard/TodaysAgenda';
 import EventCalendar from '../components/dashboard/EventCalendar';
 import BurnoutBanner from '../components/dashboard/BurnoutBanner';
+import StickyNoteWidget from '../components/dashboard/StickyNoteWidget';
 import { getAuth } from '../context/authContext';
 
 const Dashboard: React.FC = () => {
@@ -16,9 +16,8 @@ const Dashboard: React.FC = () => {
   const burnoutScore = (user as any)?.burnoutScore ?? 0;
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-secondary)' }} className="flex flex-col h-screen relative">
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
+    <div style={{ backgroundColor: 'var(--bg-secondary)' }} className="min-h-screen pb-24 relative">
+        <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
 
           <div className="mb-6">
             <DailyFocusBar />
@@ -38,13 +37,12 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className="space-y-6">
+              <StickyNoteWidget />
               <EventCalendar />
               <TodaysAgenda />
-              <WellnessCheckin />
             </div>
           </div>
         </div>
-      </main>
     </div>
   );
 };

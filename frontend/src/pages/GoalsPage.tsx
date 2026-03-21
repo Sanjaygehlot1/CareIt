@@ -27,12 +27,12 @@ const PERIOD_OPTIONS: { value: Goal['period']; label: string; desc: string }[] =
     { value: 'MONTHLY', label: 'Monthly', desc: 'Reset every 1st' },
 ];
 
-const TYPE_OPTIONS: { value: Goal['type']; label: string; unitHint: string; targetHint: string }[] = [
-    { value: 'CODING_TIME', label: 'Coding Time', unitHint: 'minutes', targetHint: 'e.g. 120' },
-    { value: 'STREAK', label: 'Streak', unitHint: 'days', targetHint: 'e.g. 7' },
-    { value: 'FOCUS_TIME', label: 'Focus Time', unitHint: 'minutes', targetHint: 'e.g. 60' },
-    { value: 'COMMITS', label: 'Commits', unitHint: 'commits', targetHint: 'e.g. 10' },
-    { value: 'CUSTOM', label: 'Custom', unitHint: '', targetHint: 'e.g. 5' },
+const TYPE_OPTIONS: { value: Goal['type']; label: string; units: string[]; targetHint: string }[] = [
+    { value: 'CODING_TIME', label: 'Coding Time', units: ['minutes', 'hours'], targetHint: 'e.g. 120' },
+    { value: 'STREAK', label: 'Streak', units: ['days', 'weeks'], targetHint: 'e.g. 7' },
+    { value: 'FOCUS_TIME', label: 'Focus Time', units: ['minutes', 'hours'], targetHint: 'e.g. 60' },
+    { value: 'COMMITS', label: 'Commits', units: ['commits', 'PRs', 'pushes'], targetHint: 'e.g. 10' },
+    { value: 'CUSTOM', label: 'Custom', units: ['tasks', 'sessions', 'pts', 'units'], targetHint: 'e.g. 5' },
 ];
 
 
@@ -55,6 +55,8 @@ function ProgressRing({ progress, size = 56, stroke = 5, color }: {
 
 
 
+const SYSTEM_TRACKED_TYPES = ['CODING_TIME', 'STREAK', 'COMMITS', 'FOCUS_TIME'] as const;
+
 function GoalCard({ goal, onDelete, onToggle }: {
     goal: Goal; onDelete: (id: number) => void; onToggle: (id: number, completed: boolean) => void;
 }) {
@@ -62,6 +64,7 @@ function GoalCard({ goal, onDelete, onToggle }: {
     const pct = Math.min((goal.currentValue / goal.targetValue) * 100, 100);
     const [deleting, setDeleting] = useState(false);
     const [toggling, setToggling] = useState(false);
+    const isSystemTracked = (SYSTEM_TRACKED_TYPES as readonly string[]).includes(goal.type);
 
     return (
         <div
@@ -72,15 +75,16 @@ function GoalCard({ goal, onDelete, onToggle }: {
                 opacity: deleting ? 0.4 : 1,
             }}
         >
-        
+
+            
             <div
-                className="relative flex-shrink-0 cursor-pointer select-none"
-                onClick={async () => {
+                className={`relative flex-shrink-0 select-none ${!isSystemTracked ? 'cursor-pointer' : ''}`}
+                onClick={!isSystemTracked ? async () => {
                     setToggling(true);
                     await onToggle(goal.id, !goal.completed);
                     setToggling(false);
-                }}
-                title={goal.completed ? 'Mark incomplete' : 'Mark complete'}
+                } : undefined}
+                title={!isSystemTracked ? (goal.completed ? 'Mark incomplete' : 'Mark complete') : 'Progress tracked automatically'}
             >
                 <ProgressRing progress={pct} color={goal.completed ? '#10b981' : meta.color} />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -93,7 +97,6 @@ function GoalCard({ goal, onDelete, onToggle }: {
                 </div>
             </div>
 
-    
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -104,10 +107,17 @@ function GoalCard({ goal, onDelete, onToggle }: {
                             >
                                 {goal.title}
                             </span>
+                            
                             {goal.isAiGenerated && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
                                     style={{ backgroundColor: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>
                                     <Sparkles size={9} />AI
+                                </span>
+                            )}
+                            {isSystemTracked && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                                    style={{ backgroundColor: 'rgba(6,182,212,0.1)', color: '#06b6d4' }}>
+                                    <TrendingUp size={9} />Auto-tracked
                                 </span>
                             )}
                         </div>
@@ -135,13 +145,23 @@ function GoalCard({ goal, onDelete, onToggle }: {
                     </div>
                     <div className="flex items-center justify-between mt-1.5">
                         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                            {goal.currentValue} / {goal.targetValue} {goal.unit}
+                            {(() => {
+                                if (goal.unit === 'hours' && (goal.type === 'CODING_TIME' || goal.type === 'FOCUS_TIME')) {
+                                    return (goal.currentValue / 60).toFixed(1);
+                                }
+                                if (goal.unit === 'weeks' && goal.type === 'STREAK') {
+                                    return (goal.currentValue / 7).toFixed(1);
+                                }
+                                return goal.currentValue;
+                            })()} / {goal.targetValue} {goal.unit}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium"
-                            style={{ backgroundColor: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}>
-                            {meta.icon}
-                            {meta.label}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                                style={{ backgroundColor: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}>
+                                {meta.icon}
+                                {meta.label}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -156,10 +176,11 @@ function AddGoalModal({ onClose, onSaved }: { onClose: () => void; onSaved: (g: 
     });
     const [saving, setSaving] = useState(false);
     const selectedType = TYPE_OPTIONS.find(t => t.value === form.type)!;
+    const isTrackedType = (SYSTEM_TRACKED_TYPES as readonly string[]).includes(form.type ?? '');
 
     const handleTypeChange = (type: Goal['type']) => {
         const meta = TYPE_OPTIONS.find(t => t.value === type)!;
-        setForm(p => ({ ...p, type, unit: meta.unitHint }));
+        setForm(p => ({ ...p, type, unit: meta.units[0] }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -227,6 +248,18 @@ function AddGoalModal({ onClose, onSaved }: { onClose: () => void; onSaved: (g: 
                             </div>
                         </div>
                     </div>
+
+                    
+                    {isTrackedType && (
+                        <div className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
+                            style={{ backgroundColor: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
+                            <TrendingUp size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#06b6d4' }} />
+                            <p className="text-xs leading-relaxed" style={{ color: '#06b6d4' }}>
+                                <strong>Auto-tracked</strong> — CareIt will measure your {selectedType.label.toLowerCase()} progress automatically from your real activity. No manual updates needed.
+                            </p>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Target *</label>
@@ -238,11 +271,14 @@ function AddGoalModal({ onClose, onSaved }: { onClose: () => void; onSaved: (g: 
                         </div>
                         <div>
                             <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Unit</label>
-                            <input value={form.unit}
-                                onChange={e => setForm(p => ({ ...p, unit: e.target.value }))}
-                                placeholder={selectedType.unitHint || 'unit'}
-                                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                                style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }} />
+                            <div className="relative">
+                                <select value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))}
+                                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
+                                    style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}>
+                                    {selectedType.units.map(u => <option key={u} value={u}>{u}</option>)}
+                                </select>
+                                <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-secondary)' }} />
+                            </div>
                         </div>
                     </div>
                     <button type="submit" disabled={saving || !form.title.trim()}
@@ -269,7 +305,7 @@ function StatsBar({ goals }: { goals: Goal[] }) {
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            
+
             <div className="col-span-2 sm:col-span-2 rounded-2xl p-4 flex items-center gap-4"
                 style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                 <div className="relative w-16 h-16 flex-shrink-0">
@@ -299,7 +335,7 @@ function StatsBar({ goals }: { goals: Goal[] }) {
                 </div>
             </div>
 
-            
+
             <div className="rounded-2xl p-4 flex flex-col justify-between"
                 style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
@@ -311,7 +347,7 @@ function StatsBar({ goals }: { goals: Goal[] }) {
                 </div>
             </div>
 
-         
+
             <div className="rounded-2xl p-4 flex flex-col justify-between"
                 style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(16,185,129,0.1)' }}>
@@ -340,6 +376,7 @@ const GoalsPage = () => {
         setLoading(true);
         const data = await getGoals(activePeriod);
         setGoals(data);
+        console.log(goals)
         setLoading(false);
     }, [activePeriod]);
 
@@ -351,6 +388,8 @@ const GoalsPage = () => {
     };
 
     const handleToggle = async (id: number, completed: boolean) => {
+        const goal = goals.find(g => g.id === id);
+        if (!goal || (SYSTEM_TRACKED_TYPES as readonly string[]).includes(goal.type)) return;
         const updated = await updateGoal(id, { completed });
         if (updated) setGoals(prev => prev.map(g => g.id === id ? updated : g));
     };
@@ -364,7 +403,7 @@ const GoalsPage = () => {
         setAiLoading(true);
         setAiError('');
         setAiSuccess('');
-        const result = await generateAiGoals();
+        const result = await generateAiGoals(activePeriod);
         setAiLoading(false);
         if (result?.goals?.length) {
             setGoals(prev => [...result.goals, ...prev]);
@@ -379,9 +418,9 @@ const GoalsPage = () => {
 
     return (
         <div style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh' }}>
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-32">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-32">
 
-       
+
                 <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
                     <div>
                         <div className="flex items-center gap-3">
@@ -412,7 +451,7 @@ const GoalsPage = () => {
                     </div>
                 </div>
 
-              
+
                 {aiSuccess && (
                     <div className="mb-4 px-4 py-3 rounded-2xl flex items-center gap-3 text-sm font-medium"
                         style={{ backgroundColor: 'rgba(139,92,246,0.1)', color: '#8b5cf6', border: '1px solid rgba(139,92,246,0.2)' }}>
@@ -426,10 +465,38 @@ const GoalsPage = () => {
                     </div>
                 )}
 
-       
-                {!loading && filtered.length > 0 && <StatsBar goals={filtered} />}
 
-          
+                {loading ? (
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                        <div className="col-span-2 sm:col-span-2 rounded-2xl p-4 flex items-center gap-4"
+                            style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                            <div className="skeleton w-16 h-16 rounded-full flex-shrink-0" />
+                            <div className="flex flex-col gap-2 flex-1">
+                                <div className="skeleton h-6 w-20" />
+                                <div className="skeleton h-3 w-28" />
+                                <div className="flex gap-2">
+                                    <div className="skeleton h-4 w-16 rounded-full" />
+                                    <div className="skeleton h-4 w-14 rounded-full" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {[1, 2].map(i => (
+                            <div key={i} className="rounded-2xl p-4 flex flex-col justify-between"
+                                style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                                <div className="skeleton w-8 h-8 rounded-xl" />
+                                <div className="mt-2">
+                                    <div className="skeleton h-7 w-12 mb-1.5" />
+                                    <div className="skeleton h-3 w-20" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : filtered.length > 0 ? (
+                    <StatsBar goals={filtered} />
+                ) : null}
+
                 <div className="flex items-center gap-1 mb-5 p-1 rounded-2xl w-fit"
                     style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                     {PERIOD_OPTIONS.map(p => (
@@ -446,37 +513,19 @@ const GoalsPage = () => {
                 </div>
 
                 {loading ? (
+                    
                     <div className="flex flex-col gap-3">
-                   
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                            <div className="col-span-2 rounded-2xl p-4 flex items-center gap-4"
-                                style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-                                <div className="skeleton w-16 h-16 rounded-full flex-shrink-0" />
-                                <div className="flex flex-col gap-2 flex-1">
-                                    <div className="skeleton h-6 w-20" />
-                                    <div className="skeleton h-3 w-28" />
-                                    <div className="flex gap-2"><div className="skeleton h-4 w-16 rounded-full" /><div className="skeleton h-4 w-14 rounded-full" /></div>
-                                </div>
-                            </div>
-                            {[1, 2].map(i => (
-                                <div key={i} className="rounded-2xl p-4"
-                                    style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-                                    <div className="skeleton w-8 h-8 rounded-xl mb-4" />
-                                    <div className="skeleton h-7 w-10 mb-1.5" />
-                                    <div className="skeleton h-3 w-20" />
-                                </div>
-                            ))}
-                        </div>
-                      
                         {[1, 2, 3].map(i => (
                             <div key={i} className="rounded-2xl p-5 flex items-start gap-5"
                                 style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                                 <div className="skeleton w-14 h-14 rounded-full flex-shrink-0" />
-                                <div className="flex-1">
-                                    <div className="skeleton h-4 mb-2" style={{ width: `${55 + i * 12}%` }} />
-                                    <div className="skeleton h-3 w-2/5 mb-4" />
-                                    <div className="skeleton h-2 w-full rounded-full mb-2" />
-                                    <div className="flex justify-between"><div className="skeleton h-3 w-20" /><div className="skeleton h-5 w-24 rounded-full" /></div>
+                                <div className="flex-1 flex flex-col justify-center mt-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="skeleton h-5 w-48" />
+                                        <div className="skeleton h-4 w-16 rounded-full" />
+                                    </div>
+                                    <div className="skeleton h-3 w-3/4 max-w-md mb-4" />
+                                    <div className="skeleton h-2 w-full rounded-full" />
                                 </div>
                             </div>
                         ))}

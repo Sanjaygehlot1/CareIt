@@ -10,10 +10,9 @@ function PrivateRoute({children} : childrenPropsType) {
 
     const {user, Loading} = getAuth()
 
-    if(Loading) return <div>Loading...</div>;
-    console.log(user);
+    if(Loading) return null;
 
-    if(!user) return <Navigate to='/sign-in'/>;
+    if(!user) return <Navigate to='/'/>;
 
     return children;
 

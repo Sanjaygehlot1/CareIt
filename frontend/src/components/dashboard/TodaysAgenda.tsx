@@ -1,22 +1,52 @@
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, CalendarX } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-
-const events = [
-  { time: '10:00 AM', title: 'Team Standup' },
-  { time: '11:30 AM', title: 'Design Review - Project Phoenix' },
-  { time: '02:00 PM', title: 'Focus Time Block' },
-  { time: '04:30 PM', title: '1-on-1 with Manager' },
-];
+import { getEvents } from '../../controllers/calendar';
+import type { ExtendedEvents } from '../../types/calendar';
 
 const TodaysAgenda: React.FC = () => {
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<ExtendedEvents[]>([]);
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 700);
-    return () => clearTimeout(t);
+    let mounted = true;
+    const fetchEvents = async () => {
+      try {
+        const responseEvents = await getEvents();
+        if (!mounted) return;
+        
+   
+        const today = new Date().toDateString();
+        const todaysEvents = responseEvents.filter((ev: ExtendedEvents) => {
+           const evDate = new Date(ev.start.dateTime || ev.start.date);
+           return evDate.toDateString() === today;
+        });
+
+     
+        todaysEvents.sort((a: ExtendedEvents, b: ExtendedEvents) => {
+           return new Date(a.start.dateTime || a.start.date).getTime() - new Date(b.start.dateTime || b.start.date).getTime();
+        });
+
+        setEvents(todaysEvents.slice(0, 5)); 
+      } catch (err) {
+        console.error("Failed to load Agenda:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchEvents();
+
+    return () => { mounted = false; };
   }, []);
 
-  if (!mounted) {
+  const formatTime = (dateStr: Date | string) => {
+    const d = new Date(dateStr);
+  
+    if (!dateStr.toString().includes('T')) return 'All Day';
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '');
+  };
+
+  if (loading) {
     return (
       <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
         className="p-6 rounded-xl shadow-card border">
@@ -27,7 +57,7 @@ const TodaysAgenda: React.FC = () => {
         </div>
    
         <div className="space-y-4">
-          {[60, 80, 50, 70].map((w, i) => (
+          {[60, 80, 50].map((w, i) => (
             <div key={i} className="flex items-center gap-4">
               <div className="skeleton h-4 w-20 flex-shrink-0" />
               <div className="skeleton w-1.5 h-1.5 rounded-full flex-shrink-0" />
@@ -46,15 +76,37 @@ const TodaysAgenda: React.FC = () => {
         <CalendarClock className="mr-3" style={{ color: 'var(--accent-primary)' }} size={24} />
         Today's Agenda
       </h2>
-      <div className="space-y-4">
-        {events.map((event, index) => (
-          <div key={index} className="flex items-center space-x-4">
-            <span className="font-medium text-sm w-24" style={{ color: 'var(--text-secondary)' }}>{event.time}</span>
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--accent-primary)' }} />
-            <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{event.title}</span>
+      
+      {events.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-6">
+              <CalendarX size={32} className="mb-2 opacity-20" style={{ color: 'var(--text-primary)' }} />
+              <p className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
+                  Your schedule is beautifully clear today.
+              </p>
           </div>
-        ))}
-      </div>
+      ) : (
+          <div className="space-y-4">
+            {events.map((event, index) => (
+              <div key={event.id || index} className="flex items-start space-x-4">
+                <span className="font-medium text-sm w-20 pt-0.5 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
+                  {formatTime(event.start.dateTime || event.start.date)}
+                </span>
+                <div className="w-1.5 h-1.5 rounded-full shrink-0 relative top-2" style={{ backgroundColor: 'var(--accent-primary)' }} />
+                <div className="flex-1 flex flex-col min-w-0">
+                   <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }} title={event.summary}>
+                     {event.summary || "Busy"}
+                   </span>
+                  
+                   {event.end?.dateTime && (
+                       <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+                           Until {formatTime(event.end.dateTime)}
+                       </span>
+                   )}
+                </div>
+              </div>
+            ))}
+          </div>
+      )}
     </div>
   );
 };

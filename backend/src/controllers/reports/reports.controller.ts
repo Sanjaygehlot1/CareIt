@@ -3,6 +3,11 @@ import { UnauthorizedException } from '../../exceptions/errorExceptions';
 import { ErrorCodes } from '../../exceptions/root';
 import { prisma } from "../../prisma";
 import { apiResponse } from '../../utils/apiResponse';
+import { google } from 'googleapis';
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL, GEMINI_API_KEY } from '../../secrets';
+import { GoogleGenAI } from '@google/genai';
+
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 
 export const getStreak = async (req: Request, res: Response, next: NextFunction) => {
@@ -228,6 +233,230 @@ export const toggleStreakReminder = async (req: Request, res: Response, next: Ne
         ));
     } catch (error) {
         console.error(error);
+        next(error);
+    }
+};
+
+export const getAdvancedReports = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user as any;
+        if (!user) return next(new UnauthorizedException("Unauthorized", ErrorCodes.UNAUTHORIZED_ACCESS));
+
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setDate(today.getDate() - 90);
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(today.getDate() - 7);
+
+        const focusStats = await prisma.focusStats.findMany({
+            where: { userId: user.id, date: { gte: thirtyDaysAgo } }
+        });
+
+        const streakStats = await prisma.streakStats.findMany({
+            where: { userId: user.id, date: { gte: threeMonthsAgo } }
+        });
+
+        let focusTime7d = 0;
+        let codingTime7d = 0;
+
+        focusStats.filter(f => new Date(f.date) >= sevenDaysAgo).forEach(f => focusTime7d += f.duration);
+        streakStats.filter(s => new Date(s.date) >= sevenDaysAgo).forEach(s => codingTime7d += s.codingDuration);
+
+        const focusHours = focusTime7d / 3600;
+        let codingHours = codingTime7d / 3600;
+        
+        if (codingHours < focusHours) codingHours = focusHours;
+        const generalCodingHours = codingHours - focusHours;
+
+        let meetingHours = 0;
+        if (user.googleRefreshToken) {
+            try {
+                const OAuth2 = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL);
+                OAuth2.setCredentials({ refresh_token: user.googleRefreshToken });
+                const calendar = google.calendar({ version: 'v3', auth: OAuth2 });
+
+                const eventsRes = await calendar.events.list({
+                    calendarId: 'primary',
+                    timeMin: sevenDaysAgo.toISOString(),
+                    timeMax: today.toISOString(),
+                    singleEvents: true,
+                    maxResults: 250,
+                    fields: 'items(start,end,summary,hangoutLink,conferenceData,location,attendees)'
+                });
+
+                const events = eventsRes.data.items ?? [];
+                
+                const meetings = events.filter(ev => {
+                    const hasConferenceData = !!ev.hangoutLink || !!ev.conferenceData;
+                    const textSearch = `${ev.location || ''} ${ev.summary || ''}`.toLowerCase();
+                    const hasExternalMeetingLink = textSearch.includes('zoom.us') || textSearch.includes('teams.microsoft') || textSearch.includes('webex.com');
+                    const hasMultipleAttendees = ev.attendees && ev.attendees.length > 1;
+                    return hasConferenceData || hasExternalMeetingLink || hasMultipleAttendees;
+                });
+
+                meetingHours = meetings.reduce((sum, ev) => {
+                    const start = ev.start?.dateTime ? new Date(ev.start.dateTime) : null;
+                    const end = ev.end?.dateTime ? new Date(ev.end.dateTime) : null;
+                    if (start && end) {
+                        return sum + (end.getTime() - start.getTime()) / 3600000;
+                    }
+                    return sum;
+                }, 0);
+            } catch (err) {
+                console.error("Google Calendar fetch failed for advanced reports:", err);
+            }
+        }
+
+        const daySums = [0, 0, 0, 0, 0, 0, 0];
+        focusStats.forEach(f => {
+            const dayOfWeek = new Date(f.date).getDay();
+            daySums[dayOfWeek] += f.duration / 60;
+        });
+        
+        streakStats.forEach(s => {
+            const dayOfWeek = new Date(s.date).getDay();
+            daySums[dayOfWeek] += s.codingDuration / 60;
+        });
+
+        const daysOfWeekList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const productivityByDay = daysOfWeekList.map((day, idx) => ({
+            name: day.substring(0, 3), 
+            value: Math.round(daySums[idx] / 4)
+        }));
+
+        const timeAllocation = [
+            { name: 'Deep Work', value: Math.round(focusHours * 10) / 10, color: '#f97316' },
+            { name: 'General Coding', value: Math.round(generalCodingHours * 10) / 10, color: '#8b5cf6' },
+            { name: 'Meetings', value: Math.round(meetingHours * 10) / 10, color: '#ef4444' }
+        ].filter(item => item.value > 0);
+
+        const projectActivity = await prisma.editorActivity.groupBy({
+            by: ['projectName'],
+            where: { userId: user.id, date: { gte: thirtyDaysAgo } },
+            _sum: { duration: true },
+            orderBy: { _sum: { duration: 'desc' } },
+            take: 5
+        });
+
+        const projectBreakdown = projectActivity.map(p => ({
+            name: p.projectName || 'Unnamed Project',
+            value: Math.round((p._sum.duration || 0) / 3600 * 10) / 10
+        }));
+
+        let githubHeatmap = [];
+        if (user.githubAccessToken && user.githubUsername) {
+            try {
+                const gqlResponse = await fetch('https://api.github.com/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${user.githubAccessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: `
+                            query($username: String!) {
+                                user(login: $username) {
+                                    contributionsCollection {
+                                        contributionCalendar {
+                                            weeks {
+                                                contributionDays {
+                                                    contributionCount
+                                                    date
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        `,
+                        variables: { username: user.githubUsername }
+                    })
+                });
+
+                const gqlData: any = await gqlResponse.json();
+                const weeks = gqlData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
+                
+                githubHeatmap = weeks.flatMap((w: any) => w.contributionDays).map((d: any) => ({
+                    date: d.date,
+                    count: d.contributionCount
+                })).slice(-90);
+
+            } catch (err) {
+                console.error("GitHub Heatmap fetch failed:", err);
+            }
+        }
+
+        const activityHeatmap = githubHeatmap.length > 0 ? githubHeatmap : streakStats.map(s => ({
+            date: s.date.toISOString().split('T')[0],
+            count: s.hasStreak ? 1 : 0
+        }));
+
+        return res.status(200).json(new apiResponse({
+            timeAllocation,
+            productivityByDay,
+            projectBreakdown,
+            activityHeatmap: {
+                data: activityHeatmap,
+                source: githubHeatmap.length > 0 ? 'github' : 'local'
+            }
+        }, "Advanced reports generated", 200));
+
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+export const getAiCoachSummary = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user as any;
+        if (!user) return next(new UnauthorizedException("Unauthorized", ErrorCodes.UNAUTHORIZED_ACCESS));
+
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 7);
+
+        const [focusStats, streakStats, userRecord] = await Promise.all([
+            prisma.focusStats.findMany({ where: { userId: user.id, date: { gte: sevenDaysAgo } } }),
+            prisma.streakStats.findMany({ where: { userId: user.id, date: { gte: sevenDaysAgo } } }),
+            prisma.user.findUnique({ where: { id: user.id }, select: { burnoutScore: true, name: true } })
+        ]);
+
+        const totalFocusHrs = focusStats.reduce((s, f) => s + f.duration, 0) / 3600;
+        const totalCodingHrs = streakStats.reduce((s, st) => s + st.codingDuration, 0) / 3600;
+        const totalCommits = streakStats.reduce((s, st) => s + st.commitCount, 0);
+        const burnout = userRecord?.burnoutScore ?? 0;
+
+        const prompt = `Act as "CareIt Coach", a direct and encouraging AI performance coach for software engineers. 
+Analyze the user's last 7 days of activity and provide a sharp, 2-sentence summary/insight.
+
+Stats:
+- Name: ${userRecord?.name}
+- Deep Work (Focus Time): ${totalFocusHrs.toFixed(1)} hours
+- Total Coding Time: ${totalCodingHrs.toFixed(1)} hours
+- Total Commits: ${totalCommits}
+- Current Burnout Score: ${burnout}/100
+
+Goal:
+Give one specific praise and one specific warning or actionable advice based on these stats. 
+Be concise. Max 35 words total.
+No quotes. No extra chatter. Output ONLY the 2-sentence summary.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        const summary = response.text || "You're making steady progress. Keep up the deep work sessions to hit your peak flow!";
+
+        return res.status(200).json(new apiResponse({ summary }, "AI Coach summary generated", 200));
+
+    } catch (error) {
+        console.error("AI Coach Error:", error);
         next(error);
     }
 };

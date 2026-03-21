@@ -12,15 +12,14 @@ export const generateApiKey = async (req: Request, res: Response, next: NextFunc
 
     try {
         const user = (req.user as any);
-        console.log("USER::",req.user)
-        
+
 
         if (!user) {
             next(new UnauthorizedException("Unautorized : Login to continue", 401));
         }
 
         const apiKey = generateKey();
-        console.log("GOOGLE_ID",user.googleProviderId)
+
 
         await prisma.user.update({
             where: { googleProviderId: user.googleProviderId },

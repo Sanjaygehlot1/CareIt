@@ -17,22 +17,35 @@ export function getMonthStart(): Date {
 }
 
 export async function syncOneGoal(goal: any, userId: number): Promise<any> {
+    const now = new Date();
+
     const periodStart = goal.period === 'DAILY'
         ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })()
         : goal.period === 'MONTHLY'
             ? getMonthStart()
             : getWeekStart();
 
-    const now = new Date();
+    const goalCreated = new Date(goal.createdAt);
+    goalCreated.setHours(0, 0, 0, 0);
+    const trackFrom = goalCreated > periodStart ? goalCreated : periodStart;
+
+
+    const SYSTEM_TRACKED_TYPES = ['CODING_TIME', 'STREAK', 'COMMITS', 'FOCUS_TIME'] as const;
+    if (!(SYSTEM_TRACKED_TYPES as readonly string[]).includes(goal.type)) {
+        return goal;
+    }
+
+    console.log(`[GoalSync] #${goal.id} ${goal.type} | trackFrom=${trackFrom.toISOString()} | period=${goal.period}`);
+
     let currentValue: number = goal.currentValue ?? 0;
 
     try {
         if (goal.type === 'CODING_TIME') {
             const stats = await prisma.streakStats.aggregate({
-                where: { userId, date: { gte: periodStart, lte: now } },
+                where: { userId, date: { gte: trackFrom, lte: now } },
                 _sum: { codingDuration: true }
             });
-            currentValue = Math.round((stats._sum.codingDuration ?? 0) / 60); 
+            currentValue = Math.round((stats._sum.codingDuration ?? 0) / 60);
 
         } else if (goal.type === 'STREAK') {
             const user = await prisma.user.findUnique({
@@ -42,28 +55,42 @@ export async function syncOneGoal(goal: any, userId: number): Promise<any> {
             currentValue = user?.currentStreak ?? 0;
 
         } else if (goal.type === 'FOCUS_TIME') {
+            const endOfDay = new Date();
+            endOfDay.setHours(23, 59, 59, 999);
             const stats = await prisma.focusStats.aggregate({
-                where: { userId, date: { gte: periodStart, lte: now } },
+                where: { userId, date: { gte: trackFrom, lte: endOfDay } },
                 _sum: { duration: true }
             });
-            currentValue = Math.round((stats._sum.duration ?? 0) / 60); 
+            currentValue = Math.round((stats._sum.duration ?? 0) / 60);
 
         } else if (goal.type === 'COMMITS') {
-          
             try {
-                const stats = await (prisma.streakStats as any).aggregate({
-                    where: { userId, date: { gte: periodStart, lte: now } },
+                const stats = await prisma.streakStats.aggregate({
+                    where: { userId, date: { gte: trackFrom, lte: now } },
                     _sum: { commitCount: true }
                 });
                 currentValue = stats._sum?.commitCount ?? 0;
             } catch {
-                currentValue = goal.currentValue ?? 0; 
+                currentValue = goal.currentValue ?? 0;
             }
-
         }
-       
 
-        const completed = currentValue >= goal.targetValue;
+        let effectiveTarget = goal.targetValue;
+        if (goal.unit === 'weeks' && goal.type === 'STREAK') {
+             effectiveTarget = goal.targetValue * 7;
+        }
+
+        const isTimeType = goal.type === 'CODING_TIME' || goal.type === 'FOCUS_TIME';
+        const isHours = goal.unit === 'hours';
+        
+        let completed = false;
+        if (isTimeType && isHours) {
+            completed = currentValue >= (goal.targetValue * 60);
+        } else {
+            completed = currentValue >= effectiveTarget;
+        }
+
+        console.log(`[GoalSync] #${goal.id} ${goal.type} → currentValue=${currentValue}, target=${goal.targetValue} ${goal.unit}, completed=${completed}`);
 
         if (currentValue !== goal.currentValue || completed !== goal.completed) {
             return await prisma.goal.update({

@@ -68,26 +68,26 @@ const SettingsPage: React.FC = () => {
       <div style={{ backgroundColor: 'var(--bg-secondary)' }} className="min-h-screen p-4 sm:p-6 lg:p-8">
         <div className="max-w-3xl mx-auto space-y-8 pb-24">
 
-      
+
           <div>
             <div className="skeleton h-7 w-40 mb-4 rounded-lg" />
             <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
               className="p-6 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center gap-5">
-             
+
               <div className="skeleton w-20 h-20 rounded-full flex-shrink-0" />
-           
+
               <div className="flex-1 flex flex-col gap-2.5 w-full">
                 <div className="skeleton h-5 w-36" />
                 <div className="skeleton h-4 w-52" />
                 <div className="skeleton h-4 w-40" />
                 <div className="skeleton h-3 w-28" />
               </div>
-           
+
               <div className="skeleton h-9 w-24 rounded-lg flex-shrink-0" />
             </div>
           </div>
 
-         
+
           <div>
             <div className="skeleton h-7 w-32 mb-4 rounded-lg" />
             <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
@@ -114,12 +114,12 @@ const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-      
+
           <div>
             <div className="skeleton h-7 w-48 mb-4 rounded-lg" />
             <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
               className="p-6 rounded-xl border space-y-5">
-           
+
               <div className="flex items-center gap-4">
                 <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
                 <div className="flex flex-col gap-1.5 flex-1">
@@ -127,14 +127,14 @@ const SettingsPage: React.FC = () => {
                   <div className="skeleton h-3 w-64 max-w-full" />
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <div className="skeleton h-11 flex-1 rounded-lg min-w-0" />
                 <div className="skeleton h-11 w-11 rounded-lg flex-shrink-0" />
                 <div className="skeleton h-11 w-36 rounded-lg flex-shrink-0" />
               </div>
               <hr style={{ borderColor: 'var(--border-primary)' }} />
-           
+
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
@@ -148,12 +148,12 @@ const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-       
+
           <div>
             <div className="skeleton h-7 w-56 mb-4 rounded-lg" />
             <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
               className="p-6 rounded-xl border space-y-5">
-           
+
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
@@ -164,7 +164,7 @@ const SettingsPage: React.FC = () => {
                 </div>
                 <div className="skeleton w-11 h-6 rounded-full flex-shrink-0" />
               </div>
-    
+
               <div className="flex items-start gap-4">
                 <div className="skeleton w-10 h-10 rounded-lg flex-shrink-0" />
                 <div className="flex flex-col gap-2 flex-1">
@@ -255,14 +255,14 @@ const SettingsPage: React.FC = () => {
 
   const toggleDailyDigest = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
-    
+
     setDigestEnabled(newValue);
     try {
-      
+
       await AxiosInstance.patch('/auth/preferences', { dailyDigestEnabled: newValue });
       showToast(newValue ? 'Daily digest enabled ✓' : 'Daily digest disabled');
     } catch {
-     
+
       setDigestEnabled(!newValue);
       showToast('Failed to update preference', 'error');
     }
@@ -324,47 +324,62 @@ const SettingsPage: React.FC = () => {
         )}
 
         {showNotification && error === 'github_conflict' && (
-          <div className="border-l-4 border-red-500 p-5 rounded-lg shadow-lg animate-slide-in-top" style={{ backgroundColor: 'var(--card-bg)' }}>
-            <div className="flex items-start">
-              <AlertCircle className="text-red-500 mt-1" size={24} />
-              <div className="ml-4 flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-bold text-red-800">GitHub Account in Use</h3>
-                  <button onClick={handleCloseNotification} className="text-red-500 hover:text-red-700"><X size={20} /></button>
-                </div>
+          <div className="rounded-2xl shadow-2xl border-2 animate-slide-in-top overflow-hidden" 
+               style={{ backgroundColor: 'var(--card-bg)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+            <div className="bg-red-500/10 p-4 border-b flex items-center gap-3" style={{ borderColor: 'rgba(239, 68, 68, 0.1)' }}>
+              <div className="bg-red-500 p-2 rounded-lg text-white">
+                <Github size={20} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-red-600">GitHub Connection Conflict</h3>
+                <p className="text-[11px] font-medium opacity-70 uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>Action Required</p>
+              </div>
+              <button onClick={handleCloseNotification} className="p-2 hover:bg-black/5 rounded-full transition-colors" style={{ color: 'var(--text-secondary)' }}>
+                <X size={18} />
+              </button>
+            </div>
 
-                <p className="text-sm text-red-700 mb-4">
-                  {message || 'This GitHub account is already connected to another user in our system.'}
-                </p>
+            <div className="p-6">
+              <p className="text-sm font-medium mb-6 leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                {message || 'This GitHub profile is already linked to another CareIt account. To connect it here, you first need to switch accounts on GitHub.'}
+              </p>
 
-                <div className="rounded-lg p-4 space-y-3" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}>
-                  <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>To connect a different account:</p>
-
-                  <div className="text-sm space-y-4" style={{ color: 'var(--text-secondary)' }}>
-                    <ol className="list-decimal list-inside space-y-2 pl-2">
-                      <li>
-                        Open a new browser tab and go to{' '}
-                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 hover:underline">
-                          github.com
-                        </a>.
-                      </li>
-                      <li>
-                        Click your profile picture (top-right), then select <strong>"Sign out"</strong>.
-                      </li>
-                      <li>
-                        Return to this page and click the button below.
-                      </li>
-                    </ol>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center text-xs font-bold border border-blue-500/20">1</div>
+                    <div className="w-px h-full bg-border-primary my-1"></div>
                   </div>
-
-                  <button
-                    onClick={handleRetryWithDifferentAccountGoogle}
-                    className="w-full mt-2 px-4 py-3 bg-gray-800 text-white font-semibold hover:bg-black rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Github size={16} />
-                    Try Connecting Again
-                  </button>
+                  <div className="pb-4">
+                    <p className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sign out of GitHub</p>
+                    <p className="text-xs opacity-70 mb-2" style={{ color: 'var(--text-secondary)' }}>Go to your GitHub profile and select "Sign out".</p>
+                    <a href="https://github.com/logout" target="_blank" rel="noopener noreferrer" 
+                       className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:underline">
+                      Logout Now <ExternalLink size={12} />
+                    </a>
+                  </div>
                 </div>
+
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-6 h-6 rounded-full bg-purple-500/10 text-purple-600 flex items-center justify-center text-xs font-bold border border-purple-500/20">2</div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Reconnect Account</p>
+                    <p className="text-xs opacity-70" style={{ color: 'var(--text-secondary)' }}>Sign in with the correct GitHub account to finish the sync.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <button
+                  onClick={() => window.location.href = `${BACKEND_BASE_URL}/auth/github/connect`}
+                  className="w-full py-3.5 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg"
+                  style={{ backgroundColor: 'var(--text-primary)', color: 'var(--bg-primary)' }}
+                >
+                  <Github size={18} />
+                  Try Connecting Again
+                </button>
               </div>
             </div>
           </div>
@@ -373,7 +388,13 @@ const SettingsPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Profile Settings</h1>
           <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border flex items-center space-x-6">
-            <img className="h-20 w-20 rounded-full" src={user?.profileUrl} alt="User Avatar" />
+            {user?.profileUrl ? (
+              <img className="h-20 w-20 rounded-full object-cover border-2 shadow-sm" style={{ borderColor: 'var(--accent-primary)' }} src={user.profileUrl} alt="User Avatar" />
+            ) : (
+              <div className="h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm" style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
+                {user?.name?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
             <div className="flex-1">
               <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.name}</h2>
               <p className={user.email ? "flex items-center gap-2 mt-1" : "flex items-center gap-2 mt-1"} style={{ color: user.email ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
@@ -386,9 +407,6 @@ const SettingsPage: React.FC = () => {
                 Logged in via: <span className="font-semibold capitalize">{user?.provider}</span>
               </p>
             </div>
-            <button style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} className="border px-4 py-2 rounded-lg text-sm font-semibold hover:bg-hover-bg transition-colors">
-              Edit Profile
-            </button>
           </div>
         </div>
 
@@ -444,12 +462,12 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-       
+
         <div>
           <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Notifications &amp; Wellbeing</h1>
           <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
 
-          
+
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(139,92,246,0.1)', color: '#8b5cf6' }}>
@@ -469,14 +487,16 @@ const SettingsPage: React.FC = () => {
                   checked={digestEnabled}
                   onChange={toggleDailyDigest}
                 />
-                <div className="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-500"
-                  style={{ backgroundColor: 'var(--border-secondary)' }} />
+                <div
+                  className="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
+                  style={{ backgroundColor: digestEnabled ? 'var(--accent-primary)' : 'var(--border-secondary)' }}
+                />
               </label>
             </div>
 
             <hr style={{ borderColor: 'var(--border-primary)' }} />
 
-      
+
             {(() => {
               const level: string = (user as any)?.burnoutLevel ?? 'NONE';
               const score: number = (user as any)?.burnoutScore ?? 0;
@@ -497,7 +517,7 @@ const SettingsPage: React.FC = () => {
                       <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Burnout Status</h3>
                       <p className="text-sm mt-0.5" style={{ color: cfg.color, fontWeight: 600 }}>{cfg.label}</p>
                       <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{cfg.desc}</p>
-                      {/* Score bar */}
+                    
                       {score > 0 && (
                         <div className="mt-2 w-48 max-w-full">
                           <div className="flex justify-between mb-1">
@@ -582,8 +602,13 @@ const SettingsPage: React.FC = () => {
                 href={'https://github.com/apps/careit-tracker'}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }}
-                className="flex items-center gap-2 border px-4 py-2 rounded-lg text-sm font-semibold hover:bg-hover-bg transition-colors"
+                style={
+                  user.githubAppConnected
+                    ? { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }
+                    : { backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }
+                }
+                className={`flex items-center gap-2 border px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${user.githubAppConnected ? 'hover:bg-red-50 dark:hover:bg-red-900/20' : 'hover:bg-hover-bg'
+                  }`}
               >
                 {user.githubAppConnected ? "Uninstall App" : "Install App"}
                 <ExternalLink size={14} />
@@ -608,10 +633,6 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <button style={{ backgroundColor: 'var(--accent-primary)' }} className="fixed bottom-6 right-6 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-all transform hover:scale-110" aria-label="Give Feedback">
-        <MessageSquarePlus size={24} />
-      </button>
 
       <Modal
         isOpen={isModalOpen}

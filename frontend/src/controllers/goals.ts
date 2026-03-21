@@ -65,9 +65,10 @@ export const deleteGoal = async (id: number): Promise<boolean> => {
     }
 };
 
-export const generateAiGoals = async (): Promise<{ goals: Goal[]; context: any } | null> => {
+export const generateAiGoals = async (period: string): Promise<{ goals: Goal[]; context: any } | null> => {
     try {
-        const response = await AxiosInstance.post('/goals/ai-generate');
+        console.log(period)
+        const response = await AxiosInstance.post('/goals/ai-generate', {period});
         return response.data.data;
     } catch (error) {
         console.error(error);

@@ -2,11 +2,9 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import SignIn from './pages/signin.tsx'
 import Dashboard from './pages/dashboard.tsx'
 import PrivateRoute from './components/privateRoute.tsx'
 import HomePage from './pages/HomePage.tsx'
-import PublicRoute from './components/publicRoute.tsx'
 import SettingsPage from './pages/SettingsPage.tsx'
 import { AuthProvider } from './context/authContext.tsx'
 import { ThemeProvider } from './context/ThemeContext.tsx'
@@ -56,14 +54,6 @@ const router = createBrowserRouter([
         path: 'settings'
       }
     ]
-  },
-  {
-    element: (
-      <PublicRoute>
-        <SignIn />
-      </PublicRoute>
-    ),
-    path: '/sign-in'
   },
 ]);
 

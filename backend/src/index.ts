@@ -7,12 +7,12 @@ import passport from '../src/OAuth2Strategy/google'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 
-//Routes
 import { router as UserRoutes } from './routes/user.routes';
 import { router as CalendarRoutes } from './routes/calendar.routes'
 import { router as ReportRoutes } from './routes/reports.routes'
 import { router as AnalyticsRoutes } from './routes/analytics.routes'
 import { router as GoalRoutes } from './routes/goals.routes'
+import { router as NoteRoutes } from './routes/notes.routes'
 import { startStreakReminderJob } from './utils/streakReminderJob'
 import { startDailyDigestJob } from './utils/dailyDigestJob'
 import { startBurnoutDetectionJob } from './utils/burnoutDetectionJob'
@@ -45,6 +45,7 @@ app.use('/api/v1/calendar', CalendarRoutes);
 app.use('/api/v1/reports', ReportRoutes);
 app.use('/api/v1/analytics', AnalyticsRoutes);
 app.use('/api/v1/goals', GoalRoutes);
+app.use('/api/v1/notes', NoteRoutes);
 
 app.get('/',(req,res)=>{
   res.send("hello")

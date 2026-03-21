@@ -9,7 +9,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
     const user = req.user as any
 
     if (!user) {
-      next(new UnauthorizedException("You must be logged in. please login and try again", ErrorCodes.UNAUTHORIZED_ACCESS));
+      return next(new UnauthorizedException("You must be logged in. please login and try again", ErrorCodes.UNAUTHORIZED_ACCESS));
     }
 
     const safeUserObj = {

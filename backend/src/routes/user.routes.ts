@@ -270,46 +270,47 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
         return `${year}-${month}-${day}`;
       }
 
-      const existingRecord = await prisma.streakStats.findUnique({
-        where: { userId_date: { userId: user.id, date: new Date(formatDateDB(today)) }, hasStreak: true }
-      });
-      console.log(existingRecord)
+      const todayDate = new Date(formatDateDB(today));
+      todayDate.setHours(0, 0, 0, 0);
 
-      if (!existingRecord) {
-        await prisma.streakStats.create({
+ 
+      const existingRecord = await prisma.streakStats.findUnique({
+        where: { userId_date: { userId: user.id, date: todayDate } }
+      });
+
+      if (existingRecord) {
+      
+        await (prisma.streakStats.update as any)({
+          where: { userId_date: { userId: user.id, date: todayDate } },
+          data: { commitCount: { increment: commitCount } },
+        });
+      } else {
+
+        await (prisma.streakStats.create as any)({
           data: {
             userId: user.id,
-            date: new Date(formatDateDB(today)),
-            hasStreak: true,
+            date: todayDate,
+            hasStreak: false,
+            codingDuration: 0,
+            commitCount: commitCount,
           }
         });
-
-        const userStats = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { longestStreak: true, currentStreak: true }
-        });
-
-        console.log(userStats)
-
-        const updatedUser = await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            currentStreak: userStats?.currentStreak! + 1,
-            longestStreak: Math.max(userStats?.longestStreak || 0, userStats?.currentStreak! + 1)
-          }
-        });
-
-        return res.status(200).json(new apiResponse({
-          currentStreak: updatedUser.currentStreak!
-        },
-          "Yayy!! Streak maintained : A commit was made just now",
-          200));
-
-        triggerGoalSync(user!.id, ['STREAK', 'COMMITS']);
       }
 
-      return res.status(200).json(new apiResponse({},
-        "Streak already marked as done!",
+    
+      const userStats = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { longestStreak: true, currentStreak: true }
+      });
+
+      
+      triggerGoalSync(user.id, ['STREAK', 'COMMITS']);
+
+      return res.status(200).json(new apiResponse({
+        currentStreak: userStats?.currentStreak ?? 0,
+        commitCount,
+      },
+        `${commitCount} commit(s) recorded for today`,
         200));
 
     }
@@ -326,8 +327,25 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
       });
 
       console.log(`App uninstalled`);
-      res.status(200).json(new apiResponse({},
+      return res.status(200).json(new apiResponse({},
         "CareIt Github App uninstalled!",
+        200));
+    }
+
+    if (event === 'github_app_authorization' && req.body.action === 'revoked') {
+      const { sender } = req.body;
+
+      await prisma.user.updateMany({
+        where: { githubUsername: sender.login },
+        data: {
+          githubConnected: false,
+          githubAccessToken: null
+        }
+      });
+
+      console.log(`OAuth authorization revoked for ${sender.login}`);
+      return res.status(200).json(new apiResponse({},
+        "CareIt Github OAuth authorization revoked!",
         200));
     }
 

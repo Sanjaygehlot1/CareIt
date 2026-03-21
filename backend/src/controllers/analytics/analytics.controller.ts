@@ -165,33 +165,40 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
             return next(new UnauthorizedException("Unauthorized : Please Login to continue", ErrorCodes.UNAUTHORIZED_ACCESS));
         }
 
+        const range = Number(req.query.range) || 7;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - (range - 1));
 
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
 
-        const rawStats = await prisma.editorActivity.groupBy({
-            by: ['date'],
-            where: {
-                userId: user.id,
-                date: { gte: sevenDaysAgo, lte: endOfToday }
-            },
-            _sum: {
-                duration: true
-            },
-            orderBy: { date: 'asc' }
-        });
-
-        console.log(rawStats)
+        const [rawStats, focusStats] = await Promise.all([
+            prisma.editorActivity.groupBy({
+                by: ['date'],
+                where: {
+                    userId: user.id,
+                    date: { gte: startDate, lte: endOfToday }
+                },
+                _sum: {
+                    duration: true
+                },
+                orderBy: { date: 'asc' }
+            }),
+            prisma.focusStats.findMany({
+                where: {
+                    userId: user.id,
+                    date: { gte: startDate, lte: endOfToday }
+                }
+            })
+        ]);
 
         const filledStats = [];
 
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(sevenDaysAgo);
+        for (let i = 0; i < range; i++) {
+            const d = new Date(startDate);
             d.setDate(d.getDate() + i);
 
             const foundStat = rawStats.find(stat => {
@@ -208,10 +215,18 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
 
             const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
 
+            const foundFocus = focusStats.find(f => {
+                const fDate = new Date(f.date);
+                return fDate.getFullYear() === d.getFullYear() &&
+                    fDate.getMonth() === d.getMonth() &&
+                    fDate.getDate() === d.getDate();
+            });
+
             filledStats.push({
                 date: formattedDate,
                 day: dayName,
-                duration: foundStat?._sum.duration || 0
+                duration: foundStat?._sum.duration || 0,
+                focusDuration: foundFocus?.duration || 0
             });
 
         }

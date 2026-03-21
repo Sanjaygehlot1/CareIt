@@ -8,8 +8,6 @@ import { GoalType, GoalPeriod } from '@prisma/client';
 import { GoogleGenAI } from "@google/genai";
 import { syncOneGoal, getWeekStart, getMonthStart } from '../../utils/goalSync';
 
-
-
 export const getGoals = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user as any;
@@ -42,7 +40,7 @@ export const createGoal = async (req: Request, res: Response, next: NextFunction
         const user = req.user as any;
         if (!user) return next(new UnauthorizedException('Unauthorized', ErrorCodes.UNAUTHORIZED_ACCESS));
 
-        const { title, description, type, period, targetValue, unit } = req.body;
+        const { title, description, type, period, targetValue, unit, currentValue, completed } = req.body;
 
         if (!title || !targetValue) {
             return res.status(400).json(new apiResponse({}, 'title and targetValue are required', 400));
@@ -60,6 +58,8 @@ export const createGoal = async (req: Request, res: Response, next: NextFunction
                 type: (type as GoalType) || 'CUSTOM',
                 period: (period as GoalPeriod) || 'WEEKLY',
                 targetValue: Number(targetValue),
+                currentValue: currentValue !== undefined ? Number(currentValue) : 0,
+                completed: completed !== undefined ? Boolean(completed) : false,
                 unit: unit || '',
                 weekStart,
             }
@@ -79,10 +79,21 @@ export const updateGoal = async (req: Request, res: Response, next: NextFunction
         if (!user) return next(new UnauthorizedException('Unauthorized', ErrorCodes.UNAUTHORIZED_ACCESS));
 
         const { id } = req.params;
-        const { title, description, targetValue, unit, completed } = req.body;
+        const { title, description, targetValue, unit, completed, currentValue } = req.body;
 
         const existing = await prisma.goal.findFirst({ where: { id: Number(id), userId: user.id } });
         if (!existing) return res.status(404).json(new apiResponse({}, 'Goal not found', 404));
+
+        const SYSTEM_TRACKED_TYPES = ['CODING_TIME', 'STREAK', 'COMMITS', 'FOCUS_TIME'];
+        const isSystemTracked = SYSTEM_TRACKED_TYPES.includes(existing.type);
+
+        if (isSystemTracked && (completed !== undefined || currentValue !== undefined)) {
+            return res.status(403).json(new apiResponse(
+                {},
+                `"${existing.type}" goals are automatically tracked by the platform. Progress cannot be set manually.`,
+                403
+            ));
+        }
 
         const updated = await prisma.goal.update({
             where: { id: Number(id) },
@@ -91,7 +102,8 @@ export const updateGoal = async (req: Request, res: Response, next: NextFunction
                 ...(description !== undefined && { description }),
                 ...(targetValue !== undefined && { targetValue: Number(targetValue) }),
                 ...(unit !== undefined && { unit }),
-                ...(completed !== undefined && { completed }),
+                ...(!isSystemTracked && completed !== undefined && { completed }),
+                ...(!isSystemTracked && currentValue !== undefined && { currentValue: Number(currentValue) }),
             }
         });
 
@@ -101,7 +113,6 @@ export const updateGoal = async (req: Request, res: Response, next: NextFunction
         next(error);
     }
 };
-
 
 
 export const deleteGoal = async (req: Request, res: Response, next: NextFunction) => {
@@ -126,6 +137,8 @@ export const deleteGoal = async (req: Request, res: Response, next: NextFunction
 
 export const generateAiGoals = async (req: Request, res: Response, next: NextFunction) => {
     try {
+
+        const {period} = req.body;
         const user = req.user as any;
         if (!user) return next(new UnauthorizedException('Unauthorized', ErrorCodes.UNAUTHORIZED_ACCESS));
 
@@ -180,7 +193,7 @@ export const generateAiGoals = async (req: Request, res: Response, next: NextFun
             avgDailyCodingMinutesLast7Days: avgDailycodingMin,
             streakDaysInLast30Days: streakDaysLast30,
             avgFocusMinutesPerSession: avgFocusMin,
-            daysWithActivityLast7: recentActivity.length
+            daysWithActivityLast7: recentActivity.length,
         };
 
         
@@ -199,8 +212,10 @@ Developer Stats:
 Rules:
 - Goals must be ACHIEVABLE but a slight STRETCH above current baseline
 - Each goal must have a clear numeric target (e.g., "Code for 120 minutes/day", "Maintain a 7-day streak")
-- Choose goal types from: CODING_TIME, STREAK, FOCUS_TIME, CUSTOM
+- Choose goal types from: CODING_TIME, STREAK, FOCUS_TIME, COMMITS
 - Keep descriptions concise, motivating, and personalized
+- ALL goals must strictly be for the exact period: ${period || 'DAILY'}
+- goals should not be repetetive and should be helpful and relevant for the user based on the provided data
 
 Respond ONLY with a valid JSON array (no markdown, no explanation), like:
 [
@@ -208,7 +223,7 @@ Respond ONLY with a valid JSON array (no markdown, no explanation), like:
     "title": "...",
     "description": "...",
     "type": "CODING_TIME",
-    "period": "WEEKLY | DAILY | MONTHLY",
+    "period": "${period || 'DAILY'}",
     "targetValue": 600,
     "unit": "minutes"
   }
@@ -223,9 +238,7 @@ Respond ONLY with a valid JSON array (no markdown, no explanation), like:
             },
         });
 
-        console.log('[AI Goals] Raw response:', geminiResponse.text);
 
-        
         let suggestions: any[] = [];
         try {
             const parsed = JSON.parse(geminiResponse.text!);
@@ -250,7 +263,7 @@ Respond ONLY with a valid JSON array (no markdown, no explanation), like:
                         title: s.title,
                         description: s.description || null,
                         type: (s.type as GoalType) || 'CUSTOM',
-                        period: (s.period as GoalPeriod) || 'WEEKLY',
+                        period: (period as GoalPeriod) || (s.period as GoalPeriod) || 'DAILY',
                         targetValue: Number(s.targetValue),
                         unit: s.unit || '',
                         isAiGenerated: true,

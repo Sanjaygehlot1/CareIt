@@ -8,13 +8,8 @@ type childrenType = {
 
 const PublicRoute = ({ children }: childrenType) => {
     const { user, Loading } = getAuth();
-    console.log(user)
 
-    if (Loading) {
-        return (
-            <h1>Loading.....</h1>
-        );
-    }
+    if (Loading) return null;
 
     if(user){
         return <Navigate to={'/dashboard'}/>
