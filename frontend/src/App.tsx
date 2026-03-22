@@ -4,11 +4,13 @@ import Header from './components/Header';
 import BottomNavBar from './components/BottomNavBar';
 import FeedbackButton from './components/common/FeedbackButton';
 import Footer from './components/common/Footer';
+import OfflineBanner from './components/common/OfflineBanner';
 
 function App() {
 
   return (
     <main className="min-h-screen flex flex-col">
+      <OfflineBanner />
       <Header />
       <Outlet />
       <Footer />

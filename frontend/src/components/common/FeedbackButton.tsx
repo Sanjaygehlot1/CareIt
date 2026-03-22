@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquarePlus, X, Send, Heart, Bug, Sparkles, CheckCircle2, RefreshCw } from 'lucide-react';
+import { AxiosInstance } from '../../axios/axiosInstance';
 
 
 const FeedbackButton: React.FC = () => {
@@ -28,9 +29,7 @@ const FeedbackButton: React.FC = () => {
 
     setIsSending(true);
     try {
-
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
-      
+      await AxiosInstance.post('/auth/feedback', { category, message: message.trim() });
       setIsSent(true);
       setTimeout(() => {
         setIsSent(false);

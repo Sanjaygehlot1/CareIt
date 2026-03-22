@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { AxiosInstance } from "../axios/axiosInstance";
+import axios from "axios";
 
 type AuthContextType = {
     user: any;
     Loading: boolean;
+    isOffline: boolean;
     logOut: () => Promise<void>;
 };
 
@@ -14,15 +16,30 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isOffline, setIsOffline] = useState(false);
 
     const getUserSession = async () => {
         try {
             const response = await AxiosInstance.get('/auth/profile');
             setUser(response.data.data);
+            setIsOffline(false);
         } catch (error) {
-            setUser(null);
+            if (axios.isAxiosError(error)) {
+                if (error.response) {
+
+                    setUser(null);
+                    setIsOffline(false);
+                } else {
+
+                    setIsOffline(true);
+                    console.warn('[Auth] Network error — staying logged in with cached state');
+                }
+            } else {
+
+                setIsOffline(true);
+            }
         } finally {
             setLoading(false);
         }
@@ -32,11 +49,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             sessionStorage.removeItem('careit_ai_coach_summary');
             await AxiosInstance.get('/auth/logout');
-            setUser(null);
         } catch (error) {
             console.log("Logout error:", error);
         }
+        setUser(null);
     };
+
+
+    useEffect(() => {
+        const goOnline = () => {
+            setIsOffline(false);
+            getUserSession();
+        };
+        const goOffline = () => setIsOffline(true);
+
+        window.addEventListener('online', goOnline);
+        window.addEventListener('offline', goOffline);
+        return () => {
+            window.removeEventListener('online', goOnline);
+            window.removeEventListener('offline', goOffline);
+        };
+    }, []);
 
     useEffect(() => {
         getUserSession();
@@ -45,6 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const values = {
         user,
         Loading: loading,
+        isOffline,
         logOut
     };
 

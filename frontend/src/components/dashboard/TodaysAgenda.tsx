@@ -2,6 +2,7 @@ import { CalendarClock, CalendarX } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { getEvents } from '../../controllers/calendar';
 import type { ExtendedEvents } from '../../types/calendar';
+import InfoTooltip from '../ui/InfoTooltip';
 
 const TodaysAgenda: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -75,6 +76,16 @@ const TodaysAgenda: React.FC = () => {
       <h2 className="text-xl font-semibold mb-4 flex items-center" style={{ color: 'var(--text-primary)' }}>
         <CalendarClock className="mr-3" style={{ color: 'var(--accent-primary)' }} size={24} />
         Today's Agenda
+        <span className="ml-1">
+          <InfoTooltip
+            title="Agenda"
+            items={[
+              { color: '#f97316', label: 'Google Calendar', desc: 'shows today\'s upcoming events synced from your calendar' },
+              { color: '#10b981', label: 'Connect', desc: 'link your calendar in Settings to see events here' },
+              { color: '#6b7280', label: '5 Events', desc: 'displays up to 5 events sorted by start time' },
+            ]}
+          />
+        </span>
       </h2>
       
       {events.length === 0 ? (

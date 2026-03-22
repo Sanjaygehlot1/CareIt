@@ -18,7 +18,7 @@ const BottomNavBar: React.FC = () => {
           bg-white/20 backdrop-blur-lg 
           rounded-full shadow-lg
           transition-all duration-300 ease-in-out
-          hover:shadow-2xl hover:-translate-y-1
+          hover:-translate-y-1
           px-4 py-2
         "
       >
@@ -33,7 +33,7 @@ const BottomNavBar: React.FC = () => {
                   w-14 h-14 
                   rounded-full
                   transition-colors duration-300
-                  hover:bg-white/20
+                  
                 "
               >
                 <div 

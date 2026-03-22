@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Target, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getGoals, type Goal } from '../../controllers/goals';
+import InfoTooltip from '../ui/InfoTooltip';
 
 const GOAL_TYPE_COLORS: Record<string, string> = {
     CODING_TIME: '#f97316',
@@ -44,7 +45,19 @@ const GoalsMiniCard = () => {
                         <Target size={18} style={{ color: 'var(--accent-primary)' }} />
                     </div>
                     <div>
-                        <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Weekly Goals</h2>
+                        <h2 className="text-sm font-semibold flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
+                        Weekly Goals
+                        <InfoTooltip
+                          title="Goals"
+                          items={[
+                            { color: '#f97316', label: 'Coding Time', desc: 'auto-tracked from VS Code extension' },
+                            { color: '#f59e0b', label: 'Streak', desc: 'consecutive days of 30+ min coding' },
+                            { color: '#8b5cf6', label: 'Focus Time', desc: 'deep work sessions from the focus timer' },
+                            { color: '#10b981', label: 'Commits', desc: 'synced from GitHub pushes' },
+                            { color: '#6b7280', label: 'Custom', desc: 'manually created goals you track yourself' },
+                          ]}
+                        />
+                    </h2>
                         {!loading && total > 0 && (
                             <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
                                 {completed}/{total} completed

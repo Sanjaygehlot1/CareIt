@@ -1,0 +1,31 @@
+<svg 
+  viewBox="0 0 100 100" 
+  fill="none" 
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="careit-orange-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+
+  <rect width="100" height="100" rx="28" fill="url(#careit-orange-gradient)" />
+  
+  <path 
+    d="M 40 32 L 20 50 L 40 68" 
+    stroke="white" 
+    stroke-width="11" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+  
+  <path 
+    d="M 52 32 C 72 32, 78 38, 78 43 C 78 48, 72 50, 60 50 C 72 50, 78 52, 78 57 C 78 62, 72 68, 52 68" 
+    fill="none" 
+    stroke="white" 
+    stroke-width="11" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+</svg>

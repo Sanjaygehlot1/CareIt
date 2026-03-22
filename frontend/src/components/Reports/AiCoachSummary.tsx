@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { AxiosInstance } from '../../axios/axiosInstance';
 import { Sparkles, BrainCircuit, RefreshCw } from 'lucide-react';
+import InfoTooltip from '../ui/InfoTooltip';
 
 const SESSION_CACHE_KEY = 'careit_ai_coach_summary';
 
@@ -67,6 +68,15 @@ export default function AiCoachSummary() {
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold uppercase tracking-wider text-orange-500 flex items-center gap-1.5">
                 CareIt AI Coach Insight
+                <InfoTooltip
+                  title="AI Coach"
+                  items={[
+                    { color: '#f97316', label: 'Personalized Insight', desc: 'generated from your recent activity data' },
+                    { color: '#8b5cf6', label: 'Analyzes Patterns', desc: 'coding time, streaks, goals, and focus sessions' },
+                    { color: '#10b981', label: 'Refresh', desc: 'click the refresh icon to generate a fresh insight' },
+                    { color: '#6b7280', label: 'Session Cache', desc: 'auto-refreshes on your next visit' },
+                  ]}
+                />
               </h3>
               <Sparkles size={14} className="text-orange-400" />
             </div>
