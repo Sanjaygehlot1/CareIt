@@ -107,14 +107,14 @@ router.get('/google/callback', (req, res, next) => {
 
     const isAlreadyLoggedIn = req.isAuthenticated();
 
-    if (isAlreadyLoggedIn && user.calendar) {
+    if (isAlreadyLoggedIn && scope === 'calendar_connect') {
       return res.redirect(`${FRONTEND_BASE_URL}/settings?status=calendar-connected`);
     }
 
     req.logIn(user, (err) => {
       if (err) return next(err);
 
-      if (user.calendar && scope == 'calendar_connect') {
+      if (scope === 'calendar_connect') {
         return res.redirect(`${FRONTEND_BASE_URL}/settings?status=calendar-connected`);
       }
       return res.redirect(`${FRONTEND_BASE_URL}/dashboard`);
@@ -377,6 +377,36 @@ router.patch('/preferences', authMiddleWare, async (req, res, next) => {
     });
 
     res.status(200).json(new apiResponse({ dailyDigestEnabled }, 'Preferences updated', 200));
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+import { sendFeedbackEmail } from '../utils/emailService';
+
+router.post('/feedback', authMiddleWare, async (req, res, next) => {
+  try {
+    const user = req.user as any;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { category, message } = req.body;
+
+    if (!message || !message.trim()) {
+      return res.status(400).json(new apiResponse(null, 'Message is required', 400));
+    }
+
+    const validCategories = ['bug', 'feature', 'other'];
+    const cat = validCategories.includes(category) ? category : 'other';
+
+    await sendFeedbackEmail(
+      user.name || 'Unknown User',
+      user.email || 'no-email',
+      cat,
+      message.trim()
+    );
+
+    res.status(200).json(new apiResponse(null, 'Feedback sent successfully', 200));
   } catch (err) {
     next(err);
   }

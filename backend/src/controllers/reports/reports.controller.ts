@@ -35,27 +35,45 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
         
         const weekStatus = await getWeekStatus(user.id);
 
-        
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const todayStats = await prisma.streakStats.findUnique({
-            where: { userId_date: { userId: user.id, date: today } },
-            select: { codingDuration: true }
-        });
-        const todayCodingDuration = todayStats?.codingDuration ?? 0;
+        const endOfToday = new Date(today);
+        endOfToday.setHours(23, 59, 59, 999);
+
+        const STREAK_THRESHOLD = 30 * 60;
+
+        const [editorAgg, todayStreakRow] = await Promise.all([
+            prisma.editorActivity.aggregate({
+                where: { userId: user.id, date: { gte: today, lte: endOfToday } },
+                _sum: { duration: true },
+            }),
+            prisma.streakStats.findUnique({
+                where: { userId_date: { userId: user.id, date: today } },
+                select: { commitCount: true },
+            }),
+        ]);
+
+        const todayCodingDuration = editorAgg._sum.duration ?? 0;
+        const todayCommits = todayStreakRow?.commitCount ?? 0;
 
         const now = new Date();
         const lastUpdate = userStreak.streakUpdatedAt;
         const cacheAge = lastUpdate ? now.getTime() - lastUpdate.getTime() : Infinity;
         const ONE_HOUR = 60 * 60 * 1000;
 
-        
+        const streakProgress = {
+            todayCodingDuration,
+            todayCommits,
+            streakThreshold: STREAK_THRESHOLD,
+            hasStreak: todayCodingDuration >= STREAK_THRESHOLD,
+        };
+
         if (cacheAge < ONE_HOUR) {
             return res.status(200).json(new apiResponse({
                 currentStreak: userStreak.currentStreak,
                 longestStreak: userStreak.longestStreak,
                 weekStatus,
-                todayCodingDuration,
+                streakProgress,
                 streakEmailReminder: userStreak.streakEmailReminder
             }, "Streak retrieved", 200));
         }
@@ -74,7 +92,7 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
         return res.status(200).json(new apiResponse({
             ...updatedStreak,
             weekStatus,
-            todayCodingDuration,
+            streakProgress,
             streakEmailReminder: userStreak.streakEmailReminder
         }, "Streak recalculated", 200));
 
@@ -317,7 +335,7 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
             daySums[dayOfWeek] += f.duration / 60;
         });
         
-        streakStats.forEach(s => {
+        streakStats.filter(s => new Date(s.date) >= thirtyDaysAgo).forEach(s => {
             const dayOfWeek = new Date(s.date).getDay();
             daySums[dayOfWeek] += s.codingDuration / 60;
         });

@@ -17,7 +17,13 @@ import { startStreakReminderJob } from './utils/streakReminderJob'
 import { startDailyDigestJob } from './utils/dailyDigestJob'
 import { startBurnoutDetectionJob } from './utils/burnoutDetectionJob'
 import { startStreakCoachJob } from './utils/streakCoachJob'
+import pgSession from 'connect-pg-simple';
+import { DB_URI } from './secrets';
+
 const app: Express = express();
+
+
+app.set('trust proxy', 1);
 
 app.use(express.json())
 app.use(cookieParser());
@@ -26,14 +32,21 @@ app.use(cors({
   origin: FRONTEND_BASE_URL
 }))
 
+const PgSessionStore = pgSession(session);
+
 app.use(session({
+  store: new PgSessionStore({
+    conString: DB_URI,
+    createTableIfMissing: true
+  }),
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   }
 }));
 
