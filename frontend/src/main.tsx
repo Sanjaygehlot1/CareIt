@@ -10,12 +10,22 @@ import { AuthProvider } from './context/authContext.tsx'
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import ReportsPage from './pages/ReportsPage.tsx'
 import GoalsPage from './pages/GoalsPage.tsx'
+import DocsPage from './pages/DocsPage.tsx'
+import AboutPage from './pages/AboutPage.tsx'
 
 const router = createBrowserRouter([
 
   {
     element: <HomePage />,
     path: "/"
+  },
+  {
+    element: <DocsPage />,
+    path: "/docs"
+  },
+  {
+    element: <AboutPage />,
+    path: "/about"
   },
   {
     element: <App />,

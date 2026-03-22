@@ -22,24 +22,27 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, childr
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full m-4 p-6 transition-all transform animate-fade-in-scale">
+      <div 
+        className="relative rounded-lg shadow-xl border max-w-md w-full m-4 p-6 transition-all transform animate-fade-in-scale"
+        style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+      >
         <div className="flex items-start">
           <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10" style={{ backgroundColor: confirmColor ? `${confirmColor}20` : '#ffedd5' }}>
             <AlertTriangle className="h-6 w-6" style={{ color: confirmColor || '#f97316' }} aria-hidden="true" />
           </div>
           <div className="ml-4 text-left flex-1">
-            <h3 className="text-lg leading-6 font-semibold text-gray-900" id="modal-title">
+            <h3 className="text-lg leading-6 font-semibold" style={{ color: 'var(--text-primary)' }} id="modal-title">
               {title}
             </h3>
             <div className="mt-2">
-              <p className="text-sm text-gray-600">{children}</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{children}</p>
             </div>
           </div>
         </div>
         <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
           <button
             type="button"
-            className="w-full inline-flex justify-center flex items-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none sm:w-auto sm:text-sm disabled:opacity-50"
+            className="w-full inline-flex justify-center flex items-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none sm:w-auto sm:text-sm disabled:opacity-50 transition-opacity hover:opacity-90"
             style={{ backgroundColor: confirmColor || '#f97316' }}
             onClick={onConfirm}
             disabled={loading}
@@ -49,7 +52,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, childr
           </button>
           <button
             type="button"
-            className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:w-auto sm:text-sm disabled:opacity-50"
+            className="w-full inline-flex justify-center rounded-md border shadow-sm px-4 py-2 text-base font-medium focus:outline-none sm:w-auto sm:text-sm disabled:opacity-50 transition-colors hover:brightness-95"
+            style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
             onClick={onClose}
             disabled={loading}
           >
