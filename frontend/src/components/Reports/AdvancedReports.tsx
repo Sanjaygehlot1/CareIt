@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     PieChart, Pie, Cell,
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { AxiosInstance } from '../../axios/axiosInstance';
 import { Activity, PieChart as PieChartIcon, Info, Code2, Flame, Github } from 'lucide-react';
+import InfoTooltip from '../ui/InfoTooltip';
 
 interface ReportData {
     timeAllocation: { name: string, value: number, color: string }[],
@@ -58,6 +59,15 @@ export default function AdvancedReports() {
                     <h3 className="text-lg font-semibold flex items-center mb-6" style={{ color: 'var(--text-primary)' }}>
                         <PieChartIcon className="mr-3" size={20} style={{ color: 'var(--accent-primary)' }} />
                         Time Allocation <span className="text-xs ml-2 font-medium opacity-60">(Last 7 Days)</span>
+                        <span className="ml-1">
+                          <InfoTooltip
+                            title="Time Allocation"
+                            items={[
+                              { color: '#f97316', label: 'Donut Chart', desc: 'shows how your coding hours split across projects' },
+                              { color: '#8b5cf6', label: 'Last 7 Days', desc: 'aggregated from VS Code editor activity' },
+                            ]}
+                          />
+                        </span>
                     </h3>
                     <div className="flex-1 flex justify-center items-center relative min-h-[250px]">
                         {data.timeAllocation.length === 0 ? (
@@ -108,6 +118,15 @@ export default function AdvancedReports() {
                     <h3 className="text-lg font-semibold flex items-center mb-6" style={{ color: 'var(--text-primary)' }}>
                         <Activity className="mr-3" size={20} style={{ color: 'var(--accent-primary)' }} />
                         Flow Peak <span className="text-xs ml-2 font-medium opacity-60">(Avg Mins)</span>
+                        <span className="ml-1">
+                          <InfoTooltip
+                            title="Flow Peak"
+                            items={[
+                              { color: '#f97316', label: 'Peak Day', desc: 'the day with the highest average coding minutes is highlighted' },
+                              { color: '#6b7280', label: 'Daily Average', desc: 'average coding time per day over the last week' },
+                            ]}
+                          />
+                        </span>
                     </h3>
                     <div className="flex-1 min-h-[250px] relative w-full pr-4">
                         {data.productivityByDay.every(d => d.value === 0) ? (
@@ -141,6 +160,15 @@ export default function AdvancedReports() {
                 <h3 className="text-sm font-bold flex items-center mb-6 opacity-80 uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>
                     <Code2 className="mr-2" size={16} style={{ color: 'var(--accent-primary)' }} />
                     Engineering Focus
+                    <span className="ml-1">
+                      <InfoTooltip
+                        title="Engineering Focus"
+                        items={[
+                          { color: '#f97316', label: 'Project Breakdown', desc: 'horizontal bars showing time spent per project' },
+                          { color: '#6b7280', label: 'Top Projects', desc: 'ranked by total coding hours from your editor' },
+                        ]}
+                      />
+                    </span>
                 </h3>
                 <div className="h-48 relative">
                     {data.projectBreakdown.length == 0 ? (
@@ -176,6 +204,16 @@ export default function AdvancedReports() {
                         <h3 className="text-sm font-bold flex items-center opacity-80 uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>
                             <Flame className="mr-2" size={16} style={{ color: 'var(--accent-primary)' }} />
                             Contribution Heatmap
+                            <span className="ml-1">
+                              <InfoTooltip
+                                title="Contribution Heatmap"
+                                items={[
+                                  { color: '#f97316', label: 'Activity Grid', desc: 'each square is one day, darker = more activity' },
+                                  { color: '#10b981', label: 'GitHub Sync', desc: 'shows real contributions when GitHub is connected' },
+                                  { color: '#6b7280', label: 'Fallback', desc: 'uses local editor sessions if GitHub is not linked' },
+                                ]}
+                              />
+                            </span>
                         </h3>
                         {data.activityHeatmap.source === 'local' && (
                             <a href="/settings" className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[9px] font-black uppercase hover:bg-orange-500/20 transition-all">

@@ -32,6 +32,7 @@ export const ThemeProvider = ({ children }: ThemeContextProps) => {
 
     useEffect(() => {
         localStorage.setItem('theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
     }, [theme])
 
     const value: ThemeContextValue = {
@@ -42,7 +43,7 @@ export const ThemeProvider = ({ children }: ThemeContextProps) => {
 
     return (
         <ThemeContext.Provider value={value}>
-            <div data-theme={theme} className="min-h-screen bg-primary">
+            <div data-theme={theme} className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
                 {children}
             </div>
         </ThemeContext.Provider>

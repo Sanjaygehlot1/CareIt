@@ -5,6 +5,7 @@ import { getThemeContext } from '../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
 import '../index.css'
 import Timer from './FocusTimer/Timer';
+import { Logo } from './ui/Logo';
 
 const Header: React.FC = () => {
     const { user, logOut } = getAuth();
@@ -42,13 +43,20 @@ const Header: React.FC = () => {
         <header style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-primary)' }} className="relative z-50 backdrop-blur-md">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                            {getGreeting()}, {user?.name.split(" ")[0]}!
-                        </h1>
-                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                            Here's your productivity snapshot for <span style={{ color: 'var(--text-primary)' }} className='font-bold'>{new Date().toDateString()}</span>
-                        </p>
+                    <div className="flex flex-col gap-4">
+                        {/* New App Logo */}
+                        <div className="mt-1 mb-2">
+                            <Logo size={42} />
+                        </div>
+                        
+                        <div>
+                            <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                                {getGreeting()}, {user?.name.split(" ")[0]}!
+                            </h1>
+                            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                Here's your productivity snapshot for <span style={{ color: 'var(--text-primary)' }} className='font-bold'>{new Date().toDateString()}</span>
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex items-center space-x-6">

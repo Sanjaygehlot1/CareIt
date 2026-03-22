@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { TrendingDown, TrendingUp, AlertTriangle, Flame, X } from 'lucide-react';
+import { TrendingDown, AlertTriangle, X } from 'lucide-react';
+import InfoTooltip from '../ui/InfoTooltip';
 
 type BurnoutLevel = 'NONE' | 'MILD' | 'MODERATE' | 'SEVERE';
 
@@ -66,8 +67,17 @@ const BurnoutBanner: React.FC<BurnoutBannerProps> = ({ level, score }) => {
             <div className="flex items-center gap-2.5 pr-6">
                 <span className="text-xl">{cfg.emoji}</span>
                 <div>
-                    <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                    <p className="font-semibold text-sm flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
                         {cfg.title}
+                        <InfoTooltip
+                          title="Burnout Detection"
+                          items={[
+                            { color: '#f59e0b', label: 'Mild', desc: 'slight dip in coding activity detected' },
+                            { color: '#f97316', label: 'Moderate', desc: 'noticeable decline over recent days' },
+                            { color: '#ef4444', label: 'Severe', desc: 'significant drop, consider taking a longer break' },
+                            { color: '#6b7280', label: 'AI Analysis', desc: 'analyzes your coding patterns daily to calculate burnout score' },
+                          ]}
+                        />
                     </p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                         {cfg.tip}
