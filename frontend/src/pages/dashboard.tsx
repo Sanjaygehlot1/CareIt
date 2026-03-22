@@ -15,9 +15,26 @@ const Dashboard: React.FC = () => {
   const burnoutLevel = (user as any)?.burnoutLevel ?? 'NONE';
   const burnoutScore = (user as any)?.burnoutScore ?? 0;
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Good Morning';
+    if (hour >= 12 && hour < 17) return 'Good Afternoon';
+    if (hour >= 17 && hour < 21) return 'Good Evening';
+    return 'Good Night';
+  };
+
   return (
     <div style={{ backgroundColor: 'var(--bg-secondary)' }} className="min-h-screen pb-24 relative">
         <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+
+          <div className="mb-8">
+              <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {getGreeting()}, {user?.name?.split(" ")[0] || 'Developer'}!
+              </h1>
+              <p className="text-md mt-1" style={{ color: 'var(--text-secondary)' }}>
+                  Here's your productivity snapshot for <span style={{ color: 'var(--text-primary)' }} className='font-bold'>{new Date().toDateString()}</span>
+              </p>
+          </div>
 
           <div className="mb-6">
             <DailyFocusBar />

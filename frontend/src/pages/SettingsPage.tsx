@@ -13,9 +13,24 @@ const SettingsPage: React.FC = () => {
 
   const [showNotification, setShowNotification] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyLoading, setApiKeyLoading] = useState(true);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await AxiosInstance.delete('/auth/account');
+      localStorage.removeItem('careit_user');
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Failed to delete account', err);
+      showToast('Could not delete account. Please try again.', 'error');
+      setIsDeleting(false);
+    }
+  };
 
   const [digestEnabled, setDigestEnabled] = useState<boolean>(
     (user as any)?.dailyDigestEnabled ?? true
@@ -627,7 +642,10 @@ const SettingsPage: React.FC = () => {
               <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Delete Your Account</h3>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Permanently delete your account and all data. This action cannot be undone.</p>
             </div>
-            <button className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors flex items-center gap-2">
+            <button 
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors flex items-center gap-2"
+            >
               <Trash2 size={16} /> Delete My Account
             </button>
           </div>
@@ -641,6 +659,18 @@ const SettingsPage: React.FC = () => {
         title="Connect Google Calendar"
       >
         You will be asked to select a Google account for calendar access. Make sure to select an account that is not already registered to avoid conflicts.
+      </Modal>
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        title="Delete Account"
+        loading={isDeleting}
+        confirmText="Delete Account"
+        confirmColor="#ef4444"
+      >
+        Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all tracking history, streaks, and analytics forever.
       </Modal>
 
       <style>{`
