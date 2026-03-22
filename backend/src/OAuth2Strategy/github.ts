@@ -3,7 +3,7 @@ import { Strategy as GitHubStrategy } from "passport-github2";
 import { GITHUB_CALLBACK_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from "../secrets";
 import { Request } from "express";
 import { prisma } from "../prisma";
-
+import { sendWelcomeEmail } from "../utils/emailService";
 interface GitHubProfile {
     id: string;
     username?: string;
@@ -64,23 +64,36 @@ passport.use(new GitHubStrategy({
             }
 
             console.log("GitHub login flow");
-            const user = await prisma.user.upsert({
-                where: { githubProviderId: profile.id },
-                create: {
-                    name: profile.displayName || profile.username!,
-                    email: profile.emails?.[0].value || `${profile.username}@github.local`,
-                    provider: 'github',
-                    profileUrl: profile.photos?.[0].value,
-                    githubAccessToken: accessToken,
-                    githubUsername: profile.username,
-                    githubConnected: true
-                },
-                update: {
-                    name: profile.displayName || profile.username,
-                    githubAccessToken: accessToken,
-                    profileUrl: profile.photos?.[0].value
-                }
+            let user = await prisma.user.findFirst({
+                where: { githubProviderId: profile.id }
             });
+
+            const isNewUser = !user;
+
+            if (isNewUser) {
+                user = await prisma.user.create({
+                    data: {
+                        name: profile.displayName || profile.username!,
+                        email: profile.emails?.[0].value || `${profile.username}@github.local`,
+                        provider: 'github',
+                        profileUrl: profile.photos?.[0].value,
+                        githubAccessToken: accessToken,
+                        githubUsername: profile.username,
+                        githubConnected: true
+                    }
+                });
+
+                sendWelcomeEmail(user.email, user.name).catch(console.error);
+            } else {
+                user = await prisma.user.update({
+                    where: { id: user!.id },
+                    data: {
+                        name: profile.displayName || profile.username,
+                        githubAccessToken: accessToken,
+                        profileUrl: profile.photos?.[0].value
+                    }
+                });
+            }
 
             done(null, user);
         } catch (error) {

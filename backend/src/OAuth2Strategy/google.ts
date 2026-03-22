@@ -3,7 +3,7 @@ import GoogleStrategy from 'passport-google-oauth20'
 import { prisma } from '../prisma'
 import { GOOGLE_CLIENT_ID, GOOGLE_CALLBACK_URL, GOOGLE_CLIENT_SECRET } from '../secrets'
 import { Request } from 'express'
-
+import { sendWelcomeEmail } from '../utils/emailService';
 
 class CustomGoogleStrategy extends GoogleStrategy.Strategy {
     authenticate(req: any, options?: any) {
@@ -79,28 +79,42 @@ passport.use(new CustomGoogleStrategy({
                 return done(null, updatedUser);
             }
 
-            const user = await prisma.user.upsert({
-                where: { googleProviderId: profile.id },
-                create: {
-                    name: profile.displayName!,
-                    email: profile.emails![0].value,
-                    provider: 'google',
-                    profileUrl: profile.photos?.[0].value || '',
-                    googleAccessToken: accessToken,
-                    googleRefreshToken: refreshToken || null,
-                    googleProviderId : profile.id,
-                    calendar: hasCalendarScope
-                },
-                update: {
-                    profileUrl: profile.photos?.[0].value,
-                    name: profile.displayName,
-                    googleAccessToken: accessToken,
-                    ...(refreshToken && { googleRefreshToken: refreshToken }),
-                    ...(hasCalendarScope && { calendar : true})
-                }
+
+            let user = await prisma.user.findUnique({
+                where: { googleProviderId: profile.id }
             });
 
-            console.log("User upserted successfully:", user);
+            const isNewUser = !user;
+
+            if (isNewUser) {
+                user = await prisma.user.create({
+                    data: {
+                        name: profile.displayName!,
+                        email: profile.emails![0].value,
+                        provider: 'google',
+                        profileUrl: profile.photos?.[0].value || '',
+                        googleAccessToken: accessToken,
+                        googleRefreshToken: refreshToken || null,
+                        googleProviderId : profile.id,
+                        calendar: hasCalendarScope
+                    }
+                });
+
+                sendWelcomeEmail(user.email, user.name).catch(console.error);
+            } else {
+                user = await prisma.user.update({
+                    where: { googleProviderId: profile.id },
+                    data: {
+                        profileUrl: profile.photos?.[0].value,
+                        name: profile.displayName,
+                        googleAccessToken: accessToken,
+                        ...(refreshToken && { googleRefreshToken: refreshToken }),
+                        ...(hasCalendarScope && { calendar : true})
+                    }
+                });
+            }
+
+            console.log("User synced successfully:", user);
             done(null, user);
 
         } catch (error) {

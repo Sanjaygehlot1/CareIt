@@ -1,6 +1,6 @@
 import { Router } from "express";
 import passport from "passport";
-import { getProfile, logOut } from "../controllers/users/auth.controller";
+import { getProfile, logOut, deleteAccount } from "../controllers/users/auth.controller";
 import '../OAuth2Strategy/google'
 import '../OAuth2Strategy/github'
 import { authMiddleWare } from "../middlewares/auth.middleware";
@@ -357,6 +357,7 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
 
 router.get('/profile', authMiddleWare, getProfile);
 router.get('/logout', logOut);
+router.delete('/account', authMiddleWare, deleteAccount);
 router.get('/generate-api-key', authMiddleWare, generateApiKey);
 router.get('/get-api-key', authMiddleWare, getApiKey);
 
