@@ -332,3 +332,59 @@ export async function sendFeedbackEmail(
         throw error;
     }
 }
+
+export async function sendWelcomeEmail(to: string, userName: string) {
+    const subject = `Welcome to CareIt, ${userName.split(' ')[0]} 🚀`;
+
+    const body = `
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 16px;">
+          Hi ${userName.split(' ')[0]},
+        </p>
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 16px;">
+          We are thrilled to welcome you to CareIt. This platform represents the union of your coding consistency and your personal well-being.
+        </p>
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
+          To get started, try running your first deep work session or sync your Google Calendar to evaluate your meeting load.
+        </p>
+        
+        <p style="font-size:14px;color:#6b7280;margin:0;">
+          Happy coding,<br/>The CareIt Team
+        </p>`;
+
+    const html = shell(`Welcome to CareIt`, body, 'Focus deeply. Live well.');
+
+    try {
+        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+        console.log(`[Welcome] Email sent to ${to}`);
+    } catch (error) {
+        console.error(`[Welcome] Failed to send to ${to}:`, error);
+    }
+}
+
+export async function sendGoodbyeEmail(to: string, userName: string) {
+    const subject = `Your CareIt account has been deleted`;
+
+    const body = `
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 16px;">
+          Hi ${userName.split(' ')[0]},
+        </p>
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 16px;">
+          We are confirming that your CareIt account and all associated relational data have been permanently deleted from our servers, exactly as you requested.
+        </p>
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
+          We're sad to see you go. If you ever want to rebuild your streaks and optimize your developer workflow, you're always welcome back.
+        </p>
+        
+        <p style="font-size:14px;color:#6b7280;margin:0;">
+          Farewell,<br/>The CareIt Team
+        </p>`;
+
+    const html = shell(`Account Deleted successfully`, body, 'Your data has been wiped.');
+
+    try {
+        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+        console.log(`[Account Delete] Email sent to ${to}`);
+    } catch (error) {
+        console.error(`[Account Delete] Failed to send to ${to}:`, error);
+    }
+}

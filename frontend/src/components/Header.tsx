@@ -5,8 +5,6 @@ import { getThemeContext } from '../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
 import '../index.css'
 import Timer from './FocusTimer/Timer';
-import { Logo } from './ui/Logo';
-
 const Header: React.FC = () => {
     const { user, logOut } = getAuth();
     const { theme, toggleTheme } = getThemeContext();
@@ -14,14 +12,6 @@ const Header: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-
-    const getGreeting = () => {
-        const hour = new Date().getHours();
-        if (hour >= 5 && hour < 12) return 'Good Morning';
-        if (hour >= 12 && hour < 17) return 'Good Afternoon';
-        if (hour >= 17 && hour < 21) return 'Good Evening';
-        return 'Good Night';
-    };
 
 
     useEffect(() => {
@@ -44,18 +34,17 @@ const Header: React.FC = () => {
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex flex-col gap-4">
-                        {/* New App Logo */}
-                        <div className="mt-1 mb-2">
-                            <Logo size={42} />
-                        </div>
-                        
-                        <div>
-                            <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                                {getGreeting()}, {user?.name.split(" ")[0]}!
-                            </h1>
-                            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                                Here's your productivity snapshot for <span style={{ color: 'var(--text-primary)' }} className='font-bold'>{new Date().toDateString()}</span>
-                            </p>
+                       
+                        <div className="mt-1 mb-2 flex items-center gap-3">
+                            <img src="/drawing.svg" alt="CareIt Logo" className="w-10 h-auto drop-shadow-md" />
+                            <div className="flex flex-col">
+                                <span className="text-xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
+                                    CareIt
+                                </span>
+                                <span className="text-[10px] font-bold tracking-widest uppercase opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    Developer Wellbeing
+                                </span>
+                            </div>
                         </div>
                     </div>
 
