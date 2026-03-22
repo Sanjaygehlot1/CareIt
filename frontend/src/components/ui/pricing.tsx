@@ -19,6 +19,7 @@ interface PricingPlan {
   buttonText: string;
   href: string;
   isPopular: boolean;
+  disabled: boolean
 }
 
 interface PricingProps {
@@ -128,7 +129,7 @@ export function Pricing({
                 <span className="text-5xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   <NumberFlow
                     value={isMonthly ? Number(plan.price) : Number(plan.yearlyPrice)}
-                    format={{ style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }}
+                    format={{ style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 0 }}
                     transformTiming={{ duration: 500, easing: "ease-out" }}
                     willChange
                   />
@@ -153,23 +154,40 @@ export function Pricing({
 
               <div className="mt-auto">
                 <hr style={{ borderColor: 'var(--card-border)' }} className="mb-4" />
-                <a
-                  href={plan.href}
-                  className={cn(
-                    buttonVariants({ variant: plan.isPopular ? "default" : "outline" }),
-                    "w-full text-base font-semibold py-3 rounded-xl transition-all duration-300 hover:scale-105",
-                  )}
-                  style={plan.isPopular ? {
-                    backgroundColor: 'var(--accent-primary)',
-                    borderColor: 'var(--accent-primary)',
-                    color: 'white',
-                  } : {
-                    borderColor: 'var(--card-border)',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  {plan.buttonText}
-                </a>
+                {plan.disabled ? (
+                  <button
+                    disabled
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "w-full text-base font-semibold py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed",
+                    )}
+                    style={{
+                      backgroundColor: 'var(--bg-secondary)',
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    {plan.buttonText}
+                  </button>
+                ) : (
+                  <a
+                    href={plan.href}
+                    className={cn(
+                      buttonVariants({ variant: plan.isPopular ? "default" : "outline" }),
+                      "w-full text-base font-semibold py-3 rounded-xl transition-all duration-300 hover:scale-105",
+                    )}
+                    style={plan.isPopular ? {
+                      backgroundColor: 'var(--accent-primary)',
+                      borderColor: 'var(--accent-primary)',
+                      color: 'white',
+                    } : {
+                      borderColor: 'var(--card-border)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {plan.buttonText}
+                  </a>
+                )}
                 <p className="mt-4 text-xs" style={{ color: 'var(--text-tertiary)' }}>{plan.description}</p>
               </div>
             </div>
