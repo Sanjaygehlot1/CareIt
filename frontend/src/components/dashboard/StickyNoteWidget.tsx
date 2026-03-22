@@ -9,6 +9,7 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AxiosInstance } from '../../axios/axiosInstance';
+import InfoTooltip from '../ui/InfoTooltip';
 
 interface Note {
   id: number;
@@ -331,8 +332,18 @@ const StickyNoteWidget: React.FC = () => {
               <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
                 <StickyNote size={13} />
               </div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
                 Scratchpad
+                <InfoTooltip
+                  title="Scratchpad"
+                  items={[
+                    { color: '#f97316', label: 'Multiple Notes', desc: 'create notes with titles, all saved to the cloud' },
+                    { color: '#8b5cf6', label: 'Rich Text', desc: 'bold, italic, bullet lists, numbered lists' },
+                    { color: '#10b981', label: 'Checklists', desc: 'track tasks with interactive checkboxes' },
+                    { color: '#3b82f6', label: 'Ctrl+S', desc: 'manual save to reduce API calls' },
+                    { color: '#fbbf24', label: 'Pin', desc: 'pin important notes to keep them at the top' },
+                  ]}
+                />
               </h3>
             </div>
             <div className="flex items-center gap-1">

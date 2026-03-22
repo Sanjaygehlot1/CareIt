@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { GitCommit, Calendar, CheckSquare, Pencil, Sparkles, X, Check, Loader2, Clock } from 'lucide-react';
 import { AxiosInstance } from '../../axios/axiosInstance';
+import InfoTooltip from '../ui/InfoTooltip';
 
 interface FocusStats {
   todayCodingMins: number;
@@ -181,8 +182,17 @@ const DailyFocusBar: React.FC = () => {
           <div className="flex items-center gap-3">
             <div style={{ backgroundColor: 'var(--accent-primary)' }} className="w-1.5 h-10 rounded-full flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--text-tertiary)' }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
                 Today's Priority
+                <InfoTooltip
+                  title="Daily Focus"
+                  items={[
+                    { color: '#f97316', label: 'Coding', desc: 'total time tracked by the VS Code extension today' },
+                    { color: '#10b981', label: 'Commits', desc: 'pushed via GitHub App integration' },
+                    { color: '#8b5cf6', label: 'Priority', desc: 'AI-suggested or manually set focus for the day' },
+                    { color: '#3b82f6', label: 'Tasks', desc: 'daily goals marked as completed' },
+                  ]}
+                />
               </p>
 
               {editing ? (

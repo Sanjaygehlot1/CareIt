@@ -18,6 +18,7 @@ export function useTimer() {
   const intervalRef = useRef<number | null>(null);
   
   const totalTimeRef = useRef(0);
+  const unsavedTimeRef = useRef(0);
 
   useEffect(() => {
     totalTimeRef.current = totalTime;
@@ -29,6 +30,7 @@ export function useTimer() {
 
     intervalRef.current = window.setInterval(() => {
       setTotalTime((prev) => prev + 1);
+      unsavedTimeRef.current += 1;
     }, 1000);
   }, [isFocused]);
 
@@ -41,20 +43,26 @@ export function useTimer() {
       intervalRef.current = null;
     }
 
-    saveFocusSession(totalTimeRef.current);
+    const unsaved = unsavedTimeRef.current;
+    if (unsaved >= MIN_SAVE_SECONDS) {
+      saveFocusSession(unsaved);
+      unsavedTimeRef.current = 0;
+    }
   }, [isFocused]);
 
   const resetTimer = useCallback(() => {
-    const elapsed = totalTimeRef.current;
-
     if (intervalRef.current !== null) clearInterval(intervalRef.current);
     intervalRef.current = null;
     setIsFocused(false);
+    
     setTotalTime(0);
     totalTimeRef.current = 0;
 
-   
-    saveFocusSession(elapsed);
+    const unsaved = unsavedTimeRef.current;
+    if (unsaved >= MIN_SAVE_SECONDS) {
+      saveFocusSession(unsaved);
+    }
+    unsavedTimeRef.current = 0;
   }, []);
 
  
@@ -68,12 +76,14 @@ export function useTimer() {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isFocused, stopTimer]);
 
- 
   useEffect(() => {
     return () => {
       if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
-        saveFocusSession(totalTimeRef.current);
+        const unsaved = unsavedTimeRef.current;
+        if (unsaved >= MIN_SAVE_SECONDS) {
+            saveFocusSession(unsaved);
+        }
       }
     };
   }, []);

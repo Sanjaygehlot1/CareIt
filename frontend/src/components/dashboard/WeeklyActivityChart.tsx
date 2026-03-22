@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { TrendingUp, Zap } from 'lucide-react';
 import { getEditorStats } from '../../controllers/analytics';
+import InfoTooltip from '../ui/InfoTooltip';
 
 interface ActivityData {
   date: string;
@@ -104,6 +105,14 @@ const ActivityTrendChart: React.FC = () => {
                <TrendingUp size={18} />
             </div>
             Activity Trends
+            <InfoTooltip
+              title="Activity Chart"
+              items={[
+                { color: '#f97316', label: 'Coding Time', desc: 'total editor activity tracked by your VS Code extension' },
+                { color: '#8b5cf6', label: 'Focus Sessions', desc: 'deep work time from the built-in focus timer' },
+                { color: '#6b7280', label: 'Range Selector', desc: 'switch between 7, 15, or 30 day views' },
+              ]}
+            />
           </h2>
           <p style={{color: 'var(--text-primary)'}}  className="text-xs font-semibold opacity-50 ml-11 -mt-1 uppercase tracking-widest">
             Last {range} days performance
