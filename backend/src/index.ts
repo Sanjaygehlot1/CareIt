@@ -3,7 +3,7 @@ import type { Express, NextFunction, Request, Response } from 'express'
 import { FRONTEND_BASE_URL, PORT, SESSION_SECRET } from './secrets';
 import { errorMiddleware } from './middlewares/errors.middleware';
 import session from 'express-session'
-import passport from '../src/OAuth2Strategy/google'
+import passport from './OAuth2Strategy/google'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 
