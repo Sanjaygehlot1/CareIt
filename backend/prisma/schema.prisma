@@ -35,6 +35,7 @@ model User {
   streakUpdatedAt      DateTime?
   streakEmailReminder  Boolean   @default(true)
   dailyDigestEnabled   Boolean   @default(true)  
+  hasAcceptedTerms     Boolean   @default(false)
 
 
   burnoutScore         Int       @default(0)      

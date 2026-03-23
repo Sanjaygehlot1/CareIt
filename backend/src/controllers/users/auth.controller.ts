@@ -24,6 +24,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
       burnoutScore : user.burnoutScore ?? 0,
       burnoutLevel : user.burnoutLevel ?? 'NONE',
       dailyDigestEnabled : user.dailyDigestEnabled ?? true,
+      hasAcceptedTerms: user.hasAcceptedTerms ?? false,
       createdAt: user.createdAt,
     }
 

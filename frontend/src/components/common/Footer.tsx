@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import LegalModal from './LegalModal';
 import { getAuth } from '../../context/authContext';
+import { AxiosInstance } from '../../axios/axiosInstance';
 
 let hasShownTermsModal = false;
 
@@ -13,14 +14,21 @@ const Footer: React.FC = () => {
   const [modalTab, setModalTab] = useState<'privacy' | 'terms'>('terms');
 
   useEffect(() => {
-    if (user && user.createdAt && !hasShownTermsModal) {
-      const isRecent = (new Date().getTime() - new Date(user.createdAt).getTime()) < 60000;
-      if (isRecent) {
-        setIsModalOpen(true);
-      }
+    if (user && user.hasAcceptedTerms === false && !hasShownTermsModal) {
+      setIsModalOpen(true);
       hasShownTermsModal = true;
     }
   }, [user]);
+
+  const handleAgree = async () => {
+    if (user && user.hasAcceptedTerms === false) {
+      try {
+        await AxiosInstance.patch('/auth/preferences', { hasAcceptedTerms: true });
+      } catch (e) {
+        console.error('Failed to accept terms', e);
+      }
+    }
+  };
 
   const openModal = (tab: 'privacy' | 'terms') => {
     setModalTab(tab);
@@ -51,6 +59,7 @@ const Footer: React.FC = () => {
         <LegalModal 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
+          onAgree={handleAgree}
           defaultTab={modalTab} 
         />
     

@@ -4,10 +4,11 @@ import { X } from 'lucide-react';
 interface LegalModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAgree?: () => void;
   defaultTab?: 'privacy' | 'terms';
 }
 
-const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, defaultTab = 'terms' }) => {
+const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, onAgree, defaultTab = 'terms' }) => {
   const [activeTab, setActiveTab] = useState<'privacy' | 'terms'>(defaultTab);
 
 
@@ -83,7 +84,10 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, defaultTab = '
         
         <div className="p-4 sm:p-6 border-t flex justify-end" style={{ borderColor: 'var(--border-primary)' }}>
           <button 
-            onClick={onClose}
+            onClick={() => {
+              if (onAgree) onAgree();
+              onClose();
+            }}
             className="px-6 py-2.5 rounded-xl font-bold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: 'var(--accent-primary)' }}
           >

@@ -23,7 +23,6 @@ const SettingsPage: React.FC = () => {
     setIsDeleting(true);
     try {
       await AxiosInstance.delete('/auth/account');
-      localStorage.removeItem('careit_user');
       window.location.href = '/';
     } catch (err) {
       console.error('Failed to delete account', err);
