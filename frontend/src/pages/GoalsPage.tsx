@@ -435,15 +435,15 @@ const GoalsPage = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                         <button onClick={handleAiGenerate} disabled={aiLoading}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60 hover:opacity-90 shadow-md"
+                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white transition-all disabled:opacity-60 hover:opacity-90 shadow-md"
                             style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
                             {aiLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-                            {aiLoading ? 'AI is thinking…' : 'Generate with AI'}
+                            {aiLoading ? 'Thinking…' : 'AI Goals'}
                         </button>
                         <button onClick={() => setShowModal(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-md"
+                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white transition-all hover:opacity-90 shadow-md"
                             style={{ backgroundColor: 'var(--accent-primary)' }}>
                             <Plus size={15} />
                             Add Goal
@@ -497,17 +497,17 @@ const GoalsPage = () => {
                     <StatsBar goals={filtered} />
                 ) : null}
 
-                <div className="flex items-center gap-1 mb-5 p-1 rounded-2xl w-fit"
+                <div className="flex items-center gap-1 mb-5 p-1 rounded-2xl w-full sm:w-fit overflow-x-auto"
                     style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                     {PERIOD_OPTIONS.map(p => (
                         <button key={p.value} onClick={() => setActivePeriod(p.value)}
-                            className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap"
                             style={{
                                 backgroundColor: activePeriod === p.value ? 'var(--accent-primary)' : 'transparent',
                                 color: activePeriod === p.value ? '#fff' : 'var(--text-secondary)',
                             }}>
                             {p.label}
-                            <span className="ml-1.5 text-xs opacity-60">{p.desc}</span>
+                            <span className="ml-1 sm:ml-1.5 text-[10px] sm:text-xs opacity-60 hidden sm:inline">{p.desc}</span>
                         </button>
                     ))}
                 </div>

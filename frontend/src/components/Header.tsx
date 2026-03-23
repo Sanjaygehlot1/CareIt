@@ -35,12 +35,12 @@ const Header: React.FC = () => {
     return (
         <header style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-primary)' }} className="relative z-50 backdrop-blur-md">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-start sm:items-center gap-4">
+                    <div className="flex-shrink-0 mt-1 sm:mt-0">
                         <Logo />
                     </div>
 
-                    <div className="flex items-center space-x-6">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 sm:gap-6">
                         <Timer />
 
 

@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
 
   return (
     <footer 
-      className="w-full pb-10 px-25 " 
+      className="w-full pb-10 px-4 sm:px-8" 
       style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
     >
              

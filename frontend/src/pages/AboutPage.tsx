@@ -31,11 +31,11 @@ export default function AboutPage() {
         </div>
       </header>
       
-      <main className="relative z-10 max-w-5xl mx-auto px-6 py-24 pb-32">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24 pb-32">
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-16">
           
           <motion.div variants={itemVariants} className="text-center space-y-6">
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight">
               The <span style={{ background: 'linear-gradient(135deg, #f97316, #fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Mission</span>
             </h1>
             <p className="text-xl md:text-2xl font-medium max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -65,7 +65,7 @@ export default function AboutPage() {
                <p className="leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Overlays health metrics, calendar congestion, and coding streaks together into beautiful insights.</p>
             </div>
           </motion.div>
-          <motion.div variants={itemVariants} className="mt-20 p-10 md:p-14 rounded-[3rem] text-center border overflow-hidden relative shadow-md" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+          <motion.div variants={itemVariants} className="mt-12 sm:mt-20 p-7 sm:p-10 md:p-14 rounded-[2rem] sm:rounded-[3rem] text-center border overflow-hidden relative shadow-md" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
             <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ background: 'radial-gradient(circle at top right, #f97316, transparent 60%)' }}></div>
             <Sparkles size={40} className="mx-auto mb-6" style={{ color: '#f97316' }} />
             <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>You write code. We take care of you.</h2>

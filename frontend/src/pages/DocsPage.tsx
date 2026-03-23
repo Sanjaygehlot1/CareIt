@@ -34,14 +34,14 @@ export default function DocsPage() {
         </div>
       </header>
       
-      <main className="relative z-10 max-w-5xl mx-auto px-6 py-20 pb-32">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-14 sm:py-20 pb-32">
         <motion.div variants={containerVariants} initial="hidden" animate="show">
           
           <motion.div variants={itemVariants} className="text-center mb-16 space-y-4">
             <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center shadow-sm mb-6" style={{ color: '#f97316' }}>
                <FileText size={32} />
             </div>
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">System Integrations</h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">System Integrations</h1>
             <p className="text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               Learn how to connect CareIt into your daily engineering workflow to maximize productivity and prevent burnout.
             </p>

@@ -338,8 +338,8 @@ const SettingsPage: React.FC = () => {
         )}
 
         {showNotification && error === 'github_conflict' && (
-          <div className="rounded-2xl shadow-2xl border-2 animate-slide-in-top overflow-hidden" 
-               style={{ backgroundColor: 'var(--card-bg)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+          <div className="rounded-2xl shadow-2xl border-2 animate-slide-in-top overflow-hidden"
+            style={{ backgroundColor: 'var(--card-bg)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
             <div className="bg-red-500/10 p-4 border-b flex items-center gap-3" style={{ borderColor: 'rgba(239, 68, 68, 0.1)' }}>
               <div className="bg-red-500 p-2 rounded-lg text-white">
                 <Github size={20} />
@@ -367,8 +367,8 @@ const SettingsPage: React.FC = () => {
                   <div className="pb-4">
                     <p className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sign out of GitHub</p>
                     <p className="text-xs opacity-70 mb-2" style={{ color: 'var(--text-secondary)' }}>Go to your GitHub profile and select "Sign out".</p>
-                    <a href="https://github.com/logout" target="_blank" rel="noopener noreferrer" 
-                       className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:underline">
+                    <a href="https://github.com/logout" target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:underline">
                       Logout Now <ExternalLink size={12} />
                     </a>
                   </div>
@@ -401,22 +401,39 @@ const SettingsPage: React.FC = () => {
 
         <div>
           <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Profile Settings</h1>
-          <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border flex items-center space-x-6">
+          <div
+            style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
+            className="p-6 rounded-xl shadow-card border flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 text-center sm:text-left"
+          >
             {user?.profileUrl ? (
-              <img className="h-20 w-20 rounded-full object-cover border-2 shadow-sm" style={{ borderColor: 'var(--accent-primary)' }} src={user.profileUrl} alt="User Avatar" />
+              <img
+                className="h-20 w-20 rounded-full object-cover border-2 shadow-sm flex-shrink-0"
+                style={{ borderColor: 'var(--accent-primary)' }}
+                src={user.profileUrl}
+                alt="User Avatar"
+              />
             ) : (
-              <div className="h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm" style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
+              <div
+                className="h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm flex-shrink-0"
+                style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
+              >
                 {user?.name?.[0]?.toUpperCase() || 'U'}
               </div>
             )}
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.name}</h2>
-              <p className={user.email ? "flex items-center gap-2 mt-1" : "flex items-center gap-2 mt-1"} style={{ color: user.email ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
-                <Mail size={16} /> {user?.email || "google login required"}
+
+            <div className="flex-1 min-w-0 w-full">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {user?.name}
+              </h2>
+
+              <p className="flex items-center justify-center sm:justify-start gap-2 mt-1 break-all" style={{ color: user.email ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                <Mail size={16} className="flex-shrink-0" /> {user?.email || "google login required"}
               </p>
-              <p className={user.githubUsername ? "flex items-center gap-2 mt-1" : "flex items-center gap-2 mt-1"} style={{ color: user.githubUsername ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
-                <Github size={16} /> {user?.githubUsername || "github login required"}
+
+              <p className="flex items-center justify-center sm:justify-start gap-2 mt-1 break-all" style={{ color: user.githubUsername ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                <Github size={16} className="flex-shrink-0" /> {user?.githubUsername || "github login required"}
               </p>
+
               <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
                 Logged in via: <span className="font-semibold capitalize">{user?.provider}</span>
               </p>
@@ -427,49 +444,54 @@ const SettingsPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Integrations</h1>
           <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
                 <Github size={28} style={{ color: 'var(--text-primary)' }} />
-                <div>
-                  <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>GitHub</h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Sync your commit and repository activity.</p>
+
+                <div className="min-w-0">
+                  <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    GitHub
+                  </h3>
+                  <p className="text-sm " style={{ color: 'var(--text-secondary)' }}>
+                    Sync your commit and repository activity.
+                  </p>
                 </div>
               </div>
-              {user?.githubUsername ? (
-                <button className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold" disabled>Connected</button>
-              ) : (
-                <button onClick={() => window.location.href = `${BACKEND_BASE_URL}/auth/github/connect`} style={{ backgroundColor: 'var(--accent-primary)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} className="border px-4 py-2 hover:opacity-90 rounded-lg text-sm font-semibold hover:bg-hover-bg cursor-pointer transition-colors">
-                  Connect
-                </button>
-              )}
+
+              <button
+                className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-semibold"
+                style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
+              >
+                Connect
+              </button>
             </div>
             <hr style={{ borderColor: 'var(--border-primary)' }} />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Calendar size={28} className="text-blue-600" />
-                <div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <Calendar size={28} className="text-blue-600 flex-shrink-0" />
+                <div className="min-w-0">
                   <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Google Calendar</h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Sync your events and meeting schedules.</p>
+                  <p className="text-sm " style={{ color: 'var(--text-secondary)' }}>Sync your events and meeting schedules.</p>
                 </div>
               </div>
               {user?.calendar ? (
-                <button className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold" disabled>Connected</button>
+                <button className="w-full sm:w-auto bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold" disabled>Connected</button>
               ) : (
-                <button onClick={handleConnectCalendar} style={{ backgroundColor: 'var(--accent-primary)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} className="border px-4 py-2 hover:opacity-90 rounded-lg text-sm font-semibold hover:bg-hover-bg cursor-pointer transition-colors">
+                <button onClick={handleConnectCalendar} style={{ backgroundColor: 'var(--accent-primary)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} className="w-full sm:w-auto border px-4 py-2 hover:opacity-90 rounded-lg text-sm font-semibold hover:bg-hover-bg cursor-pointer transition-colors">
                   Connect
                 </button>
               )}
             </div>
             <hr style={{ borderColor: 'var(--border-primary)' }} />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <HeartPulse size={28} className="text-red-500" />
-                <div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <HeartPulse size={28} className="text-red-500 flex-shrink-0" />
+                <div className="min-w-0">
                   <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Health Data (Google Fit)</h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Sync your daily steps, sleep, and activity.</p>
+                  <p className="text-sm " style={{ color: 'var(--text-secondary)' }}>Sync your daily steps, sleep, and activity.</p>
                 </div>
               </div>
-              <button style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }} className="px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed" disabled>
+              <button style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }} className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed" disabled>
                 Coming Soon
               </button>
             </div>
@@ -515,10 +537,10 @@ const SettingsPage: React.FC = () => {
               const level: string = (user as any)?.burnoutLevel ?? 'NONE';
               const score: number = (user as any)?.burnoutScore ?? 0;
               const burnoutCfg: Record<string, { label: string; icon: React.ReactNode; desc: string; color: string; bg: string }> = {
-                NONE:     { label: 'Looking great',    icon: <CheckCircle2 size={14} />, desc: 'Your coding activity is consistent with your baseline.', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-                MILD:     { label: 'Mild dip detected', icon: <Moon size={14} />,         desc: 'Your pace is slightly below baseline. A gentle nudge email has been sent.', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+                NONE: { label: 'Looking great', icon: <CheckCircle2 size={14} />, desc: 'Your coding activity is consistent with your baseline.', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
+                MILD: { label: 'Mild dip detected', icon: <Moon size={14} />, desc: 'Your pace is slightly below baseline. A gentle nudge email has been sent.', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
                 MODERATE: { label: 'Moderate decline', icon: <AlertTriangle size={14} />, desc: 'Noticeable drop in activity. We\'ve emailed you with suggestions.', color: '#f97316', bg: 'rgba(249,115,22,0.08)' },
-                SEVERE:   { label: 'Burnout risk',      icon: <OctagonAlert size={14} />, desc: 'Activity is significantly below your baseline. Please take care of yourself.', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+                SEVERE: { label: 'Burnout risk', icon: <OctagonAlert size={14} />, desc: 'Activity is significantly below your baseline. Please take care of yourself.', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
               };
               const cfg = burnoutCfg[level] ?? burnoutCfg['NONE'];
               return (
@@ -531,7 +553,7 @@ const SettingsPage: React.FC = () => {
                       <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Burnout Status</h3>
                       <p className="text-sm mt-0.5 flex items-center gap-1.5" style={{ color: cfg.color, fontWeight: 600 }}>{cfg.icon}{cfg.label}</p>
                       <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{cfg.desc}</p>
-                    
+
                       {score > 0 && (
                         <div className="mt-2 w-48 max-w-full">
                           <div className="flex justify-between mb-1">
@@ -572,41 +594,49 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 mt-4">
-              <div className="flex-1 p-3 rounded-lg font-mono text-sm truncate border" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div
+                className="flex-1 p-3 rounded-lg font-mono text-sm border min-w-0 break-all"
+                style={{
+                  backgroundColor: 'var(--bg-primary)',
+                  borderColor: 'var(--border-primary)',
+                  color: 'var(--text-secondary)'
+                }}
+              >
                 {apiKey || "No API Key generated yet"}
               </div>
 
-              <button
-                onClick={copyToClipboard}
-                disabled={!apiKey}
-                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }}
-                className="p-3 border rounded-lg hover:bg-hover-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Copy Key"
-              >
-                <Copy size={20} />
-              </button>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={copyToClipboard}
+                  disabled={!apiKey}
+                  className="p-3 border rounded-lg transition-colors flex-shrink-0"
+                  style={{ backgroundColor: 'var(--card-bg)' }}
+                >
+                  <Copy size={20} />
+                </button>
 
-              <button
-                onClick={handleGenerateKey}
-                style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
-                className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold hover:opacity-90 transition-colors"
-              >
-                <RefreshCw size={16} />
-                {apiKey ? "Regenerate" : "Generate Key"}
-              </button>
+                <button
+                  onClick={handleGenerateKey}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold whitespace-nowrap"
+                  style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
+                >
+                  <RefreshCw size={16} />
+                  {apiKey ? "Regenerate" : "Generate Key"}
+                </button>
+              </div>
             </div>
 
             <hr className="my-6 border-t" style={{ borderColor: 'var(--border-primary)' }} />
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="p-2 rounded-lg flex-shrink-0" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>
                   <Github size={24} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Install GitHub App</h3>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-sm " style={{ color: 'var(--text-secondary)' }}>
                     Install the app on your repositories to enable webhook tracking.
                   </p>
                 </div>
@@ -621,8 +651,8 @@ const SettingsPage: React.FC = () => {
                     ? { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }
                     : { backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }
                 }
-                className={`flex items-center gap-2 border px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${user.githubAppConnected ? 'hover:bg-red-50 dark:hover:bg-red-900/20' : 'hover:bg-hover-bg'
-                  }`}
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 border px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${user.githubAppConnected ? 'hover:bg-red-50 dark:hover:bg-red-900/20' : 'hover:bg-hover-bg'
+                   }`}
               >
                 {user.githubAppConnected ? "Uninstall App" : "Install App"}
                 <ExternalLink size={14} />
@@ -636,16 +666,21 @@ const SettingsPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-red-600 mb-4 flex items-center gap-2">
             <AlertTriangle size={24} /> Danger Zone
           </h1>
-          <div style={{ backgroundColor: 'var(--card-bg)' }} className="p-6 rounded-xl shadow-card border-2 border-red-500 flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Delete Your Account</h3>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Permanently delete your account and all data. This action cannot be undone.</p>
+          <div
+            style={{ backgroundColor: 'var(--card-bg)' }}
+            className="p-6 rounded-xl shadow-card border-2 border-red-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          >
+            <div className="min-w-0">
+              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Delete Your Account
+              </h3>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Permanently delete your account and all data.
+              </p>
             </div>
-            <button 
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors flex items-center gap-2"
-            >
-              <Trash2 size={16} /> Delete My Account
+
+            <button className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+              Delete
             </button>
           </div>
         </div>

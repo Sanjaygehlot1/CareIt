@@ -78,7 +78,7 @@ router.post('/check-google-available', authMiddleWare, async (req, res) => {
 
 router.get('/google/callback', (req, res, next) => {
   passport.authenticate('google', {
-    failureRedirect: `${FRONTEND_BASE_URL}/sign-in`,
+    failureRedirect: `${FRONTEND_BASE_URL}`,
     session: true
   }, (error, user, info) => {
 
@@ -102,7 +102,7 @@ router.get('/google/callback', (req, res, next) => {
     }
 
     if (!user) {
-      return res.redirect(`${FRONTEND_BASE_URL}/sign-in?error=no_user`);
+      return res.redirect(`${FRONTEND_BASE_URL}`);
     }
 
     const isAlreadyLoggedIn = req.isAuthenticated();
@@ -155,7 +155,7 @@ router.get('/github/callback', (req, res, next) => {
   console.log("Query params:", req.query);
 
   passport.authenticate('github', {
-    failureRedirect: `${FRONTEND_BASE_URL}/sign-in`,
+    failureRedirect: `${FRONTEND_BASE_URL}`,
     session: true
   }, (error: any, user: any, info: any) => {
     console.log("\n=== GITHUB AUTH RESULT ===");
@@ -178,7 +178,7 @@ router.get('/github/callback', (req, res, next) => {
     }
 
     if (!user) {
-      return res.redirect(`${FRONTEND_BASE_URL}/sign-in?error=github-conflict&message=User not found`);
+      return res.redirect(`${FRONTEND_BASE_URL}?error=github-conflict&message=User not found`);
     }
 
     const isAlreadyLoggedIn = req.isAuthenticated();

@@ -195,7 +195,7 @@ const StreakCard = () => {
 
           <Divider />
 
-          <div className="flex items-center gap-2 flex-1 justify-center">
+           <div className="flex items-center gap-2 flex-1 justify-center">
             {WEEK_DAYS.map((day, i) => {
               const todayIndex = (new Date().getDay() + 6) % 7;
               const hasStreak = streakStats.weekStatus[i];
@@ -221,7 +221,7 @@ const StreakCard = () => {
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors relative"
                     style={{ backgroundColor: bgColor }}
                   >
-                   
+
                     {isToday && !hasStreak && (
                       <span
                         className="absolute inset-0 rounded-full animate-pulse"

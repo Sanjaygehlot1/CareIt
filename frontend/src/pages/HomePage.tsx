@@ -78,9 +78,8 @@ function HeroHeader({
                 aria-label="Toggle theme"
               >
                 <span
-                  className={`flex items-center justify-center w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${
-                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
+                  className={`flex items-center justify-center w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                    }`}
                 >
                   {theme === 'dark' ? (
                     <Moon size={14} className="text-slate-800" />
@@ -89,7 +88,6 @@ function HeroHeader({
                   )}
                 </span>
               </button>
-
 
               <a
                 href={GOOGLE_AUTH_URL}
@@ -132,13 +130,6 @@ function HeroHeader({
                 ))}
               </ul>
               <div className="flex flex-col gap-3 pt-2">
-                <a
-                  href={GOOGLE_AUTH_URL}
-                  className="px-4 py-2.5 rounded-lg text-sm font-medium border flex items-center justify-center"
-                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                >
-                  Login
-                </a>
                 <a
                   href={GOOGLE_AUTH_URL}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
@@ -206,7 +197,7 @@ function HeroSection({
                 </h1>
 
                 <p
-                  className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed"
+                   className="mt-6 max-w-2xl text-pretty text-base sm:text-lg leading-relaxed mx-auto"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   Track goals, streaks, and focus time automatically. AI coaching
@@ -216,7 +207,7 @@ function HeroSection({
                 <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
                   <a
                     href={GOOGLE_AUTH_URL}
-                    className="group h-11 px-7 rounded-xl text-sm font-semibold text-white flex items-center gap-2 transition-all hover:scale-105 hover:shadow-lg"
+                     className="group h-11 px-7 rounded-xl text-sm font-semibold text-white flex items-center gap-2 transition-all hover:scale-105 hover:shadow-lg"
                     style={{
                       background: 'linear-gradient(135deg, #f97316, #ea580c)',
                       boxShadow: '0 4px 20px rgba(249,115,22,0.3)',
@@ -227,22 +218,22 @@ function HeroSection({
                     Continue with Google
                     <LucideArrowUpRightFromSquare size={15} className="transition-transform group-hover:translate-x-0.5" />
                   </a>
-                  
+
                 </div>
 
 
                 <div
-                  className="mt-12 grid grid-cols-3 gap-px rounded-xl overflow-hidden border"
+                  className="mt-10 sm:mt-12 grid grid-cols-3 gap-px rounded-xl overflow-hidden border"
                   style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--border-primary)' }}
                 >
                   {STATS.map(s => (
                     <div
                       key={s.label}
-                      className="text-center py-4 px-3"
+                      className="text-center py-4 px-2 sm:px-3"
                       style={{ backgroundColor: 'var(--card-bg)' }}
                     >
-                      <div className="text-xl font-bold" style={{ color: '#f97316' }}>{s.value}</div>
-                      <div className="text-xs mt-0.5 leading-tight" style={{ color: 'var(--text-tertiary)' }}>{s.label}</div>
+                      <div className="text-lg sm:text-xl font-bold" style={{ color: '#f97316' }}>{s.value}</div>
+                      <div className="text-[10px] sm:text-xs mt-0.5 leading-tight" style={{ color: 'var(--text-tertiary)' }}>{s.label}</div>
                     </div>
                   ))}
                 </div>
@@ -291,9 +282,9 @@ export default function HomePage() {
           }
         >
           <img
-            src="https://res.cloudinary.com/dh9bwsdjp/image/upload/v1774103101/Screenshot_2026-03-21_195446_psrtjx.png"
+            src="./gallery/dashboard.png"
             alt="CareIt Dashboard Preview"
-            className="w-full h-full object-cover object-top rounded-xl"
+            className="w-full h-full object-cover object-top rounded-xl sm:object-cover object-center"
             draggable={false}
           />
         </ContainerScroll>
@@ -337,7 +328,7 @@ export default function HomePage() {
 
 
 
-      <Footer/>
+      <Footer />
 
     </div>
   );

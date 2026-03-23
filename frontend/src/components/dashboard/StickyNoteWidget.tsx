@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   StickyNote, Maximize2, X, Plus, Trash2, Pin, PinOff,
-  Bold, Italic, List, ListOrdered, CheckSquare, Loader2, Save
+  Bold, Italic, List, ListOrdered, CheckSquare, Loader2, Save, Menu
 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -27,6 +27,7 @@ const StickyNoteWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const activeNote = notes.find(n => n.id === activeNoteId) || null;
@@ -113,9 +114,13 @@ const StickyNoteWidget: React.FC = () => {
   }, [isMaximized, saveNote]);
 
   const handleSwitchNote = useCallback(async (noteId: number) => {
-    if (noteId === activeNoteId) return;
+    if (noteId === activeNoteId) {
+      setIsSidebarOpen(false);
+      return;
+    }
     if (isDirty) await saveNote();
     setActiveNoteId(noteId);
+    setIsSidebarOpen(false);
   }, [activeNoteId, isDirty, saveNote]);
 
   const handleCreateNote = async () => {
@@ -329,7 +334,15 @@ const StickyNoteWidget: React.FC = () => {
           <div className="flex items-center justify-between px-4 py-2.5 shrink-0 select-none border-b"
             style={{ borderColor: 'var(--border-primary)' }}>
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+              {isMaximized && (
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="md:hidden p-1.5 hover:bg-orange-500/10 rounded-lg text-orange-500 transition-all active:scale-95"
+                >
+                  <Menu size={16} />
+                </button>
+              )}
+              <div className={`p-1.5 rounded-lg bg-orange-500/10 text-orange-500 ${isMaximized ? 'hidden md:block' : ''}`}>
                 <StickyNote size={13} />
               </div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
@@ -364,10 +377,35 @@ const StickyNoteWidget: React.FC = () => {
           </div>
 
           {isMaximized ? (
-            <div className="flex-1 flex overflow-hidden">
-              <div className="w-[220px] shrink-0 border-r overflow-hidden flex flex-col" style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="flex-1 flex overflow-hidden relative">
+              <div className="hidden md:flex w-[220px] shrink-0 border-r overflow-hidden flex-col" style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-secondary)' }}>
                 <NotesList />
               </div>
+
+              <AnimatePresence>
+                {isSidebarOpen && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="md:hidden absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"
+                      onClick={() => setIsSidebarOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ x: '-100%' }}
+                      animate={{ x: 0 }}
+                      exit={{ x: '-100%' }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                      className="md:hidden absolute left-0 top-0 bottom-0 w-[240px] z-20 border-r flex flex-col shadow-2xl"
+                      style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-secondary)' }}
+                    >
+                      <NotesList />
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+
               <div className="flex-1 flex flex-col overflow-hidden">
                 {activeNote ? (
                   <>

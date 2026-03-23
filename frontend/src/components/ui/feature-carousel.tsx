@@ -59,8 +59,8 @@ export function FeatureCarousel({ features }: { features: CarouselFeature[] }) {
 
   return (
     <div className="w-full relative z-0 max-w-[90rem] mx-auto md:p-8">
-      <div className="relative overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] flex flex-col lg:flex-row min-h-[500px] lg:h-[520px] border border-border/40">
-        <div className="w-full lg:w-[35%] min-h-[300px] md:min-h-[380px] lg:h-full relative z-30 flex flex-col items-start justify-center overflow-hidden px-8 md:px-16 lg:pl-16" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
+      <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] lg:rounded-[4rem] flex flex-col lg:flex-row min-h-[420px] sm:min-h-[500px] lg:h-[520px] border border-border/40">
+        <div className="w-full lg:w-[35%] min-h-[220px] sm:min-h-[300px] md:min-h-[380px] lg:h-full relative z-30 flex flex-col items-start justify-center overflow-hidden px-6 sm:px-8 md:px-16 lg:pl-16" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
           <div className="absolute inset-x-0 top-0 h-12 md:h-20 lg:h-16 bg-gradient-to-b from-[#f97316] via-[#ea580c]/80 to-transparent z-40" />
           <div className="absolute inset-x-0 bottom-0 h-12 md:h-20 lg:h-16 bg-gradient-to-t from-[#ea580c] via-[#f97316]/80 to-transparent z-40" />
           <div className="relative w-full h-full flex items-center justify-center lg:justify-start z-20">
@@ -122,7 +122,7 @@ export function FeatureCarousel({ features }: { features: CarouselFeature[] }) {
           </div>
         </div>
 
-        <div className="flex-1 min-h-[400px] md:min-h-[480px] lg:h-full relative flex items-center justify-center py-12 md:py-16 lg:py-10 px-6 md:px-12 lg:px-10 overflow-hidden border-t lg:border-t-0 lg:border-l border-border/20" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+        <div className="flex-1 min-h-[320px] sm:min-h-[400px] md:min-h-[480px] lg:h-full relative flex items-center justify-center py-8 sm:py-12 md:py-16 lg:py-10 px-4 sm:px-6 md:px-12 lg:px-10 overflow-hidden border-t lg:border-t-0 lg:border-l border-border/20" style={{ backgroundColor: 'var(--bg-secondary)' }}>
           <div className="relative w-full max-w-[640px] aspect-video flex items-center justify-center">
             {features.map((feature, index) => {
               const status = getCardStatus(index);
