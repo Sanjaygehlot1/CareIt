@@ -5,7 +5,7 @@ import BottomNavBar from './components/BottomNavBar';
 import FeedbackButton from './components/common/FeedbackButton';
 import Footer from './components/common/Footer';
 import OfflineBanner from './components/common/OfflineBanner';
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 function App() {
 
   return (
