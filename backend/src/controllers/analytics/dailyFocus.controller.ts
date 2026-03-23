@@ -16,7 +16,7 @@ export const getDailyFocusStats = async (req: Request, res: Response, next: Next
         if (!user) return next(new UnauthorizedException('Unauthorized', ErrorCodes.UNAUTHORIZED_ACCESS));
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
 
@@ -104,7 +104,7 @@ export const getTodayPriority = async (req: Request, res: Response, next: NextFu
         if (!user) return next(new UnauthorizedException('Unauthorized', ErrorCodes.UNAUTHORIZED_ACCESS));
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
         const streakStat = await prisma.streakStats.findUnique({
             where: { userId_date: { userId: user.id, date: today } },
@@ -133,7 +133,7 @@ export const setTodayPriority = async (req: Request, res: Response, next: NextFu
         }
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
         await (prisma.streakStats.upsert as any)({
             where: { userId_date: { userId: user.id, date: today } },
@@ -160,7 +160,7 @@ export const generateAiPriority = async (req: Request, res: Response, next: Next
         if (!user) return next(new UnauthorizedException('Unauthorized', ErrorCodes.UNAUTHORIZED_ACCESS));
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
 

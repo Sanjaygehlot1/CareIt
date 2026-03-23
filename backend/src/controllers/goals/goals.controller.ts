@@ -46,7 +46,7 @@ export const createGoal = async (req: Request, res: Response, next: NextFunction
             return res.status(400).json(new apiResponse({}, 'title and targetValue are required', 400));
         }
 
-        const weekStart = period === 'DAILY' ? new Date(new Date().setHours(0, 0, 0, 0))
+        const weekStart = period === 'DAILY' ? new Date(new Date().setTime(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())))
             : period === 'MONTHLY' ? getMonthStart()
                 : getWeekStart();
 
@@ -150,7 +150,7 @@ export const generateAiGoals = async (req: Request, res: Response, next: NextFun
 
         
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7);
         const thirtyDaysAgo = new Date(today);

@@ -31,7 +31,7 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
         const activities = Array.isArray(req.body) ? req.body : [req.body];
         const values = activities.map(a => {
             const d = new Date(a.timestamp);
-            d.setHours(0, 0, 0, 0); 
+            d.setTime(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); 
 
             return Prisma.sql`(${userId}, ${a.project}, ${d}, ${a.duration})`;  
         });
@@ -63,7 +63,7 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
             
 async function updateUserStreak(userId: number) {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
     
     const todayActivity = await prisma.editorActivity.aggregate({
@@ -167,7 +167,7 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
 
         const range = Number(req.query.range) || 7;
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
         const startDate = new Date(today);
         startDate.setDate(startDate.getDate() - (range - 1));

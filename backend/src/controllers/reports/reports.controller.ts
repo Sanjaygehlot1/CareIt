@@ -36,7 +36,7 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
         const weekStatus = await getWeekStatus(user.id);
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
 
@@ -68,7 +68,12 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
             hasStreak: todayCodingDuration >= STREAK_THRESHOLD,
         };
 
-        if (cacheAge < ONE_HOUR) {
+        const isSameDay = lastUpdate && 
+            lastUpdate.getFullYear() === now.getFullYear() &&
+            lastUpdate.getMonth() === now.getMonth() &&
+            lastUpdate.getDate() === now.getDate();
+
+        if (cacheAge < ONE_HOUR && isSameDay) {
             return res.status(200).json(new apiResponse({
                 currentStreak: userStreak.currentStreak,
                 longestStreak: userStreak.longestStreak,
@@ -104,7 +109,7 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
 
 async function getWeekStatus(userId: number): Promise<boolean[]> {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
     const currentDay = today.getDay(); 
     const mondayOffset = currentDay === 0 ? -6 : -(currentDay - 1); 
@@ -137,7 +142,7 @@ async function getWeekStatus(userId: number): Promise<boolean[]> {
         const dateTime = date.getTime();
         const streak = weekStreaks.find(s => {
             const streakDate = new Date(s.date);
-            streakDate.setHours(0, 0, 0, 0);
+            streakDate.setTime(Date.UTC(streakDate.getFullYear(), streakDate.getMonth(), streakDate.getDate()));
             return streakDate.getTime() === dateTime;
         });
         return streak?.hasStreak || false;
@@ -148,7 +153,7 @@ async function getWeekStatus(userId: number): Promise<boolean[]> {
 
 async function recalculateStreak(userId: number) {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
@@ -175,7 +180,7 @@ async function recalculateStreak(userId: number) {
 
     const dates = activeDates.map(d => {
         const date = new Date(d.date);
-        date.setHours(0, 0, 0, 0);
+        date.setTime(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
         return date.getTime();
     });
     const oneDayMs = 24 * 60 * 60 * 1000;
@@ -188,9 +193,14 @@ async function recalculateStreak(userId: number) {
         let checkDate = mostRecentDate;
         
         for (const date of dates) {
-            if (date === checkDate) {
+            const diffDays = Math.round(Math.abs(date - checkDate) / oneDayMs);
+            if (diffDays === 0) {
                 currentStreak++;
-                checkDate -= oneDayMs;
+               
+                const nextCheck = new Date(checkDate);
+                nextCheck.setDate(nextCheck.getDate() - 1);
+                nextCheck.setTime(Date.UTC(nextCheck.getFullYear(), nextCheck.getMonth(), nextCheck.getDate()));
+                checkDate = nextCheck.getTime();
             } else if (date < checkDate) {
                 break;
             }
@@ -202,12 +212,12 @@ async function recalculateStreak(userId: number) {
     let tempStreak = 1;
 
     for (let i = 1; i < dates.length; i++) {
-        const diff = dates[i - 1] - dates[i];
+        const diffDays = Math.round(Math.abs(dates[i - 1] - dates[i]) / oneDayMs);
         
-        if (diff === oneDayMs) {
+        if (diffDays === 1) {
             tempStreak++;
             longestStreak = Math.max(longestStreak, tempStreak);
-        } else {
+        } else if (diffDays > 1) {
             longestStreak = Math.max(longestStreak, tempStreak);
             tempStreak = 1;
         }
