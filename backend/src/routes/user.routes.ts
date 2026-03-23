@@ -271,7 +271,7 @@ router.post('/github/webhooks/github-app', async (req, res, next) => {
       }
 
       const todayDate = new Date(formatDateDB(today));
-      todayDate.setHours(0, 0, 0, 0);
+      todayDate.setTime(Date.UTC(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()));
 
  
       const existingRecord = await prisma.streakStats.findUnique({

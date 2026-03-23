@@ -197,37 +197,26 @@ export const generateAiGoals = async (req: Request, res: Response, next: NextFun
         };
 
         
-        const prompt = `You are a productivity coach for a developer using CareIt, a developer productivity platform.
+        const prompt = `Act as an expert engineering coach recommending goals for a developer on CareIt.
 
-Based on this developer's data, generate exactly 3 realistic, personalized weekly goals:
+Analyze their recent performance and generate exactly 3 personalized, realistic goals for the timeframe: ${period || 'DAILY'}.
 
-Developer Stats:
-- Current coding streak: ${dataContext.currentStreak} days
-- Longest streak ever: ${dataContext.longestStreak} days
-- Avg daily coding time (last 7 days): ${dataContext.avgDailyCodingMinutesLast7Days} minutes
-- Active coding days (last 7 days): ${dataContext.daysWithActivityLast7}/7
-- Streak days in last 30 days: ${dataContext.streakDaysInLast30Days}/30
-- Avg focus session length: ${dataContext.avgFocusMinutesPerSession} minutes
+Developer Profile:
+- Current Streak: ${dataContext.currentStreak} days
+- Longest Streak: ${dataContext.longestStreak} days
+- Avg Daily Coding: ${dataContext.avgDailyCodingMinutesLast7Days} mins
+- Active Days (Last 7): ${dataContext.daysWithActivityLast7}/7
+- Streak Days (Last 30): ${dataContext.streakDaysInLast30Days}/30
+- Avg Focus Session: ${dataContext.avgFocusMinutesPerSession} mins
 
 Rules:
-- Goals must be ACHIEVABLE but a slight STRETCH above current baseline
-- Each goal must have a clear numeric target (e.g., "Code for 120 minutes/day", "Maintain a 7-day streak")
-- Choose goal types from: CODING_TIME, STREAK, FOCUS_TIME, COMMITS
-- Keep descriptions concise, motivating, and personalized
-- ALL goals must strictly be for the exact period: ${period || 'DAILY'}
-- goals should not be repetetive and should be helpful and relevant for the user based on the provided data
+1. CHALLENGE, BUT DON'T OVERWHELM: Push them slightly past their baseline, but keep it highly achievable.
+2. ALLOWED TYPES: Select gracefully from CODING_TIME, STREAK, FOCUS_TIME, or COMMITS.
+3. CONCISE: Write short, punchy, and motivating descriptions. 
+4. NO REPETITION: Ensure all 3 goals tackle distinctly different habits.
 
-Respond ONLY with a valid JSON array (no markdown, no explanation), like:
-[
-  {
-    "title": "...",
-    "description": "...",
-    "type": "CODING_TIME",
-    "period": "${period || 'DAILY'}",
-    "targetValue": 600,
-    "unit": "minutes"
-  }
-]`;
+Respond strictly with an unformatted JSON array matching this exact structure (no markdown blocks, no extra text):
+[ { "title": "Focus Block Master", "description": "Maintain 45 mins of deep focus daily.", "type": "FOCUS_TIME", "period": "${period || 'DAILY'}", "targetValue": 45, "unit": "minutes" } ]`;
 
 
         const geminiResponse = await ai.models.generateContent({

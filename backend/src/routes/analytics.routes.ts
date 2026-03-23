@@ -30,7 +30,7 @@ router.post('/focus-session', authMiddleWare, async (req, res, next) => {
         }
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
        
         const existing = await prisma.focusStats.findUnique({

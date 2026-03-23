@@ -459,20 +459,21 @@ export const getAiCoachSummary = async (req: Request, res: Response, next: NextF
         const totalCommits = streakStats.reduce((s, st) => s + st.commitCount, 0);
         const burnout = userRecord?.burnoutScore ?? 0;
 
-        const prompt = `Act as "CareIt Coach", a direct and encouraging AI performance coach for software engineers. 
-Analyze the user's last 7 days of activity and provide a sharp, 2-sentence summary/insight.
+        const prompt = `Act as a sharp, observant engineering coach.
+Analyze the developer's last 7 days of activity and provide a punchy 2-sentence insight.
 
-Stats:
-- Name: ${userRecord?.name}
-- Deep Work (Focus Time): ${totalFocusHrs.toFixed(1)} hours
-- Total Coding Time: ${totalCodingHrs.toFixed(1)} hours
+Performance Data:
+- Developer: ${userRecord?.name}
+- Deep Work (Focus): ${totalFocusHrs.toFixed(1)} hrs
+- Total Coding: ${totalCodingHrs.toFixed(1)} hrs
 - Total Commits: ${totalCommits}
-- Current Burnout Score: ${burnout}/100
+- Burnout Risk Score: ${burnout}/100
 
-Goal:
-Give one specific praise and one specific warning or actionable advice based on these stats. 
-Be concise. Max 35 words total.
-No quotes. No extra chatter. Output ONLY the 2-sentence summary.`;
+Directives:
+1. Sentence 1: Hard, specific praise on a strong metric.
+2. Sentence 2: Actionable advice or a gentle warning targeting the weakest metric (e.g., high burnout, low focus).
+3. Be brutally concise. Strictly maximum 35 words.
+4. No quotes, no intro, no emojis. Output ONLY the 2 sentences.`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
