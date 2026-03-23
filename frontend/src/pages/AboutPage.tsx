@@ -2,6 +2,7 @@ import { getThemeContext } from '../context/ThemeContext';
 import { Link } from 'react-router-dom';
 import { Zap, ArrowLeft, Code, Flame, Sparkles, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Logo } from '../components/ui/Logo';
 export default function AboutPage() {
   const { theme } = getThemeContext();
   const containerVariants = {
@@ -28,12 +29,7 @@ export default function AboutPage() {
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-semibold">Back to Home</span>
           </Link>
-          <div className="flex items-center gap-2.5 hover:scale-105 transition-transform cursor-pointer">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
-              <Zap size={17} color="white" />
-            </div>
-            <span className="text-lg font-bold">Care<span style={{ color: '#f97316' }}>It</span></span>
-          </div>
+          <Logo/>
         </div>
       </header>
       

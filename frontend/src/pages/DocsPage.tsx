@@ -2,6 +2,7 @@ import { getThemeContext } from '../context/ThemeContext';
 import { Link } from 'react-router-dom';
 import { Zap, ArrowLeft, Code2, HeartPulse, Clock, Github, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Logo } from '../components/ui/Logo';
 
 export default function DocsPage() {
   const { theme } = getThemeContext();
@@ -21,7 +22,6 @@ export default function DocsPage() {
 
   return (
     <div className="relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)' }}>
-      {/* Background Magic Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-15%] right-[5%] w-[450px] h-[450px] rounded-full mix-blend-multiply filter blur-[120px] opacity-20" style={{ backgroundColor: '#10b981' }}></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-[100px] opacity-20" style={{ backgroundColor: '#f97316' }}></div>
@@ -33,12 +33,7 @@ export default function DocsPage() {
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-semibold">Back to Home</span>
           </Link>
-          <div className="flex items-center gap-2.5 hover:scale-105 transition-transform cursor-pointer">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
-              <Zap size={17} color="white" />
-            </div>
-            <span className="text-lg font-bold">Care<span style={{ color: '#f97316' }}>It</span> Docs</span>
-          </div>
+          <Logo/>
         </div>
       </header>
       

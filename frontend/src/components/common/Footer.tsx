@@ -1,8 +1,31 @@
-import React from 'react';
-import { Heart, Github, Twitter, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart } from 'lucide-react';
+import LegalModal from './LegalModal';
+import { getAuth } from '../../context/authContext';
+
+let hasShownTermsModal = false;
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const { user } = getAuth();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<'privacy' | 'terms'>('terms');
+
+  useEffect(() => {
+    if (user && user.createdAt && !hasShownTermsModal) {
+      const isRecent = (new Date().getTime() - new Date(user.createdAt).getTime()) < 60000;
+      if (isRecent) {
+        setIsModalOpen(true);
+      }
+      hasShownTermsModal = true;
+    }
+  }, [user]);
+
+  const openModal = (tab: 'privacy' | 'terms') => {
+    setModalTab(tab);
+    setIsModalOpen(true);
+  };
 
   return (
     <footer 
@@ -13,13 +36,23 @@ const Footer: React.FC = () => {
         <hr className="mb-10 opacity-30" style={{ borderColor: 'var(--border-primary)' }} />
         
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[13px]" style={{ color: 'var(--text-tertiary)' }}>
-          <div className="flex items-center gap-1.5 font-medium">
-            © {currentYear} <span style={{ color: 'var(--text-primary)' }}>CareIt Technologies Inc.</span> All rights reserved.
+          <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-4 font-medium">
+            <span>© {currentYear} <span style={{ color: 'var(--text-primary)' }}>CareIt Technologies Inc.</span> All rights reserved.</span>
+            <div className="flex items-center gap-3">
+              <button onClick={() => openModal('privacy')} className="hover:underline transition-all">Privacy Policy</button>
+              <button onClick={() => openModal('terms')} className="hover:underline transition-all">Terms of Service</button>
+            </div>
           </div>
           <div className="flex items-center gap-1.5 opacity-80">
             Made with <Heart size={14} className="text-red-500 fill-red-500 animate-pulse" /> for the dev community.
           </div>
         </div>
+        
+        <LegalModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          defaultTab={modalTab} 
+        />
     
     </footer>
   );

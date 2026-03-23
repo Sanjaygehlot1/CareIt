@@ -8,6 +8,7 @@ import { ContainerScroll } from '../components/ui/container-scroll-animation';
 import { FeatureCarousel } from '../components/ui/feature-carousel';
 import { CAROUSEL_FEATURES, GOOGLE_AUTH_URL, PRICING_PLANS } from '../utils/data';
 import { Logo } from '../components/ui/Logo';
+import Footer from '../components/common/Footer';
 
 const STATS = [
   { label: 'Developers using CareIt', value: '2+' },
@@ -72,11 +73,21 @@ function HeroHeader({
             <div className="flex items-center gap-3">
               <button
                 onClick={onToggleTheme}
-                className="p-2 rounded-lg transition-colors"
-                style={{ backgroundColor: 'var(--hover-bg)', color: 'var(--text-secondary)' }}
+                className="relative inline-flex items-center h-8 w-[52px] rounded-full transition-colors duration-300 focus:outline-none"
+                style={{ backgroundColor: theme === 'dark' ? '#4b5563' : '#d1d5db' }}
                 aria-label="Toggle theme"
               >
-                {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
+                <span
+                  className={`flex items-center justify-center w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${
+                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                >
+                  {theme === 'dark' ? (
+                    <Moon size={14} className="text-slate-800" />
+                  ) : (
+                    <Sun size={14} className="text-orange-500" />
+                  )}
+                </span>
               </button>
 
 
@@ -326,22 +337,7 @@ export default function HomePage() {
 
 
 
-      <footer
-        className="border-t py-10"
-        style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
-      >
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between flex-wrap gap-4">
-          <Logo />
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            © 2026 CareIt. All rights reserved.
-          </p>
-          <div className="flex items-center gap-5 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            <a href="#" className="hover:text-orange-500 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">Terms</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">GitHub</a>
-          </div>
-        </div>
-      </footer>
+      <Footer/>
 
     </div>
   );
