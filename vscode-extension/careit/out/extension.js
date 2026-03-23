@@ -56,6 +56,7 @@ let lastActivityTime = Date.now();
 let todayCodingSeconds = 0;
 let continuousCodingStart = Date.now();
 let extensionContext;
+let currentDay = new Date().toDateString();
 function activate(context) {
     console.log('CareIt tracker activated');
     extensionContext = context;
@@ -86,6 +87,8 @@ function activate(context) {
             const newConfig = vscode.workspace.getConfiguration('careit');
             apiKey = newConfig.get('apiKey') || '';
             serverUrl = newConfig.get('serverUrl') || 'http://localhost:3000';
+            const breakMins = newConfig.get('breakReminderMinutes') ?? 90;
+            BREAK_THRESHOLD = breakMins * 60 * 1000;
             vscode.window.showInformationMessage('CareIt: Configuration updated.');
         }
     }));
@@ -167,54 +170,56 @@ function activate(context) {
 function onActivity() {
     const now = Date.now();
     const wasIdle = now - lastActivityTime >= IDLE_THRESHOLD;
-    lastActivityTime = now;
-    // If returning from idle, start a new continuous coding window
+    // If returning from idle, record the past session using the time they actually went idle
     if (wasIdle) {
+        recordCurrentSession(lastActivityTime);
         continuousCodingStart = now;
         currentSessionStart = now;
     }
+    lastActivityTime = now;
 }
 // ────────────────────────────────────────────────────────────────
 // Session recording
 // ────────────────────────────────────────────────────────────────
-function recordCurrentSession() {
+function recordCurrentSession(forceEndTime) {
     if (!currentProject) {
         return;
     }
-    const now = Date.now();
-    const timeSinceLastActivity = now - lastActivityTime;
-    // If user was idle, don't count this session
-    if (timeSinceLastActivity >= IDLE_THRESHOLD) {
-        currentSessionStart = now;
-        return;
+    const now = forceEndTime || Date.now();
+    const timeSinceLastActivity = Date.now() - lastActivityTime;
+    // Actual coding ends when they stopped typing if they went idle.
+    // Otherwise, if they are still active, they coded up to `now`.
+    const endTime = (timeSinceLastActivity >= IDLE_THRESHOLD) ? lastActivityTime : now;
+    const durationMs = endTime - currentSessionStart;
+    // Ignore invalid or too short sessions (< 5 seconds)
+    if (durationMs >= 5000) {
+        const durationSeconds = Math.round(durationMs / 1000);
+        todayCodingSeconds += durationSeconds;
+        // Aggregate into project sessions
+        const existing = projectSessions.get(currentProject);
+        if (existing) {
+            existing.totalDuration += durationSeconds;
+        }
+        else {
+            projectSessions.set(currentProject, {
+                startTime: currentSessionStart,
+                totalDuration: durationSeconds
+            });
+        }
+        console.log(`[CareIt] Recorded ${durationSeconds}s on: ${currentProject}`);
+        updateStatusBar();
     }
-    const durationMs = now - currentSessionStart;
-    // Ignore very short sessions (< 5 seconds)
-    if (durationMs < 5000) {
-        currentSessionStart = now;
-        return;
-    }
-    const durationSeconds = Math.round(durationMs / 1000);
-    todayCodingSeconds += durationSeconds;
-    // Aggregate into project sessions
-    const existing = projectSessions.get(currentProject);
-    if (existing) {
-        existing.totalDuration += durationSeconds;
-    }
-    else {
-        projectSessions.set(currentProject, {
-            startTime: currentSessionStart,
-            totalDuration: durationSeconds
-        });
-    }
-    console.log(`[CareIt] Recorded ${durationSeconds}s on: ${currentProject}`);
     currentSessionStart = now;
-    updateStatusBar();
 }
 // ────────────────────────────────────────────────────────────────
 // Status bar
 // ────────────────────────────────────────────────────────────────
 function updateStatusBar() {
+    const todayStr = new Date().toDateString();
+    if (todayStr !== currentDay) {
+        todayCodingSeconds = 0;
+        currentDay = todayStr;
+    }
     const h = Math.floor(todayCodingSeconds / 3600);
     const m = Math.floor((todayCodingSeconds % 3600) / 60);
     const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
@@ -277,6 +282,9 @@ async function sendBatch(serverUrl, apiKey) {
                 live.totalDuration -= snapped.totalDuration;
                 if (live.totalDuration <= 0) {
                     projectSessions.delete(key);
+                }
+                else {
+                    live.startTime = Date.now();
                 }
             }
         }

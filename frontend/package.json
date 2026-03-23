@@ -33,6 +33,7 @@
     "react-big-calendar": "^1.19.4",
     "react-calendar": "^6.0.0",
     "react-dom": "^19.1.1",
+    "react-joyride": "^3.0.0",
     "react-quilljs": "^2.0.5",
     "react-router-dom": "^7.9.3",
     "react-tooltip": "^5.30.0",

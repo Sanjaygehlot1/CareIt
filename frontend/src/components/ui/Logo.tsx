@@ -8,7 +8,7 @@ interface LogoProps {
 export const Logo: React.FC<LogoProps> = () => {
   return (
     <div className="mt-1 mb-2 flex items-center gap-3">
-      <img src="/drawing.svg" alt="CareIt Logo" className="w-10 h-auto drop-shadow-md" />
+      <img src="/logo.svg" alt="CareIt Logo" className="w-10 h-auto drop-shadow-md" />
       <div className="flex flex-col">
         <span className="text-xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
           CareIt

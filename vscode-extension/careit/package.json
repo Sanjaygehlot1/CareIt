@@ -3,15 +3,21 @@
   "displayName": "CareIt Productivity Tracker",
   "description": "Tracks your coding activity for the CareIt dashboard",
   "version": "0.0.1",
+  "publisher": "SanjayGehlot",
   "engines": {
     "vscode": "^1.106.1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sanjaygehlot1/CareIt/tree/main/vscode-extension/careit"
+  },
+  "icon": "icon.png",
   "categories": [
     "Other",
     "Visualization"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -53,16 +59,17 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.106.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.46.3",
+    "@types/vscode": "^1.106.1",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.46.3"
   },
   "dependencies": {
+    "@vscode/vsce": "^3.7.1",
     "axios": "^1.6.0"
   }
 }
