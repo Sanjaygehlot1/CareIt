@@ -6,6 +6,8 @@ import {
 import { AxiosInstance } from '../../axios/axiosInstance';
 import { Activity, PieChart as PieChartIcon, Info, Code2, Flame, Github } from 'lucide-react';
 import InfoTooltip from '../ui/InfoTooltip';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
 
 interface ReportData {
     timeAllocation: { name: string, value: number, color: string }[],
@@ -243,7 +245,8 @@ export default function AdvancedReports() {
                                 {block.map((day) => (
                                     <div
                                         key={day.date}
-                                        title={`${day.date}: ${day.count} ${data.activityHeatmap.source === 'github' ? 'contributions' : 'sessions'}`}
+                                        data-tooltip-id="heatmap-tooltip"
+                                        data-tooltip-content={`${day.date}: ${day.count} ${data.activityHeatmap.source === 'github' ? 'contributions' : 'sessions'}`}
                                         className={`w-full aspect-square rounded-[3px] transition-all hover:scale-125 cursor-default`}
                                         style={{
                                             backgroundColor: day.count > 0 ? 'var(--accent-primary)' : 'var(--bg-primary)',
@@ -265,6 +268,7 @@ export default function AdvancedReports() {
                         </span>
                     </div>
                 )}
+                <ReactTooltip id="heatmap-tooltip" className="custom-tooltip" place="top" opacity={1} />
             </div>
         </div>
     );

@@ -5,6 +5,9 @@ import { getThemeContext } from '../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
 import '../index.css'
 import Timer from './FocusTimer/Timer';
+import { Logo } from './ui/Logo';
+
+
 const Header: React.FC = () => {
     const { user, logOut } = getAuth();
     const { theme, toggleTheme } = getThemeContext();
@@ -34,18 +37,7 @@ const Header: React.FC = () => {
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex flex-col gap-4">
-                       
-                        <div className="mt-1 mb-2 flex items-center gap-3">
-                            <img src="/drawing.svg" alt="CareIt Logo" className="w-10 h-auto drop-shadow-md" />
-                            <div className="flex flex-col">
-                                <span className="text-xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
-                                    CareIt
-                                </span>
-                                <span className="text-[10px] font-bold tracking-widest uppercase opacity-60" style={{ color: 'var(--text-secondary)' }}>
-                                    Developer Wellbeing
-                                </span>
-                            </div>
-                        </div>
+                        <Logo />
                     </div>
 
                     <div className="flex items-center space-x-6">
@@ -88,7 +80,7 @@ const Header: React.FC = () => {
                                     style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
                                 >
                                     <div className="p-4 border-b" style={{ borderColor: 'var(--border-primary)' }}>
-                                        <p style={{color: 'var(--text-primary'}} className="text-xs font-bold uppercase tracking-widest opacity-40 mb-1">Signed in as</p>
+                                        <p style={{ color: 'var(--text-primary' }} className="text-xs font-bold uppercase tracking-widest opacity-40 mb-1">Signed in as</p>
                                         <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>{user?.name}</p>
                                         <p className="text-[10px] opacity-60 truncate" style={{ color: 'var(--text-secondary)' }}>{user?.email || (user?.githubUsername + '@github')}</p>
                                     </div>

@@ -7,6 +7,7 @@ import { Pricing } from '../components/ui/pricing';
 import { ContainerScroll } from '../components/ui/container-scroll-animation';
 import { FeatureCarousel } from '../components/ui/feature-carousel';
 import { CAROUSEL_FEATURES, GOOGLE_AUTH_URL, PRICING_PLANS } from '../utils/data';
+import { Logo } from '../components/ui/Logo';
 
 const STATS = [
   { label: 'Developers using CareIt', value: '2+' },
@@ -22,21 +23,7 @@ const NAV_ITEMS = [
   { name: 'About', href: '/about' },
 ];
 
-function CareItLogo() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <div
-        className="w-8 h-8 rounded-xl flex items-center justify-center shadow-md"
-        style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
-      >
-        <Zap size={17} color="white" />
-      </div>
-      <span className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-        Care<span style={{ color: '#f97316' }}>It</span>
-      </span>
-    </div>
-  );
-}
+
 
 
 function HeroHeader({
@@ -63,7 +50,7 @@ function HeroHeader({
 
             <div className="flex items-center gap-10">
               <Link to="/" aria-label="home">
-                <CareItLogo />
+                <Logo />
               </Link>
               <ul className="hidden lg:flex gap-8 text-sm">
                 {NAV_ITEMS.map(item => (
@@ -344,7 +331,7 @@ export default function HomePage() {
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
       >
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between flex-wrap gap-4">
-          <CareItLogo />
+          <Logo />
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             © 2026 CareIt. All rights reserved.
           </p>
