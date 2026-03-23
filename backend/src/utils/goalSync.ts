@@ -4,10 +4,10 @@ import { prisma } from '../prisma';
 
 export function getWeekStart(): Date {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const day = today.getDay();
     const offset = day === 0 ? -6 : 1 - day;
     today.setDate(today.getDate() + offset);
+    today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
     return today;
 }
 
@@ -20,13 +20,13 @@ export async function syncOneGoal(goal: any, userId: number): Promise<any> {
     const now = new Date();
 
     const periodStart = goal.period === 'DAILY'
-        ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })()
+        ? (() => { const d = new Date(); d.setTime(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); return d; })()
         : goal.period === 'MONTHLY'
             ? getMonthStart()
             : getWeekStart();
 
     const goalCreated = new Date(goal.createdAt);
-    goalCreated.setHours(0, 0, 0, 0);
+    goalCreated.setTime(Date.UTC(goalCreated.getFullYear(), goalCreated.getMonth(), goalCreated.getDate()));
     const trackFrom = goalCreated > periodStart ? goalCreated : periodStart;
 
 
@@ -56,9 +56,10 @@ export async function syncOneGoal(goal: any, userId: number): Promise<any> {
 
         } else if (goal.type === 'FOCUS_TIME') {
             const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999);
+            endOfDay.setTime(Date.UTC(endOfDay.getFullYear(), endOfDay.getMonth(), endOfDay.getDate() + 1));
+           
             const stats = await prisma.focusStats.aggregate({
-                where: { userId, date: { gte: trackFrom, lte: endOfDay } },
+                where: { userId, date: { gte: trackFrom, lt: endOfDay } },
                 _sum: { duration: true }
             });
             currentValue = Math.round((stats._sum.duration ?? 0) / 60);

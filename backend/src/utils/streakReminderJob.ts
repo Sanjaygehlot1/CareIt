@@ -9,7 +9,7 @@ export function startStreakReminderJob() {
 
         try {
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
             
             const usersAtRisk = await prisma.user.findMany({

@@ -12,7 +12,7 @@ export function startDailyDigestJob() {
 
         try {
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
             const now = new Date();
 
             const users = await (prisma.user.findMany as any)({
@@ -73,17 +73,24 @@ export function startDailyDigestJob() {
                     let line2 = '';
 
                     try {
-                        const prompt = `You are writing a warm, personal 2-sentence daily summary for a developer named ${user.name}.
+                        const prompt = `Act as a supportive, articulate engineering coach writing a daily brief for a developer named ${user.name}.
 
-Data for today:
-- Coding time: ${codingMins} minutes
-- Commits pushed: ${commits}
-- Streak: ${hasStreak ? `maintained at ${user.currentStreak} days` : 'not maintained today'}
-- Daily goals completed: ${goalsCompleted} of ${totalDailyGoals}
+Today's Performance Data:
+- Time Spent Coding: ${codingMins} minutes
+- Code Commits: ${commits}
+- Active Streak: ${hasStreak ? `Extended to ${user.currentStreak} days` : 'Lost today'}
+- Daily Goals Hit: ${goalsCompleted} out of ${totalDailyGoals}
 
-Write EXACTLY 2 sentences. First sentence = what they accomplished (fact-based, warm). Second sentence = a short motivating or reflective thought for tomorrow. 
-Keep it human, never robotic. Max 20 words per sentence.
-Respond ONLY with valid JSON: {"line1": "...", "line2": "..."}`;
+Directives:
+1. Sentence 1: A warm, fact-based wrap-up emphasizing their specific accomplishments.
+2. Sentence 2: A short, motivating, forward-looking thought for tomorrow.
+3. Be purely human and encouraging. Avoid robotic language completely. Max 20 words per sentence.
+
+Output STRICTLY as a raw JSON format (no markdown blocks, no extra text):
+{
+  "line1": "Great focus today with ${codingMins} minutes spent coding and ${commits} commits under your belt!",
+  "line2": "Rest your eyes tonight and get ready to tackle those remaining goals tomorrow."
+}`;
 
                         const response = await ai.models.generateContent({
                             model: 'gemini-2.0-flash',

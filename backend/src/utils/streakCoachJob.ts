@@ -25,7 +25,7 @@ type CoachUser = {
 async function analyseUserStreakPattern(userId: number) {
     const windowStart = new Date();
     windowStart.setDate(windowStart.getDate() - WINDOW_DAYS);
-    windowStart.setHours(0, 0, 0, 0);
+    windowStart.setTime(Date.UTC(windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate()));
 
     const stats = await prisma.streakStats.findMany({
         where: { userId, date: { gte: windowStart } },
@@ -133,7 +133,7 @@ Return ONLY valid JSON array — no extra text, no explanation:
                 title: 'Code 20% longer each day',
                 description: `Push your daily average from ${avgCodingMins}m to ${Math.round(avgCodingMins * 1.2)}m`,
                 type: 'CODING_TIME',
-                targetValue: Math.round(avgCodingMins * 1.2 * 5), // weekly total
+                targetValue: Math.round(avgCodingMins * 1.2 * 5),
                 unit: 'minutes',
             },
             {
@@ -156,7 +156,7 @@ Return ONLY valid JSON array — no extra text, no explanation:
     const dayOfWeek = today.getDay();
     const monday = new Date(today);
     monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-    monday.setHours(0, 0, 0, 0);
+    monday.setTime(Date.UTC(monday.getFullYear(), monday.getMonth(), monday.getDate()));
 
    
     const created = await Promise.all(newGoals.map(g =>
