@@ -45,9 +45,9 @@ let statusBarItem;
 let isSending = false;
 let batchTimer = null;
 let breakReminderTimer = null;
-const BATCH_INTERVAL = 60_000 * 5; // Send every 5 minutes
-const IDLE_THRESHOLD = 2 * 60 * 1000; // 2 minutes idle = pause tracking
-let BREAK_THRESHOLD = 90 * 60 * 1000; // configurable from settings
+const BATCH_INTERVAL = 60_000 * 5;
+const IDLE_THRESHOLD = 2 * 60 * 1000;
+let BREAK_THRESHOLD = 90 * 60 * 1000;
 const SESSION_STORAGE_KEY = 'careit.pendingSessions';
 const BREAK_SHOWN_KEY = 'careit.breakShownAt';
 let currentProject = '';
@@ -60,19 +60,16 @@ let currentDay = new Date().toDateString();
 function activate(context) {
     console.log('CareIt tracker activated');
     extensionContext = context;
-    // ── Status bar ──────────────────────────────────────────────
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = 'careit.sendNow';
     updateStatusBar();
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
-    // ── Configuration ──────────────────────────────────────────
     const config = vscode.workspace.getConfiguration('careit');
     let apiKey = config.get('apiKey') ?? '';
     let serverUrl = config.get('serverUrl') ?? 'http://localhost:3000';
     const breakMinutes = config.get('breakReminderMinutes') ?? 90;
     BREAK_THRESHOLD = breakMinutes * 60 * 1000;
-    // Warn if API key is not set
     if (!apiKey) {
         vscode.window
             .showWarningMessage('CareIt: No API key configured. Your coding activity won\'t be tracked.', 'Open Settings')
@@ -92,37 +89,28 @@ function activate(context) {
             vscode.window.showInformationMessage('CareIt: Configuration updated.');
         }
     }));
-    // ── Restore persisted sessions (crash recovery) ────────────
     restoreSessions(context);
-    // ── Initialize current project ─────────────────────────────
     if (vscode.workspace.workspaceFolders) {
         currentProject = vscode.workspace.workspaceFolders[0].name;
         currentSessionStart = Date.now();
         lastActivityTime = Date.now();
         continuousCodingStart = Date.now();
     }
-    // ── Activity listeners ─────────────────────────────────────
-    // Typing
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(() => {
         onActivity();
     }));
-    // Cursor / selection movement
     context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(() => {
         onActivity();
     }));
-    // Switching between editor tabs
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(() => {
         onActivity();
     }));
-    // Scrolling (visible range changes)
     context.subscriptions.push(vscode.window.onDidChangeTextEditorVisibleRanges(() => {
         onActivity();
     }));
-    // Terminal interaction
     context.subscriptions.push(vscode.window.onDidChangeActiveTerminal(() => {
         onActivity();
     }));
-    // Track workspace changes (switching projects)
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
         recordCurrentSession();
         if (vscode.workspace.workspaceFolders) {
@@ -131,15 +119,11 @@ function activate(context) {
             lastActivityTime = Date.now();
         }
     }));
-    // ── Periodic batch sending ─────────────────────────────────
     startBatchTimer(() => sendBatch(serverUrl, apiKey));
-    // ── Break reminder checker ─────────────────────────────────
     startBreakReminderTimer(context);
-    // ── Status bar updater (every 30s) ─────────────────────────
     const statusTimer = setInterval(() => {
         updateStatusBar();
     }, 30_000);
-    // ── Cleanup on deactivation ────────────────────────────────
     context.subscriptions.push({
         dispose: () => {
             recordCurrentSession();
@@ -156,7 +140,6 @@ function activate(context) {
             clearInterval(statusTimer);
         }
     });
-    // ── Manual send command ────────────────────────────────────
     const disposable = vscode.commands.registerCommand('careit.sendNow', async () => {
         recordCurrentSession();
         await sendBatch(serverUrl, apiKey);
@@ -164,13 +147,9 @@ function activate(context) {
     });
     context.subscriptions.push(disposable);
 }
-// ────────────────────────────────────────────────────────────────
-// Activity tracking
-// ────────────────────────────────────────────────────────────────
 function onActivity() {
     const now = Date.now();
     const wasIdle = now - lastActivityTime >= IDLE_THRESHOLD;
-    // If returning from idle, record the past session using the time they actually went idle
     if (wasIdle) {
         recordCurrentSession(lastActivityTime);
         continuousCodingStart = now;
@@ -178,24 +157,17 @@ function onActivity() {
     }
     lastActivityTime = now;
 }
-// ────────────────────────────────────────────────────────────────
-// Session recording
-// ────────────────────────────────────────────────────────────────
 function recordCurrentSession(forceEndTime) {
     if (!currentProject) {
         return;
     }
     const now = forceEndTime || Date.now();
     const timeSinceLastActivity = Date.now() - lastActivityTime;
-    // Actual coding ends when they stopped typing if they went idle.
-    // Otherwise, if they are still active, they coded up to `now`.
     const endTime = (timeSinceLastActivity >= IDLE_THRESHOLD) ? lastActivityTime : now;
     const durationMs = endTime - currentSessionStart;
-    // Ignore invalid or too short sessions (< 5 seconds)
     if (durationMs >= 5000) {
         const durationSeconds = Math.round(durationMs / 1000);
         todayCodingSeconds += durationSeconds;
-        // Aggregate into project sessions
         const existing = projectSessions.get(currentProject);
         if (existing) {
             existing.totalDuration += durationSeconds;
@@ -211,9 +183,6 @@ function recordCurrentSession(forceEndTime) {
     }
     currentSessionStart = now;
 }
-// ────────────────────────────────────────────────────────────────
-// Status bar
-// ────────────────────────────────────────────────────────────────
 function updateStatusBar() {
     const todayStr = new Date().toDateString();
     if (todayStr !== currentDay) {
@@ -226,9 +195,6 @@ function updateStatusBar() {
     statusBarItem.text = `$(pulse) CareIt: ${timeStr}`;
     statusBarItem.tooltip = `Today's coding time: ${timeStr}\nClick to force send analytics`;
 }
-// ────────────────────────────────────────────────────────────────
-// Batch sending
-// ────────────────────────────────────────────────────────────────
 function startBatchTimer(sendFn) {
     if (batchTimer) {
         return;
@@ -236,7 +202,6 @@ function startBatchTimer(sendFn) {
     batchTimer = setInterval(async () => {
         const now = Date.now();
         const idleTime = now - lastActivityTime;
-        // Don't send if user is idle
         if (idleTime >= IDLE_THRESHOLD) {
             console.log('[CareIt] User idle — skipping batch send.');
             return;
@@ -259,7 +224,6 @@ async function sendBatch(serverUrl, apiKey) {
         return;
     }
     isSending = true;
-    // Snapshot current sessions, then clear
     const sessionsSnapshot = new Map(projectSessions);
     const activities = Array.from(sessionsSnapshot.entries()).map(([project, session]) => ({
         project,
@@ -274,7 +238,6 @@ async function sendBatch(serverUrl, apiKey) {
             headers: { 'careit-api-key': apiKey },
             timeout: 10000
         });
-        // Success — clear only the snapshot entries from the live map
         for (const key of sessionsSnapshot.keys()) {
             const live = projectSessions.get(key);
             const snapped = sessionsSnapshot.get(key);
@@ -288,7 +251,6 @@ async function sendBatch(serverUrl, apiKey) {
                 }
             }
         }
-        // Persist remaining sessions
         persistSessions(extensionContext);
         statusBarItem.text = '$(check) CareIt';
         setTimeout(() => updateStatusBar(), 3000);
@@ -310,15 +272,11 @@ async function sendBatch(serverUrl, apiKey) {
             statusBarItem.text = '$(alert) CareIt: Retry later';
             setTimeout(() => updateStatusBar(), 5000);
         }
-        // Data stays in projectSessions since we only subtract on success
     }
     finally {
         isSending = false;
     }
 }
-// ────────────────────────────────────────────────────────────────
-// Session persistence (crash recovery)
-// ────────────────────────────────────────────────────────────────
 function persistSessions(context) {
     const data = {};
     projectSessions.forEach((session, project) => {
@@ -334,25 +292,18 @@ function restoreSessions(context) {
             todayCodingSeconds += session.totalDuration;
         }
         console.log(`[CareIt] Restored ${Object.keys(stored).length} pending session(s)`);
-        // Clear stored data after restoring
         context.globalState.update(SESSION_STORAGE_KEY, undefined);
     }
 }
-// ────────────────────────────────────────────────────────────────
-// Break reminders
-// ────────────────────────────────────────────────────────────────
 function startBreakReminderTimer(context) {
-    // Check every 5 minutes if a break reminder is needed
     breakReminderTimer = setInterval(() => {
         const now = Date.now();
         const idleTime = now - lastActivityTime;
-        // Only check if the user is actively coding
         if (idleTime >= IDLE_THRESHOLD) {
             return;
         }
         const continuousMs = now - continuousCodingStart;
         if (continuousMs >= BREAK_THRESHOLD) {
-            // Don't show if we already showed one recently (within 30 min)
             const lastShown = context.globalState.get(BREAK_SHOWN_KEY) ?? 0;
             if (now - lastShown < 30 * 60 * 1000) {
                 return;
@@ -366,11 +317,9 @@ function startBreakReminderTimer(context) {
                 .showInformationMessage(`☕ You've been coding for ${timeStr} — time for a stretch break!`, 'Take a Break', 'Remind Later')
                 .then(selection => {
                 if (selection === 'Take a Break') {
-                    // Reset continuous timer
                     continuousCodingStart = Date.now();
                     vscode.window.showInformationMessage('🧘 Enjoy your break! Your streak is safe.');
                 }
-                // "Remind Later" or dismissed — will check again in 30 min
             });
         }
     }, 5 * 60_000);
