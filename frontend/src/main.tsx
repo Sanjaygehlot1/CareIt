@@ -13,6 +13,7 @@ import GoalsPage from './pages/GoalsPage.tsx'
 import DocsPage from './pages/DocsPage.tsx'
 import AboutPage from './pages/AboutPage.tsx'
 
+
 const router = createBrowserRouter([
 
   {
