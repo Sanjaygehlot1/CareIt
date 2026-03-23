@@ -358,7 +358,7 @@ const GoalsCard = () => {
     const handleAiGenerate = async () => {
         setAiLoading(true);
         setAiError('');
-        const result = await generateAiGoals();
+        const result = await generateAiGoals(activePeriod);
         setAiLoading(false);
         if (result?.goals) {
             setGoals(prev => [...result.goals, ...prev]);

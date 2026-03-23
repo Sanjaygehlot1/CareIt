@@ -1,13 +1,10 @@
-import { getThemeContext } from '../context/ThemeContext';
 import { Link } from 'react-router-dom';
-import { Zap, ArrowLeft, Code2, HeartPulse, Clock, Github, FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, Code2, HeartPulse, Clock, Github, FileText } from 'lucide-react';
+import { motion, type Variants } from 'framer-motion';
 import { Logo } from '../components/ui/Logo';
 
 export default function DocsPage() {
-  const { theme } = getThemeContext();
-
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -15,7 +12,7 @@ export default function DocsPage() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, scale: 0.95, y: 15 },
     show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 20 } }
   };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, X, Zap, MapPin, FileText, User, Link2, Paperclip, Train } from 'lucide-react';
+import { Calendar, Clock, X, Zap, FileText, User, Link2, Paperclip, Train } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ExtendedEvents } from '../../types/calendar';
 

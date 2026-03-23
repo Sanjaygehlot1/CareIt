@@ -1,5 +1,5 @@
-import React, { Fragment } from 'react';
-import { X, AlertTriangle, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface ModalProps {
   isOpen: boolean;
