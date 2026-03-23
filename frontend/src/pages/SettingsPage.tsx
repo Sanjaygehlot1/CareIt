@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, Trash2, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw, ExternalLink } from 'lucide-react';
+import { Mail, Trash2, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw, ExternalLink, CheckCircle2, Moon, OctagonAlert } from 'lucide-react';
 import { getAuth } from '../context/authContext';
 import { useSearchParams } from 'react-router-dom';
 import { BACKEND_BASE_URL } from '../utils/secrets';
@@ -514,11 +514,11 @@ const SettingsPage: React.FC = () => {
             {(() => {
               const level: string = (user as any)?.burnoutLevel ?? 'NONE';
               const score: number = (user as any)?.burnoutScore ?? 0;
-              const burnoutCfg: Record<string, { label: string; desc: string; color: string; bg: string }> = {
-                NONE: { label: '✅ Looking great', desc: 'Your coding activity is consistent with your baseline.', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-                MILD: { label: '😴 Mild dip detected', desc: 'Your pace is slightly below baseline. A gentle nudge email has been sent.', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
-                MODERATE: { label: '⚠️ Moderate decline', desc: 'Noticeable drop in activity. We\'ve emailed you with suggestions.', color: '#f97316', bg: 'rgba(249,115,22,0.08)' },
-                SEVERE: { label: '🔴 Burnout risk', desc: 'Activity is significantly below your baseline. Please take care of yourself.', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+              const burnoutCfg: Record<string, { label: string; icon: React.ReactNode; desc: string; color: string; bg: string }> = {
+                NONE:     { label: 'Looking great',    icon: <CheckCircle2 size={14} />, desc: 'Your coding activity is consistent with your baseline.', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
+                MILD:     { label: 'Mild dip detected', icon: <Moon size={14} />,         desc: 'Your pace is slightly below baseline. A gentle nudge email has been sent.', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+                MODERATE: { label: 'Moderate decline', icon: <AlertTriangle size={14} />, desc: 'Noticeable drop in activity. We\'ve emailed you with suggestions.', color: '#f97316', bg: 'rgba(249,115,22,0.08)' },
+                SEVERE:   { label: 'Burnout risk',      icon: <OctagonAlert size={14} />, desc: 'Activity is significantly below your baseline. Please take care of yourself.', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
               };
               const cfg = burnoutCfg[level] ?? burnoutCfg['NONE'];
               return (
@@ -529,7 +529,7 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Burnout Status</h3>
-                      <p className="text-sm mt-0.5" style={{ color: cfg.color, fontWeight: 600 }}>{cfg.label}</p>
+                      <p className="text-sm mt-0.5 flex items-center gap-1.5" style={{ color: cfg.color, fontWeight: 600 }}>{cfg.icon}{cfg.label}</p>
                       <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{cfg.desc}</p>
                     
                       {score > 0 && (
