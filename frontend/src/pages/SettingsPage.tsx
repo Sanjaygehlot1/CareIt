@@ -458,12 +458,13 @@ const SettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-semibold"
-                style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
-              >
-                Connect
-              </button>
+              {user?.githubUsername ? (
+                <button className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold" disabled>Connected</button>
+              ) : (
+                <button onClick={() => window.location.href = `${BACKEND_BASE_URL}/auth/github/connect`} style={{ backgroundColor: 'var(--accent-primary)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} className="border px-4 py-2 hover:opacity-90 rounded-lg text-sm font-semibold hover:bg-hover-bg cursor-pointer transition-colors">
+                  Connect
+                </button>
+              )}
             </div>
             <hr style={{ borderColor: 'var(--border-primary)' }} />
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -652,7 +653,7 @@ const SettingsPage: React.FC = () => {
                     : { backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }
                 }
                 className={`w-full sm:w-auto flex items-center justify-center gap-2 border px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${user.githubAppConnected ? 'hover:bg-red-50 dark:hover:bg-red-900/20' : 'hover:bg-hover-bg'
-                   }`}
+                  }`}
               >
                 {user.githubAppConnected ? "Uninstall App" : "Install App"}
                 <ExternalLink size={14} />

@@ -2,7 +2,7 @@
   "name": "careit-tracker",
   "displayName": "CareIt Productivity Tracker",
   "description": "Tracks your coding activity for the CareIt dashboard",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "SanjayGehlot",
   "engines": {
     "vscode": "^1.106.1"
