@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, Trash2, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw, ExternalLink, CheckCircle2, Moon, OctagonAlert } from 'lucide-react';
+import { Mail, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw, ExternalLink, CheckCircle2, Moon, OctagonAlert } from 'lucide-react';
 import { getAuth } from '../context/authContext';
 import { useSearchParams } from 'react-router-dom';
 import { BACKEND_BASE_URL } from '../utils/secrets';
