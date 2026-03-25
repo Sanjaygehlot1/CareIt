@@ -54,6 +54,17 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+app.use((req, res, next) => {
+  if (req.path.includes('/auth/profile')) {
+    console.log("=== API PROFILE DEBUG ===");
+    console.log("Origin:", req.headers.origin);
+    console.log("Cookies received:", req.cookies);
+    console.log("Session ID:", req.sessionID);
+    console.log("Is Authenticated?", req.isAuthenticated());
+  }
+  next();
+});
+
 app.use('/api/v1/auth', UserRoutes);
 app.use('/api/v1/calendar', CalendarRoutes);
 app.use('/api/v1/reports', ReportRoutes);
