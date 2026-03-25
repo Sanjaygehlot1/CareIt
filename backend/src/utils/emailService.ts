@@ -2,21 +2,32 @@ import nodemailer from 'nodemailer';
 import { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } from '../secrets';
 
 const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465,
+  auth: { user: SMTP_USER, pass: SMTP_PASS },
+  connectionTimeout: 10000,
+  greetingTimeout: 5000,
+  socketTimeout: 30000,
+});
+
+transporter.verify((error) => {
+  if (error) {
+    console.error('[SMTP] Connection test failed:', error);
+  } else {
+    console.log('[SMTP] Transporter is ready');
+  }
 });
 
 function fmtMins(mins: number) {
-    if (mins < 60) return `${mins}m`;
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
 function shell(title: string, body: string, footer: string) {
-    return `
+  return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;color:#111827;">
       <div style="padding:40px 32px 0;">
         <div style="font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#9ca3af;margin-bottom:24px;">CareIt</div>
@@ -30,7 +41,7 @@ function shell(title: string, body: string, footer: string) {
 }
 
 function statBlock(value: string, label: string, color = '#111827') {
-    return `
+  return `
     <div style="text-align:center;padding:16px 0;">
       <div style="font-size:32px;font-weight:700;color:${color};line-height:1;">${value}</div>
       <div style="font-size:12px;color:#6b7280;margin-top:6px;">${label}</div>
@@ -38,14 +49,14 @@ function statBlock(value: string, label: string, color = '#111827') {
 }
 
 export async function sendStreakReminderEmail(
-    to: string,
-    userName: string,
-    currentStreak: number,
-    minutesCodableLeft: number
+  to: string,
+  userName: string,
+  currentStreak: number,
+  minutesCodableLeft: number
 ) {
-    const subject = `Your ${currentStreak}-day streak needs attention`;
+  const subject = `Your ${currentStreak}-day streak needs attention`;
 
-    const body = `
+  const body = `
         <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
           ${userName.split(' ')[0]}, you haven't hit 30 minutes of coding today. Your current streak is at risk.
         </p>
@@ -70,38 +81,38 @@ export async function sendStreakReminderEmail(
           Open your editor to keep going.
         </p>`;
 
-    const html = shell(
-        `Don't lose your ${currentStreak}-day streak`,
-        body,
-        'You received this because streak reminders are enabled. Turn them off in Reports.'
-    );
+  const html = shell(
+    `Don't lose your ${currentStreak}-day streak`,
+    body,
+    'You received this because streak reminders are enabled. Turn them off in Reports.'
+  );
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
-        console.log(`[Streak Reminder] Email sent to ${to}`);
-    } catch (error) {
-        console.error(`[Streak Reminder] Failed to send email to ${to}:`, error);
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    console.log(`[Streak Reminder] Email sent to ${to}`);
+  } catch (error) {
+    console.error(`[Streak Reminder] Failed to send email to ${to}:`, error);
+  }
 }
 
 export async function sendDailyDigestEmail(
-    to: string,
-    userName: string,
-    line1: string,
-    line2: string,
-    todayCodingMins: number,
-    streakStatus: 'maintained' | 'extended' | 'missed',
-    currentStreak: number
+  to: string,
+  userName: string,
+  line1: string,
+  line2: string,
+  todayCodingMins: number,
+  streakStatus: 'maintained' | 'extended' | 'missed',
+  currentStreak: number
 ) {
-    const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    const subject = `${dateStr} — Your daily summary`;
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const subject = `${dateStr} — Your daily summary`;
 
-    const streakLabel = streakStatus === 'missed'
-        ? 'Streak paused'
-        : `${currentStreak}-day streak ${streakStatus === 'extended' ? 'extended' : 'maintained'}`;
-    const streakColor = streakStatus === 'missed' ? '#ef4444' : '#10b981';
+  const streakLabel = streakStatus === 'missed'
+    ? 'Streak paused'
+    : `${currentStreak}-day streak ${streakStatus === 'extended' ? 'extended' : 'maintained'}`;
+  const streakColor = streakStatus === 'missed' ? '#ef4444' : '#10b981';
 
-    const body = `
+  const body = `
         <p style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin:0 0 12px;">${dateStr}</p>
 
         <div style="border-left:2px solid #e5e7eb;padding-left:16px;margin-bottom:28px;">
@@ -119,53 +130,53 @@ export async function sendDailyDigestEmail(
           </div>
         </div>`;
 
-    const html = shell(
-        `Hey ${userName.split(' ')[0]}, here's your day`,
-        body,
-        'Daily digest from CareIt. Disable in Settings.'
-    );
+  const html = shell(
+    `Hey ${userName.split(' ')[0]}, here's your day`,
+    body,
+    'Daily digest from CareIt. Disable in Settings.'
+  );
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
-        console.log(`[Daily Digest] Email sent to ${to}`);
-    } catch (error) {
-        console.error(`[Daily Digest] Failed to send to ${to}:`, error);
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    console.log(`[Daily Digest] Email sent to ${to}`);
+  } catch (error) {
+    console.error(`[Daily Digest] Failed to send to ${to}:`, error);
+  }
 }
 
 export async function sendBurnoutAlertEmail(
-    to: string,
-    userName: string,
-    burnoutLevel: 'MILD' | 'MODERATE' | 'SEVERE',
-    currentAvgMins: number,
-    baselineAvgMins: number,
-    dropPercent: number
+  to: string,
+  userName: string,
+  burnoutLevel: 'MILD' | 'MODERATE' | 'SEVERE',
+  currentAvgMins: number,
+  baselineAvgMins: number,
+  dropPercent: number
 ) {
-    const configs = {
-        MILD: {
-            title: 'Your coding pace has dipped',
-            accent: '#f59e0b',
-            message: `Your recent average is ${dropPercent}% below your baseline. A short focused session can help rebuild momentum.`,
-            tip: 'Try a 25-minute focused session tomorrow.',
-        },
-        MODERATE: {
-            title: 'Noticeable decline in activity',
-            accent: '#f97316',
-            message: `Coding time is down ${dropPercent}% over the past two weeks. A few consistent sessions can turn this around.`,
-            tip: 'Block 30 minutes on your calendar and protect that time.',
-        },
-        SEVERE: {
-            title: 'Significant drop in activity',
-            accent: '#ef4444',
-            message: `Activity has dropped ${dropPercent}% from your baseline. This often signals burnout. Rest is productive too.`,
-            tip: 'Take a proper break. Your data will be here when you return.',
-        },
-    };
+  const configs = {
+    MILD: {
+      title: 'Your coding pace has dipped',
+      accent: '#f59e0b',
+      message: `Your recent average is ${dropPercent}% below your baseline. A short focused session can help rebuild momentum.`,
+      tip: 'Try a 25-minute focused session tomorrow.',
+    },
+    MODERATE: {
+      title: 'Noticeable decline in activity',
+      accent: '#f97316',
+      message: `Coding time is down ${dropPercent}% over the past two weeks. A few consistent sessions can turn this around.`,
+      tip: 'Block 30 minutes on your calendar and protect that time.',
+    },
+    SEVERE: {
+      title: 'Significant drop in activity',
+      accent: '#ef4444',
+      message: `Activity has dropped ${dropPercent}% from your baseline. This often signals burnout. Rest is productive too.`,
+      tip: 'Take a proper break. Your data will be here when you return.',
+    },
+  };
 
-    const cfg = configs[burnoutLevel];
-    const subject = `CareIt: ${cfg.title}`;
+  const cfg = configs[burnoutLevel];
+  const subject = `CareIt: ${cfg.title}`;
 
-    const body = `
+  const body = `
         <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
           ${userName.split(' ')[0]}, we noticed a change in your coding patterns.
         </p>
@@ -184,27 +195,27 @@ export async function sendBurnoutAlertEmail(
           <p style="font-size:14px;color:#374151;margin:0;line-height:1.5;">${cfg.tip}</p>
         </div>`;
 
-    const html = shell(cfg.title, body, 'CareIt tracks your wellbeing, not just your code.');
+  const html = shell(cfg.title, body, 'CareIt tracks your wellbeing, not just your code.');
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
-        console.log(`[Burnout Alert] ${burnoutLevel} email sent to ${to}`);
-    } catch (error) {
-        console.error(`[Burnout Alert] Failed to send to ${to}:`, error);
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    console.log(`[Burnout Alert] ${burnoutLevel} email sent to ${to}`);
+  } catch (error) {
+    console.error(`[Burnout Alert] Failed to send to ${to}:`, error);
+  }
 }
 
 export async function sendRecalibrateEmail(
-    to: string,
-    userName: string,
-    missRate: number,
-    aiSuggestion: string,
-    currentGoalSummary: string,
+  to: string,
+  userName: string,
+  missRate: number,
+  aiSuggestion: string,
+  currentGoalSummary: string,
 ) {
-    const firstName = userName.split(' ')[0];
-    const subject = `Time to adjust your targets, ${firstName}`;
+  const firstName = userName.split(' ')[0];
+  const subject = `Time to adjust your targets, ${firstName}`;
 
-    const body = `
+  const body = `
         <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
           ${firstName}, you've missed your streak target ${missRate}% of the time recently.
           That's not a failure — it's a signal your targets may be too ambitious.
@@ -229,27 +240,27 @@ export async function sendRecalibrateEmail(
           Update your targets in <strong style="color:#374151;">Goals</strong> anytime.
         </p>`;
 
-    const html = shell(`Time to recalibrate, ${firstName}`, body, 'CareIt — helping you build sustainable habits.');
+  const html = shell(`Time to recalibrate, ${firstName}`, body, 'CareIt — helping you build sustainable habits.');
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
-        console.log(`[Streak Coach] Recalibrate email sent to ${to}`);
-    } catch (error) {
-        console.error(`[Streak Coach] Failed to send recalibrate email to ${to}:`, error);
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    console.log(`[Streak Coach] Recalibrate email sent to ${to}`);
+  } catch (error) {
+    console.error(`[Streak Coach] Failed to send recalibrate email to ${to}:`, error);
+  }
 }
 
 export async function sendLevelUpEmail(
-    to: string,
-    userName: string,
-    hitRate: number,
-    avgCodingMins: number,
-    newGoals: { title: string; description: string; targetValue: number; unit: string }[],
+  to: string,
+  userName: string,
+  hitRate: number,
+  avgCodingMins: number,
+  newGoals: { title: string; description: string; targetValue: number; unit: string }[],
 ) {
-    const firstName = userName.split(' ')[0];
-    const subject = `New challenges unlocked, ${firstName}`;
+  const firstName = userName.split(' ')[0];
+  const subject = `New challenges unlocked, ${firstName}`;
 
-    const body = `
+  const body = `
         <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
           ${firstName}, you've been consistently exceeding your targets. Time for the next level.
         </p>
@@ -273,27 +284,27 @@ export async function sendLevelUpEmail(
           These goals are live in <strong style="color:#374151;">Goals</strong>. Keep going.
         </p>`;
 
-    const html = shell(`Level up, ${firstName}`, body, 'CareIt — raising the bar with you.');
+  const html = shell(`Level up, ${firstName}`, body, 'CareIt — raising the bar with you.');
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
-        console.log(`[Streak Coach] Level-up email sent to ${to} (${newGoals.length} new goals)`);
-    } catch (error) {
-        console.error(`[Streak Coach] Failed to send level-up email to ${to}:`, error);
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    console.log(`[Streak Coach] Level-up email sent to ${to} (${newGoals.length} new goals)`);
+  } catch (error) {
+    console.error(`[Streak Coach] Failed to send level-up email to ${to}:`, error);
+  }
 }
 
 export async function sendFeedbackEmail(
-    userName: string,
-    userEmail: string,
-    category: 'bug' | 'feature' | 'other',
-    message: string,
+  userName: string,
+  userEmail: string,
+  category: 'bug' | 'feature' | 'other',
+  message: string,
 ) {
-    const categoryLabels = { bug: 'Bug Report', feature: 'Feature Request', other: 'General Feedback' };
-    const categoryColors = { bug: '#ef4444', feature: '#8b5cf6', other: '#6b7280' };
+  const categoryLabels = { bug: 'Bug Report', feature: 'Feature Request', other: 'General Feedback' };
+  const categoryColors = { bug: '#ef4444', feature: '#8b5cf6', other: '#6b7280' };
 
-    const subject = `[CareIt Feedback] ${categoryLabels[category]} from ${userName}`;
-    const body = `
+  const subject = `[CareIt Feedback] ${categoryLabels[category]} from ${userName}`;
+  const body = `
         <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 20px;">
           New feedback submitted through the app.
         </p>
@@ -322,21 +333,21 @@ export async function sendFeedbackEmail(
           <div style="font-size:14px;color:#374151;padding:16px;background:#fafafa;border-radius:8px;line-height:1.7;white-space:pre-wrap;">${message}</div>
         </div>`;
 
-    const html = shell(`Feedback: ${categoryLabels[category]}`, body, `Sent by ${userName} · ${userEmail}`);
+  const html = shell(`Feedback: ${categoryLabels[category]}`, body, `Sent by ${userName} · ${userEmail}`);
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to: SMTP_USER, subject, html });
-        console.log(`[Feedback] Email sent for ${userEmail}`);
-    } catch (error) {
-        console.error(`[Feedback] Failed to send feedback email:`, error);
-        throw error;
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to: SMTP_USER, subject, html });
+    console.log(`[Feedback] Email sent for ${userEmail}`);
+  } catch (error) {
+    console.error(`[Feedback] Failed to send feedback email:`, error);
+    throw error;
+  }
 }
 
 export async function sendWelcomeEmail(to: string, userName: string) {
-    const subject = `Welcome to CareIt, ${userName.split(' ')[0]} 🚀`;
+  const subject = `Welcome to CareIt, ${userName.split(' ')[0]} 🚀`;
 
-    const body = `
+  const body = `
         <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 16px;">
           Hi ${userName.split(' ')[0]},
         </p>
@@ -351,20 +362,20 @@ export async function sendWelcomeEmail(to: string, userName: string) {
           Happy coding,<br/>The CareIt Team
         </p>`;
 
-    const html = shell(`Welcome to CareIt`, body, 'Focus deeply. Live well.');
+  const html = shell(`Welcome to CareIt`, body, 'Focus deeply. Live well.');
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
-        console.log(`[Welcome] Email sent to ${to}`);
-    } catch (error) {
-        console.error(`[Welcome] Failed to send to ${to}:`, error);
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    console.log(`[Welcome] Email sent to ${to}`);
+  } catch (error) {
+    console.error(`[Welcome] Failed to send to ${to}:`, error);
+  }
 }
 
 export async function sendGoodbyeEmail(to: string, userName: string) {
-    const subject = `Your CareIt account has been deleted`;
+  const subject = `Your CareIt account has been deleted`;
 
-    const body = `
+  const body = `
         <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 16px;">
           Hi ${userName.split(' ')[0]},
         </p>
@@ -379,12 +390,12 @@ export async function sendGoodbyeEmail(to: string, userName: string) {
           Farewell,<br/>The CareIt Team
         </p>`;
 
-    const html = shell(`Account Deleted successfully`, body, 'Your data has been wiped.');
+  const html = shell(`Account Deleted successfully`, body, 'Your data has been wiped.');
 
-    try {
-        await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
-        console.log(`[Account Delete] Email sent to ${to}`);
-    } catch (error) {
-        console.error(`[Account Delete] Failed to send to ${to}:`, error);
-    }
+  try {
+    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    console.log(`[Account Delete] Email sent to ${to}`);
+  } catch (error) {
+    console.error(`[Account Delete] Failed to send to ${to}:`, error);
+  }
 }

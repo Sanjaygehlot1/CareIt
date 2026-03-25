@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Zap, Sun, Moon, Menu, X, LucideArrowUpRightFromSquare } from 'lucide-react';
 import { getThemeContext } from '../context/ThemeContext';
+import { getAuth } from '../context/authContext';
 import { Pricing } from '../components/ui/pricing';
 import { ContainerScroll } from '../components/ui/container-scroll-animation';
 import { FeatureCarousel } from '../components/ui/feature-carousel';
@@ -250,6 +251,14 @@ function HeroSection({
 
 export default function HomePage() {
   const { toggleTheme, theme } = getThemeContext();
+  const { user, Loading } = getAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!Loading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, Loading, navigate]);
 
   return (
     <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh' }}>
