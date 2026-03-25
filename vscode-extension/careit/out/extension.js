@@ -67,7 +67,7 @@ function activate(context) {
     context.subscriptions.push(statusBarItem);
     const config = vscode.workspace.getConfiguration('careit');
     let apiKey = config.get('apiKey') ?? '';
-    let serverUrl = config.get('serverUrl') ?? 'http://localhost:3000';
+    let serverUrl = config.get('serverUrl') ?? 'https://api.careit.sanjaycodes.dev';
     const breakMinutes = config.get('breakReminderMinutes') ?? 90;
     BREAK_THRESHOLD = breakMinutes * 60 * 1000;
     if (!apiKey) {
@@ -83,7 +83,7 @@ function activate(context) {
         if (e.affectsConfiguration('careit')) {
             const newConfig = vscode.workspace.getConfiguration('careit');
             apiKey = newConfig.get('apiKey') || '';
-            serverUrl = newConfig.get('serverUrl') || 'http://localhost:3000';
+            serverUrl = newConfig.get('serverUrl') || 'https://api.careit.sanjaycodes.dev';
             const breakMins = newConfig.get('breakReminderMinutes') ?? 90;
             BREAK_THRESHOLD = breakMins * 60 * 1000;
             vscode.window.showInformationMessage('CareIt: Configuration updated.');
