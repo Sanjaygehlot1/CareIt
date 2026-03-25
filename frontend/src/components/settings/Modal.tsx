@@ -42,7 +42,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, childr
         <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
           <button
             type="button"
-            className="w-full inline-flex justify-center flex items-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none sm:w-auto sm:text-sm disabled:opacity-50 transition-opacity hover:opacity-90"
+            className="w-full inline-flex justify-center flex items-center gap-2 rounded-md border border-transparent cursor-pointer shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none sm:w-auto sm:text-sm disabled:opacity-50 transition-opacity hover:opacity-90"
             style={{ backgroundColor: confirmColor || '#f97316' }}
             onClick={onConfirm}
             disabled={loading}
@@ -52,7 +52,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, childr
           </button>
           <button
             type="button"
-            className="w-full inline-flex justify-center rounded-md border shadow-sm px-4 py-2 text-base font-medium focus:outline-none sm:w-auto sm:text-sm disabled:opacity-50 transition-colors hover:brightness-95"
+            className="w-full inline-flex justify-center rounded-md border shadow-sm px-4 py-2 text-base font-medium focus:outline-none cursor-pointer sm:w-auto sm:text-sm disabled:opacity-50 transition-colors hover:brightness-95"
             style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
             onClick={onClose}
             disabled={loading}

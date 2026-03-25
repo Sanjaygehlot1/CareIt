@@ -611,7 +611,7 @@ const SettingsPage: React.FC = () => {
                 <button
                   onClick={copyToClipboard}
                   disabled={!apiKey}
-                  className="p-3 border rounded-lg transition-colors flex-shrink-0"
+                  className="p-3 border cursor-pointer rounded-lg transition-colors flex-shrink-0"
                   style={{ backgroundColor: 'var(--card-bg)' }}
                 >
                   <Copy size={20} />
@@ -619,7 +619,7 @@ const SettingsPage: React.FC = () => {
 
                 <button
                   onClick={handleGenerateKey}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold whitespace-nowrap"
+                  className="flex-1 cursor-pointer sm:flex-none flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold whitespace-nowrap"
                   style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
                 >
                   <RefreshCw size={16} />
@@ -680,7 +680,7 @@ const SettingsPage: React.FC = () => {
               </p>
             </div>
 
-            <button className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+            <button onClick={() => setIsDeleteModalOpen(true)} className="w-full sm:w-auto bg-red-500 text-white cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold">
               Delete
             </button>
           </div>

@@ -1,23 +1,44 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 import { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } from '../secrets';
+
+dns.setDefaultResultOrder('ipv4first');
+
+const PORT = Number(SMTP_PORT);
+
 
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465,
-  auth: { user: SMTP_USER, pass: SMTP_PASS },
+  port: PORT,
+  secure: PORT === 465,
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
   connectionTimeout: 10000,
   greetingTimeout: 5000,
   socketTimeout: 30000,
 });
 
-transporter.verify((error) => {
-  if (error) {
-    console.error('[SMTP] Connection test failed:', error);
-  } else {
+(async () => {
+  try {
+    await transporter.verify();
     console.log('[SMTP] Transporter is ready');
+  } catch (error) {
+    console.error('[SMTP] Connection test failed:', error);
   }
-});
+})();
+
+async function sendMailWithRetry(mailOptions: any, retries = 2): Promise<any> {
+  try {
+    return await transporter.sendMail(mailOptions);
+  } catch (error) {
+    if (retries === 0) throw error;
+    console.warn('[SMTP] Retry sending mail...', retries);
+    return sendMailWithRetry(mailOptions, retries - 1);
+  }
+}
+
 
 function fmtMins(mins: number) {
   if (mins < 60) return `${mins}m`;
@@ -88,7 +109,12 @@ export async function sendStreakReminderEmail(
   );
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
     console.log(`[Streak Reminder] Email sent to ${to}`);
   } catch (error) {
     console.error(`[Streak Reminder] Failed to send email to ${to}:`, error);
@@ -137,7 +163,12 @@ export async function sendDailyDigestEmail(
   );
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
     console.log(`[Daily Digest] Email sent to ${to}`);
   } catch (error) {
     console.error(`[Daily Digest] Failed to send to ${to}:`, error);
@@ -198,7 +229,12 @@ export async function sendBurnoutAlertEmail(
   const html = shell(cfg.title, body, 'CareIt tracks your wellbeing, not just your code.');
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
     console.log(`[Burnout Alert] ${burnoutLevel} email sent to ${to}`);
   } catch (error) {
     console.error(`[Burnout Alert] Failed to send to ${to}:`, error);
@@ -243,7 +279,12 @@ export async function sendRecalibrateEmail(
   const html = shell(`Time to recalibrate, ${firstName}`, body, 'CareIt — helping you build sustainable habits.');
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
     console.log(`[Streak Coach] Recalibrate email sent to ${to}`);
   } catch (error) {
     console.error(`[Streak Coach] Failed to send recalibrate email to ${to}:`, error);
@@ -287,7 +328,12 @@ export async function sendLevelUpEmail(
   const html = shell(`Level up, ${firstName}`, body, 'CareIt — raising the bar with you.');
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
     console.log(`[Streak Coach] Level-up email sent to ${to} (${newGoals.length} new goals)`);
   } catch (error) {
     console.error(`[Streak Coach] Failed to send level-up email to ${to}:`, error);
@@ -336,10 +382,16 @@ export async function sendFeedbackEmail(
   const html = shell(`Feedback: ${categoryLabels[category]}`, body, `Sent by ${userName} · ${userEmail}`);
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to: SMTP_USER, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
+
     console.log(`[Feedback] Email sent for ${userEmail}`);
   } catch (error) {
-    console.error(`[Feedback] Failed to send feedback email:`, error);
+    console.error('[Feedback] Failed to send feedback email:', error);
     throw error;
   }
 }
@@ -365,7 +417,12 @@ export async function sendWelcomeEmail(to: string, userName: string) {
   const html = shell(`Welcome to CareIt`, body, 'Focus deeply. Live well.');
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
     console.log(`[Welcome] Email sent to ${to}`);
   } catch (error) {
     console.error(`[Welcome] Failed to send to ${to}:`, error);
@@ -393,7 +450,12 @@ export async function sendGoodbyeEmail(to: string, userName: string) {
   const html = shell(`Account Deleted successfully`, body, 'Your data has been wiped.');
 
   try {
-    await transporter.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sendMailWithRetry({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      subject,
+      html,
+    });
     console.log(`[Account Delete] Email sent to ${to}`);
   } catch (error) {
     console.error(`[Account Delete] Failed to send to ${to}:`, error);
