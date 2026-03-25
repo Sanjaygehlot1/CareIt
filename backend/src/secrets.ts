@@ -27,5 +27,6 @@ export const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587')
 export const SMTP_USER = process.env.SMTP_USER || ''
 export const SMTP_PASS = process.env.SMTP_PASS || ''
 export const SMTP_FROM = process.env.SMTP_FROM || 'CareIt <noreply@careit.dev>'
+export const RESEND_API_KEY = process.env.RESEND_API_KEY
 
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''

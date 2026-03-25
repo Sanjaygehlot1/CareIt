@@ -409,15 +409,29 @@ const StickyNoteWidget: React.FC = () => {
               <div className="flex-1 flex flex-col overflow-hidden">
                 {activeNote ? (
                   <>
-                    <div className="px-6 pt-4 pb-2 shrink-0">
+                    <div className="px-6 pt-4 pb-2 shrink-0 flex items-center justify-between gap-4">
                       <input
                         ref={titleInputRef}
                         value={activeNote.title}
                         onChange={handleTitleChange}
                         placeholder="Note title..."
-                        className="w-full text-lg font-bold bg-transparent border-none outline-none placeholder:opacity-30"
+                        className="flex-1 text-lg font-bold bg-transparent border-none outline-none placeholder:opacity-30"
                         style={{ color: 'var(--text-primary)' }}
                       />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleTogglePin(activeNote.id)}
+                          className={`p-2 rounded-lg transition-colors ${activeNote.isPinned ? 'bg-orange-500/10 text-orange-500' : 'text-orange-500/40 hover:bg-orange-500/10 hover:text-orange-500'}`}
+                        >
+                          {activeNote.isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteNote(activeNote.id)}
+                          className="p-2 rounded-lg text-red-500/40 hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                     <MenuBar />
                     <div className="flex-1 overflow-auto px-6 py-4 tiptap-container">
@@ -440,14 +454,28 @@ const StickyNoteWidget: React.FC = () => {
             <>
               {activeNote ? (
                 <>
-                  <div className="px-3 pt-2 pb-1 shrink-0 border-b" style={{ borderColor: 'var(--border-primary)' }}>
+                  <div className="px-3 pt-2 pb-1 shrink-0 border-b flex items-center justify-between gap-2" style={{ borderColor: 'var(--border-primary)' }}>
                     <input
                       value={activeNote.title}
                       onChange={handleTitleChange}
                       placeholder="Note title..."
-                      className="w-full text-xs font-bold bg-transparent border-none outline-none placeholder:opacity-30"
+                      className="flex-1 text-xs font-bold bg-transparent border-none outline-none placeholder:opacity-30"
                       style={{ color: 'var(--text-primary)' }}
                     />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleTogglePin(activeNote.id)}
+                        className={`p-1 rounded-md transition-colors ${activeNote.isPinned ? 'bg-orange-500/10 text-orange-500' : 'text-orange-500/30 hover:bg-orange-500/10 hover:text-orange-500'}`}
+                      >
+                        {activeNote.isPinned ? <PinOff size={11} /> : <Pin size={11} />}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteNote(activeNote.id)}
+                        className="p-1 rounded-md text-red-500/30 hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
                   </div>
                   <MenuBar />
                   <div className="flex-1 overflow-auto p-3 tiptap-container">
