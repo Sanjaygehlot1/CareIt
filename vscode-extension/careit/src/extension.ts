@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
   
   const config = vscode.workspace.getConfiguration('careit');
   let apiKey = config.get<string>('apiKey') ?? '';
-  let serverUrl = config.get<string>('serverUrl') ?? 'http://localhost:3000';
+  let serverUrl = config.get<string>('serverUrl') ?? 'https://api.careit.sanjaycodes.dev';
   const breakMinutes = config.get<number>('breakReminderMinutes') ?? 90;
   BREAK_THRESHOLD = breakMinutes * 60 * 1000;
 
@@ -72,7 +72,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (e.affectsConfiguration('careit')) {
         const newConfig = vscode.workspace.getConfiguration('careit');
         apiKey = newConfig.get<string>('apiKey') || '';
-        serverUrl = newConfig.get<string>('serverUrl') || 'http://localhost:3000';
+        serverUrl = newConfig.get<string>('serverUrl') || 'https://api.careit.sanjaycodes.dev';
         const breakMins = newConfig.get<number>('breakReminderMinutes') ?? 90;
         BREAK_THRESHOLD = breakMins * 60 * 1000;
         vscode.window.showInformationMessage('CareIt: Configuration updated.');

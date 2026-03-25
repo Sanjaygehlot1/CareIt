@@ -33,12 +33,12 @@
         "careit.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Your CareIt Personal API Key (Get it from http://localhost:5173/settings)"
+          "description": "Your CareIt Personal API Key (Get it from https://careit.sanjaycodes.dev/settings)"
         },
         "careit.serverUrl": {
           "type": "string",
-          "default": "http://localhost:3000",
-          "description": "The URL of the CareIt backend server"
+          "default": "https://api.careit.sanjaycodes.dev",
+          "description": "The URL of the CareIt backend server (default is https://api.careit.sanjaycodes.dev)"
         },
         "careit.breakReminderMinutes": {
           "type": "number",
