@@ -65,13 +65,14 @@ export default function AdvancedReports() {
                           <InfoTooltip
                             title="Time Allocation"
                             items={[
-                              { color: '#f97316', label: 'Donut Chart', desc: 'shows how your coding hours split across projects' },
-                              { color: '#8b5cf6', label: 'Last 7 Days', desc: 'aggregated from VS Code editor activity' },
+                              { color: '#f97316', label: 'Deep Work', desc: 'concentrated coding time without interruptions' },
+                              { color: '#ef4444', label: 'Meetings', desc: 'aggregated from your Google Calendar events' },
+                              { color: '#8b5cf6', label: 'Coding', desc: 'general development and editor activity' },
                             ]}
                           />
                         </span>
                     </h3>
-                    <div className="flex-1 flex justify-center items-center relative min-h-[250px]">
+                    <div className="flex-1 flex justify-center items-center relative min-h-[300px]">
                         {data.timeAllocation.length === 0 ? (
                             <div className="flex flex-col items-center opacity-50">
                                 <Info style={{ color: 'var(--text-secondary)' }} size={32} className="mb-2" />
@@ -85,9 +86,9 @@ export default function AdvancedReports() {
                                             data={data.timeAllocation}
                                             cx="50%"
                                             cy="50%"
-                                            innerRadius={75}
-                                            outerRadius={105}
-                                            paddingAngle={6}
+                                            innerRadius={80}
+                                            outerRadius={110}
+                                            paddingAngle={4}
                                             dataKey="value"
                                             stroke="none"
                                             animationDuration={1500}
@@ -98,15 +99,24 @@ export default function AdvancedReports() {
                                         </Pie>
                                         <Tooltip
                                             formatter={(val: number) => [`${val} hrs`, 'Duration']}
-                                            contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', borderRadius: '12px' }}
+                                            contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--text-primary)' }}
+                                            itemStyle={{ color: 'var(--text-primary)', padding: '2px 0' }}
+                                            labelStyle={{ display: 'none' }}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
-                                <div className="absolute -bottom-2 w-full flex justify-center gap-4 text-xs font-semibold flex-wrap">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none translate-y-[-10px]">
+                                    <span className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                                        {data.timeAllocation.reduce((acc, curr) => acc + curr.value, 0).toFixed(1)}h
+                                    </span>
+                                    <span style={{ color: 'var(--text-secondary)' }} className="text-[9px] uppercase font-black tracking-[0.2em] opacity-60">Total Time</span>
+                                </div>
+                                <div className="absolute -bottom-4 w-full flex justify-center gap-3 text-[11px] font-bold flex-wrap px-4">
                                     {data.timeAllocation.map((entry, i) => (
-                                        <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                                        <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm transition-all hover:translate-y-[-2px]" style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-secondary)', borderColor: 'var(--card-border)' }}>
                                             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                                            {entry.name}
+                                            <span>{entry.name}</span>
+                                            <span style={{ color: 'var(--accent-primary)' }} className="font-black border-l pl-2 border-primary/20">{entry.value}h</span>
                                         </div>
                                     ))}
                                 </div>
@@ -143,7 +153,9 @@ export default function AdvancedReports() {
                                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} />
                                     <Tooltip
                                         cursor={{ fill: 'var(--text-primary)', opacity: 0.05 }}
-                                        contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', borderRadius: '12px' }}
+                                        contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--text-primary)' }}
+                                        itemStyle={{ color: 'var(--text-primary)' }}
+                                        labelStyle={{ color: 'var(--text-primary)' }}
                                     />
                                     <Bar dataKey="value" fill="var(--accent-primary)" radius={[6, 6, 6, 6]} animationDuration={1500}>
                                         {data.productivityByDay.map((entry, index) => {
@@ -187,7 +199,12 @@ export default function AdvancedReports() {
                         >
                             <XAxis type="number" hide />
                             <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={40} tick={{ fill: 'var(--text-primary)', fontSize: 11, fontWeight: 700 }} />
-                            <Tooltip cursor={{ fill: 'var(--text-primary)', opacity: 0.05 }} contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--text-primary)' }} />
+                            <Tooltip 
+                                cursor={{ fill: 'var(--text-primary)', opacity: 0.05 }} 
+                                contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--text-primary)' }}
+                                itemStyle={{ color: 'var(--text-primary)' }}
+                                labelStyle={{ color: 'var(--text-primary)' }}
+                            />
                             <Bar style={{ color: 'var(--accent-primary)' }} dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
                                 {data.projectBreakdown.map((_, index) => (
                                     <Cell key={`cell-${index}`} fill={'var(--accent-primary)'} fillOpacity={1 - (index * 0.15)} />

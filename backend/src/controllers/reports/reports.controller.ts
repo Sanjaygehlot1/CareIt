@@ -358,7 +358,7 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
 
         const timeAllocation = [
             { name: 'Deep Work', value: Math.round(focusHours * 10) / 10, color: '#f97316' },
-            { name: 'General Coding', value: Math.round(generalCodingHours * 10) / 10, color: '#8b5cf6' },
+            { name: 'Coding', value: Math.round(codingHours * 10) / 10, color: '#3b82f6' },
             { name: 'Meetings', value: Math.round(meetingHours * 10) / 10, color: '#ef4444' }
         ].filter(item => item.value > 0);
 

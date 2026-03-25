@@ -57,6 +57,7 @@ const InfoTooltip = ({ items, title = 'How it works' }: InfoTooltipProps) => {
             transform: 'translateX(-50%)',
             backgroundColor: 'var(--card-bg)',
             borderColor: 'var(--card-border)',
+            color: 'var(--text-primary)',
           }}
           onMouseEnter={() => setShow(true)}
           onMouseLeave={() => setShow(false)}

@@ -5,7 +5,7 @@
   "version": "0.0.4",
   "publisher": "SanjayGehlot",
   "engines": {
-    "vscode": "^1.106.1"
+    "vscode": "^1.80.0"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,8 @@
     "Visualization"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:careit.sendNow"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -64,12 +65,13 @@
     "@types/vscode": "^1.106.1",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.3"
+    "typescript-eslint": "^8.46.3",
+    "axios": "^1.6.0"
   },
   "dependencies": {
-    "@vscode/vsce": "^3.7.1",
-    "axios": "^1.6.0"
+    
   }
 }
