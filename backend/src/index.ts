@@ -48,6 +48,7 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    domain: process.env.NODE_ENV === 'production' ? '.sanjaycodes.dev' : undefined
   }
 }));
 
@@ -72,7 +73,7 @@ app.use('/api/v1/analytics', AnalyticsRoutes);
 app.use('/api/v1/goals', GoalRoutes);
 app.use('/api/v1/notes', NoteRoutes);
 
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
   res.send("hello")
 })
 
