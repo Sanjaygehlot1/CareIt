@@ -114,10 +114,16 @@ router.get('/google/callback', (req, res, next) => {
     req.logIn(user, (err) => {
       if (err) return next(err);
 
-      if (scope === 'calendar_connect') {
-        return res.redirect(`${FRONTEND_BASE_URL}/settings?status=calendar-connected`);
-      }
-      return res.redirect(`${FRONTEND_BASE_URL}/dashboard`);
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("Session save error:", saveErr);
+          return next(saveErr);
+        }
+        if (scope === 'calendar_connect') {
+          return res.redirect(`${FRONTEND_BASE_URL}/settings?status=calendar-connected`);
+        }
+        return res.redirect(`${FRONTEND_BASE_URL}/dashboard`);
+      });
     });
   })(req, res, next);
 });
@@ -196,7 +202,13 @@ router.get('/github/callback', (req, res, next) => {
       }
 
       console.log("User logged in successfully via GitHub");
-      return res.redirect(`${FRONTEND_BASE_URL}/dashboard`);
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("Session save error:", saveErr);
+          return next(saveErr);
+        }
+        return res.redirect(`${FRONTEND_BASE_URL}/dashboard`);
+      });
     });
   })(req, res, next);
 });
