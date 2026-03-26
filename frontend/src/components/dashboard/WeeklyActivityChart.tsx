@@ -28,7 +28,7 @@ const ActivityTrendChart: React.FC = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      // If we're looking for 7 days and have dashboard context data, use it!
+     
       if (range === 7 && dashboardData?.stats) {
         setStats(dashboardData.stats);
         setLoading(false);

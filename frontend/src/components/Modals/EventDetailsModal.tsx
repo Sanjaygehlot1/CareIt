@@ -15,7 +15,7 @@ const EventDetailsModal: React.FC<ModalProps> = ({ isOpen, onClose, events, date
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+      className="fixed inset-0 z-[300] flex items-center justify-center backdrop-blur-sm"
       style={{ backgroundColor: 'var(--modal-overlay)' }}
     >
       <div

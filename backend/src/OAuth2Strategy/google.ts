@@ -137,7 +137,7 @@ passport.serializeUser((user: any, done) => {
 })
 
 passport.deserializeUser(async (id: any, done) => {
-    // Check cache first (TTL: 2 seconds)
+    
     const cached = userCache.get(id);
     if (cached && cached.expires > Date.now()) {
         return done(null, cached.user);
@@ -150,7 +150,7 @@ passport.deserializeUser(async (id: any, done) => {
             return done(null, false);
         }
 
-        // Store in cache for 2 seconds (covers the concurrent burst of dashboard requests)
+    
         userCache.set(id, { user, expires: Date.now() + 2000 });
         done(null, user);
     } catch (error) {

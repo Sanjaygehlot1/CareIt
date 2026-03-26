@@ -12,7 +12,7 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
 
         const userId = user.id;
 
-        // 1. Fetch Basic Profile (from DB to ensure latest data, though deserializeUser might have it)
+
         const userRecord = await prisma.user.findUnique({
             where: { id: userId },
             select: {
@@ -33,7 +33,6 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
 
         if (!userRecord) return res.status(404).json(new apiResponse({}, 'User not found', 404));
 
-        // 2. Fetch Streak Week Status (Optimized with Hash Map)
         const today = new Date();
         today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
         const currentDay = today.getDay();
@@ -64,15 +63,15 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
         });
         const weekStatus = weekDates.map(time => streakMap.get(time) || false);
 
-        // 3. Fetch Synced Goals
+
         const goals = await prisma.goal.findMany({
             where: { userId },
             orderBy: [{ completed: 'asc' }, { createdAt: 'desc' }],
-            take: 10 // Limit for dashboard
+            take: 10 
         });
         const syncedGoals = await Promise.all(goals.map(g => syncOneGoal(g, userId)));
 
-        // 4. Fetch Editor Stats (Optimized with Hash Map)
+
         const range = 7;
         const startDate = new Date(today);
         startDate.setDate(startDate.getDate() - (range - 1));
@@ -117,14 +116,14 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
             });
         }
 
-        // 5. Fetch Latest Notes
+        
         const notes = await prisma.note.findMany({
             where: { userId },
             orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
             take: 5
         });
 
-        // 6. Today's Priority and Stats
+       
         const todayRecord = weekRecords.find(r => {
              const rd = new Date(r.date);
              return rd.getUTCDate() === today.getUTCDate() && rd.getUTCMonth() === today.getUTCMonth();
@@ -138,7 +137,7 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
         const dashboardFocusStats = {
             todayCodingMins: Math.round((todayRecord?.codingDuration || 0) / 60),
             todayCommits: todayRecord?.commitCount || 0,
-            meetingCount: 0, // Calendar sync can be added here if needed
+            meetingCount: 0, 
             meetingHours: 0,
             tasksCompleted: syncedGoals.filter(g => g.completed && g.period === 'DAILY').length,
             tasksTotal: syncedGoals.filter(g => g.period === 'DAILY').length
