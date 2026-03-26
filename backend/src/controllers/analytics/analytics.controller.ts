@@ -175,25 +175,24 @@ export const getEditorStats = async (req: Request, res: Response, next: NextFunc
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
 
-        const [rawStats, focusStats] = await Promise.all([
-            prisma.editorActivity.groupBy({
-                by: ['date'],
-                where: {
-                    userId: user.id,
-                    date: { gte: startDate, lte: endOfToday }
-                },
-                _sum: {
-                    duration: true
-                },
-                orderBy: { date: 'asc' }
-            }),
-            prisma.focusStats.findMany({
-                where: {
-                    userId: user.id,
-                    date: { gte: startDate, lte: endOfToday }
-                }
-            })
-        ]);
+        const rawStats = await prisma.editorActivity.groupBy({
+            by: ['date'],
+            where: {
+                userId: user.id,
+                date: { gte: startDate, lte: endOfToday }
+            },
+            _sum: {
+                duration: true
+            },
+            orderBy: { date: 'asc' }
+        });
+
+        const focusStats = await prisma.focusStats.findMany({
+            where: {
+                userId: user.id,
+                date: { gte: startDate, lte: endOfToday }
+            }
+        });
 
         const filledStats = [];
 

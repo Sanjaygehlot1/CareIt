@@ -18,6 +18,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
       profileUrl: user.profileUrl,
       calendar : user.calendar,
       id : user.providerId,
+      geminiKey: user.geminiApiKey,
       provider : user.provider,
       githubUsername : user.githubUsername,
       githubAppConnected : user.githubAppInstalled,

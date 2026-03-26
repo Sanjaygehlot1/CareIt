@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { AxiosInstance } from '../../axios/axiosInstance';
 import { Sparkles, BrainCircuit, RefreshCw } from 'lucide-react';
 import InfoTooltip from '../ui/InfoTooltip';
+import { extractErrorMessage } from '../../utils/errorHandle';
 
 const SESSION_CACHE_KEY = 'careit_ai_coach_summary';
 
@@ -27,16 +28,19 @@ export default function AiCoachSummary() {
     }
 
     try {
-      const res = await AxiosInstance.get('/reports/coach-summary');
+      const res = await AxiosInstance.get('/reports/coach-summary', {
+        params:{refresh : true}
+      });
       const newSummary = res.data.data.summary;
       
       if (newSummary) {
         setSummary(newSummary);
         sessionStorage.setItem(SESSION_CACHE_KEY, newSummary);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Coach Summary failed:", err);
-      if (!summary) setSummary("Unable to reach the AI Coach right now. Please check your connection and try again.");
+      const backendMessage = extractErrorMessage(err, "Unable to reach the AI Coach right now. Please try again later.");
+      setSummary(backendMessage);
     } finally {
       setLoading(false);
       setIsRefreshing(false);

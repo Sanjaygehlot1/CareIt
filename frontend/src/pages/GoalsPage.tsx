@@ -8,6 +8,7 @@ import {
     getGoals, createGoal, updateGoal, deleteGoal, generateAiGoals,
     type Goal, type CreateGoalPayload
 } from '../controllers/goals';
+import { extractErrorMessage } from '../utils/errorHandle';
 
 
 
@@ -187,9 +188,15 @@ function AddGoalModal({ onClose, onSaved }: { onClose: () => void; onSaved: (g: 
         e.preventDefault();
         if (!form.title.trim()) return;
         setSaving(true);
-        const created = await createGoal(form);
-        setSaving(false);
-        if (created) onSaved(created);
+        try {
+            const created = await createGoal(form);
+            if (created) onSaved(created);
+        } catch (err) {
+            console.error('Create goal failed:', err);
+            alert(extractErrorMessage(err, 'Failed to create goal'));
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -374,24 +381,38 @@ const GoalsPage = () => {
 
     const fetchGoals = useCallback(async () => {
         setLoading(true);
-        const data = await getGoals(activePeriod);
-        setGoals(data);
-        console.log(goals)
-        setLoading(false);
+        try {
+            const data = await getGoals(activePeriod);
+            setGoals(data);
+        } catch (err) {
+            console.error('Fetch goals failed:', err);
+        } finally {
+            setLoading(false);
+        }
     }, [activePeriod]);
 
     useEffect(() => { fetchGoals(); }, [fetchGoals]);
 
     const handleDelete = async (id: number) => {
-        const ok = await deleteGoal(id);
-        if (ok) setGoals(prev => prev.filter(g => g.id !== id));
+        try {
+            const ok = await deleteGoal(id);
+            if (ok) setGoals(prev => prev.filter(g => g.id !== id));
+        } catch (err) {
+            console.error('Delete goal failed:', err);
+            alert(extractErrorMessage(err, 'Failed to delete goal'));
+        }
     };
 
     const handleToggle = async (id: number, completed: boolean) => {
         const goal = goals.find(g => g.id === id);
         if (!goal || (SYSTEM_TRACKED_TYPES as readonly string[]).includes(goal.type)) return;
-        const updated = await updateGoal(id, { completed });
-        if (updated) setGoals(prev => prev.map(g => g.id === id ? updated : g));
+        try {
+            const updated = await updateGoal(id, { completed });
+            if (updated) setGoals(prev => prev.map(g => g.id === id ? updated : g));
+        } catch (err) {
+            console.error('Toggle status failed:', err);
+            alert(extractErrorMessage(err, 'Failed to update status'));
+        }
     };
 
     const handleAddGoal = (g: Goal) => {
@@ -403,14 +424,18 @@ const GoalsPage = () => {
         setAiLoading(true);
         setAiError('');
         setAiSuccess('');
-        const result = await generateAiGoals(activePeriod);
-        setAiLoading(false);
-        if (result?.goals?.length) {
-            setGoals(prev => [...result.goals, ...prev]);
-            setAiSuccess(`✦ AI generated ${result.goals.length} goals based on your coding data`);
-            setTimeout(() => setAiSuccess(''), 5000);
-        } else {
-            setAiError('AI generation failed. Make sure GEMINI_API_KEY is set in the backend .env');
+        try {
+            const result = await generateAiGoals(activePeriod);
+            if (result?.goals?.length) {
+                setGoals(prev => [...result.goals, ...prev]);
+                setAiSuccess(`✦ AI generated ${result.goals.length} goals based on your coding data`);
+                setTimeout(() => setAiSuccess(''), 5000);
+            }
+        } catch (err) {
+            console.error('AI Generate failed:', err);
+            setAiError(extractErrorMessage(err, 'AI generation failed. Please try again later.'));
+        } finally {
+            setAiLoading(false);
         }
     };
 

@@ -8,49 +8,52 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  name       String
-  email      String   @unique
-  provider   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  profileUrl String?
-  calendar   Boolean  @default(false)
+  id                      Int              @id @default(autoincrement())
+  name                    String
+  email                   String           @unique
+  provider                String
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  profileUrl              String?
 
-  googleAccessToken  String?
-  googleRefreshToken String?
-  googleProviderId   String? @unique
+  calendar                Boolean          @default(false)
+  googleAccessToken       String?
+  googleProviderId        String?          @unique
+  googleRefreshToken      String?
 
-  githubRefreshToken      String?
   githubAccessToken       String?
-  githubConnected         Boolean @default(false)
-  githubProviderId        String? @unique
+  githubRefreshToken      String?
+  githubConnected         Boolean          @default(false)
+  githubProviderId        String?          @unique
   githubUsername          String?
   githubAppInstallationId Int?
-  githubAppInstalled      Boolean @default(false)
+  githubAppInstalled      Boolean          @default(false)
 
-  apiKey          String?   @unique
-  currentStreak        Int       @default(0)
-  longestStreak        Int       @default(0)
-  streakUpdatedAt      DateTime?
-  streakEmailReminder  Boolean   @default(true)
-  dailyDigestEnabled   Boolean   @default(true)  
-  hasAcceptedTerms     Boolean   @default(false)
+  apiKey                  String?          @unique
 
+  currentStreak           Int              @default(0)
+  longestStreak           Int              @default(0)
+  streakUpdatedAt         DateTime?
+  streakEmailReminder     Boolean          @default(true)
+  burnoutAlertedAt        DateTime?
+  burnoutLevel            BurnoutLevel     @default(NONE)
+  burnoutScore            Int              @default(0)
+  dailyDigestEnabled      Boolean          @default(true)
+  streakCoachAlertedAt    DateTime?
+  streakCoachType         String?
+  hasAcceptedTerms        Boolean          @default(false)
 
-  burnoutScore         Int       @default(0)      
-  burnoutLevel         BurnoutLevel @default(NONE)
-  burnoutAlertedAt     DateTime?                 
-
-
-  streakCoachAlertedAt DateTime?                  
-  streakCoachType      String?                    
-
-  editorActivities EditorActivity[]
-  focusStats       FocusStats[]
-  streakStats      StreakStats[]
-  goals            Goal[]
-  notes            Note[]
+  editorActivities        EditorActivity[]
+  focusStats              FocusStats[]
+  goals                   Goal[]
+  notes                   Note[]
+  streakStats             StreakStats[]
+  
+  geminiApiKey            String?
+  aiSummary               String?
+  aiSummaryUpdatedAt      DateTime?
+  aiSummaryGenerationCount Int              @default(0)
+  lastAiSummaryResetAt    DateTime?
 
   @@map("users")
 }
@@ -83,32 +86,51 @@ model StreakStats {
   userId         Int
   date           DateTime @db.Date
   hasStreak      Boolean  @default(false)
-  codingDuration Int      @default(0)
-  commitCount    Int      @default(0)
-  todayPriority  String?              // user-set or AI-generated priority for the day
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  codingDuration Int      @default(0)
+  commitCount    Int      @default(0)
+  todayPriority  String?
   user           User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
 }
 
 model Goal {
-  id          Int        @id @default(autoincrement())
-  userId      Int
-  title       String
-  description String?
-  type        GoalType   @default(CUSTOM)
-  period      GoalPeriod @default(WEEKLY)
-  targetValue Float      
-  currentValue Float     @default(0)
-  unit        String     @default("") 
-  completed   Boolean    @default(false)
-  isAiGenerated Boolean  @default(false)
-  weekStart   DateTime?  @db.Date 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  user        User       @relation(fields: [userId], references: [id])
+  id            Int        @id @default(autoincrement())
+  userId        Int
+  title         String
+  description   String?
+  type          GoalType   @default(CUSTOM)
+  period        GoalPeriod @default(WEEKLY)
+  targetValue   Float
+  currentValue  Float      @default(0)
+  unit          String     @default("")
+  completed     Boolean    @default(false)
+  isAiGenerated Boolean    @default(false)
+  weekStart     DateTime?  @db.Date
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  user          User       @relation(fields: [userId], references: [id])
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String   @default("Untitled")
+  content   String   @default("")
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
 }
 
 enum GoalType {
@@ -130,15 +152,4 @@ enum BurnoutLevel {
   MILD
   MODERATE
   SEVERE
-}
-
-model Note {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  title     String   @default("Untitled")
-  content   String   @default("")
-  isPinned  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
 }

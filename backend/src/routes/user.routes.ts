@@ -379,18 +379,19 @@ router.patch('/preferences', authMiddleWare, async (req, res, next) => {
     const user = req.user as any;
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { dailyDigestEnabled, hasAcceptedTerms } = req.body;
+    const { dailyDigestEnabled, hasAcceptedTerms, geminiApiKey } = req.body;
 
-    console.log(dailyDigestEnabled, hasAcceptedTerms)
+    console.log(dailyDigestEnabled, hasAcceptedTerms, !!geminiApiKey)
     await (prisma.user.update as any)({
       where: { id: user.id },
       data: {
         ...(typeof dailyDigestEnabled === 'boolean' ? { dailyDigestEnabled } : {}),
         ...(typeof hasAcceptedTerms === 'boolean' ? { hasAcceptedTerms } : {}),
+        ...(typeof geminiApiKey === 'string' || geminiApiKey === null ? { geminiApiKey } : {}),
       },
     });
 
-    res.status(200).json(new apiResponse({ dailyDigestEnabled, hasAcceptedTerms }, 'Preferences updated', 200));
+    res.status(200).json(new apiResponse({ dailyDigestEnabled, hasAcceptedTerms, geminiApiKey }, 'Preferences updated', 200));
   } catch (err) {
     next(err);
   }

@@ -4,8 +4,9 @@ import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { AxiosInstance } from '../../axios/axiosInstance';
-import { Activity, PieChart as PieChartIcon, Info, Code2, Flame, Github } from 'lucide-react';
+import { Activity, PieChart as PieChartIcon, Info, Code2, Flame, Github, AlertCircle } from 'lucide-react';
 import InfoTooltip from '../ui/InfoTooltip';
+import { extractErrorMessage } from '../../utils/errorHandle';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -22,13 +23,18 @@ interface ReportData {
 export default function AdvancedReports() {
     const [data, setData] = useState<ReportData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        setError(null);
         AxiosInstance.get('/reports/advanced')
             .then(res => {
                 setData(res.data.data);
             })
-            .catch(err => console.error("Failed to load advanced reports:", err))
+            .catch(err => {
+                console.error("Failed to load advanced reports:", err);
+                setError(extractErrorMessage(err, "Failed to load report data"));
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -40,6 +46,27 @@ export default function AdvancedReports() {
                     <div className="h-80 skeleton rounded-xl" />
                 </div>
                 <div className="h-64 skeleton rounded-xl" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="mt-8 p-12 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-4"
+                 style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+                <div className="p-4 rounded-full bg-red-500/10 text-red-500">
+                    <AlertCircle size={32} />
+                </div>
+                <div className="max-w-md">
+                    <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Report Generation Failed</h3>
+                    <p className="text-sm opacity-70" style={{ color: 'var(--text-secondary)' }}>{error}</p>
+                </div>
+                <button 
+                  onClick={() => { setLoading(true); window.location.reload(); }}
+                  className="px-6 py-2 bg-orange-500 text-white rounded-xl font-bold hover:scale-105 transition-all active:scale-95 cursor-pointer"
+                >
+                    Try Again
+                </button>
             </div>
         );
     }

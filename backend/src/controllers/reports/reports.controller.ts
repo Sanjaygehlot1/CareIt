@@ -7,7 +7,7 @@ import { google } from 'googleapis';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL, GEMINI_API_KEY } from '../../secrets';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const sharedAi = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 
 export const getStreak = async (req: Request, res: Response, next: NextFunction) => {
@@ -42,16 +42,15 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
 
         const STREAK_THRESHOLD = 30 * 60;
 
-        const [editorAgg, todayStreakRow] = await Promise.all([
-            prisma.editorActivity.aggregate({
-                where: { userId: user.id, date: { gte: today, lte: endOfToday } },
-                _sum: { duration: true },
-            }),
-            prisma.streakStats.findUnique({
-                where: { userId_date: { userId: user.id, date: today } },
-                select: { commitCount: true },
-            }),
-        ]);
+        const editorAgg = await prisma.editorActivity.aggregate({
+            where: { userId: user.id, date: { gte: today, lte: endOfToday } },
+            _sum: { duration: true },
+        });
+
+        const todayStreakRow = await prisma.streakStats.findUnique({
+            where: { userId_date: { userId: user.id, date: today } },
+            select: { commitCount: true },
+        });
 
         const todayCodingDuration = editorAgg._sum.duration ?? 0;
         const todayCommits = todayStreakRow?.commitCount ?? 0;
@@ -444,26 +443,67 @@ export const getAiCoachSummary = async (req: Request, res: Response, next: NextF
         const user = req.user as any;
         if (!user) return next(new UnauthorizedException("Unauthorized", ErrorCodes.UNAUTHORIZED_ACCESS));
 
-        const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 7);
+        const userRecord = await prisma.user.findUnique({ 
+            where: { id: user.id }, 
+            select: { 
+                id: true,
+                name: true, 
+                burnoutScore: true, 
+                aiSummary: true, 
+                aiSummaryUpdatedAt: true,
+                aiSummaryGenerationCount: true,
+                lastAiSummaryResetAt: true,
+                geminiApiKey: true
+            } 
+        });
 
-        const [focusStats, streakStats, userRecord] = await Promise.all([
-            prisma.focusStats.findMany({ where: { userId: user.id, date: { gte: sevenDaysAgo } } }),
-            prisma.streakStats.findMany({ where: { userId: user.id, date: { gte: sevenDaysAgo } } }),
-            prisma.user.findUnique({ where: { id: user.id }, select: { burnoutScore: true, name: true } })
-        ]);
+        if (!userRecord) return res.status(404).json(new apiResponse({}, "User not found", 404));
+
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const lastResetStr = userRecord.lastAiSummaryResetAt ? userRecord.lastAiSummaryResetAt.toISOString().split('T')[0] : '';
+
+        let currentCount = userRecord.aiSummaryGenerationCount;
+
+        if (todayStr !== lastResetStr) {
+            currentCount = 0;
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { aiSummaryGenerationCount: 0, lastAiSummaryResetAt: now }
+            });
+        }
+
+        const summaryUpdatedStr = userRecord.aiSummaryUpdatedAt ? userRecord.aiSummaryUpdatedAt.toISOString().split('T')[0] : '';
+        const isForceRefresh = req.query.refresh === 'true';
+        console.log(isForceRefresh, req.query.refresh)
+
+        if (userRecord.aiSummary && summaryUpdatedStr === todayStr && !isForceRefresh) {
+            return res.status(200).json(new apiResponse({ summary: userRecord.aiSummary, cached: true }, "Cached AI Coach summary retrieved", 200));
+        }
+
+        const isUsingPersonalKey = !!userRecord.geminiApiKey;
+        if (!isUsingPersonalKey && currentCount >= 2) {
+            return res.status(429).json(new apiResponse({ 
+                summary: userRecord.aiSummary 
+            }, "Daily limit reached (2 generations per day). Add your own Gemini API key for unlimited coaching!", 429));
+        }
+
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(now.getDate() - 7);
+
+        const focusStats = await prisma.focusStats.findMany({ where: { userId: user.id, date: { gte: sevenDaysAgo } } });
+        const streakStats = await prisma.streakStats.findMany({ where: { userId: user.id, date: { gte: sevenDaysAgo } } });
 
         const totalFocusHrs = focusStats.reduce((s, f) => s + f.duration, 0) / 3600;
         const totalCodingHrs = streakStats.reduce((s, st) => s + st.codingDuration, 0) / 3600;
         const totalCommits = streakStats.reduce((s, st) => s + st.commitCount, 0);
-        const burnout = userRecord?.burnoutScore ?? 0;
+        const burnout = userRecord.burnoutScore;
 
         const prompt = `Act as a sharp, observant engineering coach.
 Analyze the developer's last 7 days of activity and provide a punchy 2-sentence insight.
 
 Performance Data:
-- Developer: ${userRecord?.name}
+- Developer: ${userRecord.name}
 - Deep Work (Focus): ${totalFocusHrs.toFixed(1)} hrs
 - Total Coding: ${totalCodingHrs.toFixed(1)} hrs
 - Total Commits: ${totalCommits}
@@ -475,17 +515,61 @@ Directives:
 3. Be brutally concise. Strictly maximum 35 words.
 4. No quotes, no intro, no emojis. Output ONLY the 2 sentences.`;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
+        let modelResponse;
+        if (isUsingPersonalKey) {
+            const personalAi = new GoogleGenAI({ apiKey: userRecord.geminiApiKey! });
+            modelResponse = await personalAi.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+        } else {
+            modelResponse = await sharedAi.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+        }
+
+        const summary = modelResponse.text || "You're making steady progress. Keep up the deep work sessions to hit your peak flow!";
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                aiSummary: summary,
+                aiSummaryUpdatedAt: now,
+                aiSummaryGenerationCount: isUsingPersonalKey ? userRecord.aiSummaryGenerationCount : currentCount + 1,
+            }
         });
 
-        const summary = response.text || "You're making steady progress. Keep up the deep work sessions to hit your peak flow!";
+        return res.status(200).json(new apiResponse({ summary, cached: false }, "AI Coach summary generated", 200));
 
-        return res.status(200).json(new apiResponse({ summary }, "AI Coach summary generated", 200));
-
-    } catch (error) {
+    } catch (error: any) {
         console.error("AI Coach Error:", error);
+        if (error.message?.includes('API_KEY_INVALID')) {
+             return res.status(401).json(new apiResponse({}, "The provided Gemini API key is invalid.", 401));
+        }
+        next(error);
+    }
+};
+
+export const updateGeminiApiKey = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user as any;
+        if (!user) return next(new UnauthorizedException("Unauthorized", ErrorCodes.UNAUTHORIZED_ACCESS));
+
+        const { apiKey } = req.body;
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { geminiApiKey: apiKey || null }
+        });
+
+        return res.status(200).json(new apiResponse(
+            { hasKey: !!apiKey },
+            apiKey ? "Gemini API key updated successfully." : "Gemini API key removed. Using shared key.",
+            200
+        ));
+    } catch (error) {
+        console.error(error);
         next(error);
     }
 };

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw, ExternalLink, CheckCircle2, Moon, OctagonAlert } from 'lucide-react';
+import { Mail, AlertTriangle, MessageSquarePlus, Github, Calendar, HeartPulse, X, CheckCircle, AlertCircle, Key, Copy, RefreshCw, ExternalLink, CheckCircle2, Moon, OctagonAlert, BrainCircuit, Eye, EyeOff } from 'lucide-react';
 import { getAuth } from '../context/authContext';
 import { useSearchParams } from 'react-router-dom';
 import { BACKEND_BASE_URL } from '../utils/secrets';
 import Modal from '../components/settings/Modal';
 import { generateApiKey, getApiKey } from '../controllers/apiKey';
 import { AxiosInstance } from '../axios/axiosInstance';
+import { extractErrorMessage } from '../utils/errorHandle';
 
 const SettingsPage: React.FC = () => {
   const { user } = getAuth();
@@ -18,7 +19,6 @@ const SettingsPage: React.FC = () => {
 
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyLoading, setApiKeyLoading] = useState(true);
-
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
@@ -26,7 +26,7 @@ const SettingsPage: React.FC = () => {
       window.location.href = '/';
     } catch (err) {
       console.error('Failed to delete account', err);
-      showToast('Could not delete account. Please try again.', 'error');
+      showToast(extractErrorMessage(err, 'Could not delete account. Please try again.'), 'error');
       setIsDeleting(false);
     }
   };
@@ -34,6 +34,10 @@ const SettingsPage: React.FC = () => {
   const [digestEnabled, setDigestEnabled] = useState<boolean>(
     (user as any)?.dailyDigestEnabled ?? true
   );
+
+  const [geminiKey, setGeminiKey] = useState<string>((user as any)?.geminiKey || '');
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [isSavingGemini, setIsSavingGemini] = useState(false);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -239,7 +243,7 @@ const SettingsPage: React.FC = () => {
         window.location.href = `${BACKEND_BASE_URL}/auth/google/login`;
       } catch (err) {
         console.error('Logout failed:', err);
-        alert('Failed to log out. Please try again.');
+        alert(extractErrorMessage(err, 'Failed to log out. Please try again.'));
       }
     }
   };
@@ -255,7 +259,7 @@ const SettingsPage: React.FC = () => {
         }
       } catch (e) {
         console.error("Failed to generate key", e);
-        showToast("Failed to generate key.", 'error');
+        showToast(extractErrorMessage(e, "Failed to generate key."), 'error');
       }
     }
   };
@@ -275,10 +279,22 @@ const SettingsPage: React.FC = () => {
 
       await AxiosInstance.patch('/auth/preferences', { dailyDigestEnabled: newValue });
       showToast(newValue ? 'Daily digest enabled ✓' : 'Daily digest disabled');
-    } catch {
-
+    } catch (err) {
       setDigestEnabled(!newValue);
-      showToast('Failed to update preference', 'error');
+      showToast(extractErrorMessage(err, 'Failed to update preference'), 'error');
+    }
+  };
+
+  const handleSaveGeminiKey = async () => {
+    setIsSavingGemini(true);
+    try {
+      await AxiosInstance.patch('/auth/preferences', { geminiApiKey: geminiKey || null });
+      showToast('Gemini API Key updated!');
+    } catch (err) {
+      console.error('Failed to save Gemini key', err);
+      showToast(extractErrorMessage(err, 'Failed to update API key'), 'error');
+    } finally {
+      setIsSavingGemini(false);
     }
   };
 
@@ -626,6 +642,56 @@ const SettingsPage: React.FC = () => {
                   {apiKey ? "Regenerate" : "Generate Key"}
                 </button>
               </div>
+            </div>
+
+            <hr className="my-6 border-t" style={{ borderColor: 'var(--border-primary)' }} />
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', color: '#f97316' }}>
+                  <BrainCircuit size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Personal Gemini API Key</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Get unlimited AI coaching by using your own Google Gemini key.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex-1 relative">
+                  <input
+                    type={showGeminiKey ? "text" : "password"}
+                    placeholder="Paste your Gemini API Key here..."
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    className="w-full p-3 pr-12 rounded-lg font-mono text-sm border outline-none focus:border-orange-500 transition-colors"
+                    style={{
+                      backgroundColor: 'var(--bg-primary)',
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGeminiKey(!showGeminiKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-[var(--hover-bg)] transition-colors opacity-50 hover:opacity-100 cursor-pointer"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {showGeminiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                <button
+                  onClick={handleSaveGeminiKey}
+                  disabled={isSavingGemini}
+                  className="cursor-pointer px-6 py-3 rounded-lg text-sm font-semibold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                  style={{ backgroundColor: '#f97316', color: 'white' }}
+                >
+                  {isSavingGemini ? "Saving..." : "Save Key"}
+                </button>
+              </div>
+              <p className="text-xs opacity-60 flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                Don't have a key? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline flex items-center gap-1">Get one for free here <ExternalLink size={10} /></a>
+              </p>
             </div>
 
             <hr className="my-6 border-t" style={{ borderColor: 'var(--border-primary)' }} />
