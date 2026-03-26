@@ -12,17 +12,31 @@ const GOAL_TYPE_COLORS: Record<string, string> = {
     CUSTOM: '#6b7280',
 };
 
+import { useDashboard } from '../../context/dashboardContext';
+
 const GoalsMiniCard = () => {
     const navigate = useNavigate();
+    const { data: dashboardData, loading: dashboardLoading } = useDashboard();
     const [goals, setGoals] = useState<Goal[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getGoals('WEEKLY').then(data => {
-            setGoals(data.slice(0, 4));
+        if (dashboardData?.goals) {
+            // Filter only weekly goals for the mini card
+            const weeklyGoals = dashboardData.goals.filter((g: Goal) => g.period === 'WEEKLY');
+            setGoals(weeklyGoals.slice(0, 4));
             setLoading(false);
-        });
-    }, []);
+            return;
+        }
+
+        // Only fetch if dashboard data is missing (unlikely since it's wrapped)
+        if (!dashboardLoading) {
+            getGoals('WEEKLY').then(data => {
+                setGoals(data.slice(0, 4));
+                setLoading(false);
+            });
+        }
+    }, [dashboardData, dashboardLoading]);
 
     const completed = goals.filter(g => g.completed).length;
     const total = goals.length;

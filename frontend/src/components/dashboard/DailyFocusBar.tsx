@@ -55,7 +55,10 @@ function fmtMins(mins: number) {
 }
 
 
+import { useDashboard } from '../../context/dashboardContext';
+
 const DailyFocusBar: React.FC = () => {
+  const { data: dashboardData } = useDashboard();
   const [mounted, setMounted] = useState(false);
 
   const [priority, setPriority] = useState('');
@@ -75,38 +78,14 @@ const DailyFocusBar: React.FC = () => {
   }, []);
 
 
-  const fetchPriority = useCallback(async () => {
-    try {
-      const res = await AxiosInstance.get('/analytics/priority');
-      const p = res.data?.data?.priority ?? '';
-      setPriority(p);
-     
-      if (!p) {
-        await generateAiPriority(false);
-      }
-    } catch {
-      setPriority('');
-    } finally {
+  useEffect(() => {
+    if (dashboardData) {
+      setPriority(dashboardData.priority || '');
       setPriorityLoading(false);
-    }
-  }, []);
-
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await AxiosInstance.get('/analytics/daily-focus-stats');
-      setStats(res.data?.data ?? null);
-    } catch {
-      setStats(null);
-    } finally {
+      setStats(dashboardData.focusStats || null);
       setStatsLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchPriority();
-    fetchStats();
-  }, [fetchPriority, fetchStats]);
+  }, [dashboardData]);
 
 
   const generateAiPriority = async (withLoadingState = true) => {

@@ -125,6 +125,8 @@ passport.use(new CustomGoogleStrategy({
     }
 ));
 
+const userCache = new Map<number, { user: any; expires: number }>();
+
 passport.serializeUser((user: any, done) => {
     try {
         done(null, user.id)
@@ -135,13 +137,21 @@ passport.serializeUser((user: any, done) => {
 })
 
 passport.deserializeUser(async (id: any, done) => {
-    console.log("Deserializing user:", id);
+    // Check cache first (TTL: 2 seconds)
+    const cached = userCache.get(id);
+    if (cached && cached.expires > Date.now()) {
+        return done(null, cached.user);
+    }
+
     try {
         const user = await prisma.user.findUnique({ where: { id } });
         if (!user) {
             console.log("User not found in database");
             return done(null, false);
         }
+
+        // Store in cache for 2 seconds (covers the concurrent burst of dashboard requests)
+        userCache.set(id, { user, expires: Date.now() + 2000 });
         done(null, user);
     } catch (error) {
         done(error, null);

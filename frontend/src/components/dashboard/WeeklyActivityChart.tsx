@@ -11,6 +11,7 @@ import {
 import { TrendingUp, Zap } from 'lucide-react';
 import { getEditorStats } from '../../controllers/analytics';
 import InfoTooltip from '../ui/InfoTooltip';
+import { useDashboard } from '../../context/dashboardContext';
 
 interface ActivityData {
   date: string;
@@ -20,12 +21,20 @@ interface ActivityData {
 }
 
 const ActivityTrendChart: React.FC = () => {
+  const { data: dashboardData } = useDashboard();
   const [stats, setStats] = useState<ActivityData[]>([]);
   const [range, setRange] = useState(7);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
+      // If we're looking for 7 days and have dashboard context data, use it!
+      if (range === 7 && dashboardData?.stats) {
+        setStats(dashboardData.stats);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const res = await getEditorStats(range);
@@ -37,7 +46,7 @@ const ActivityTrendChart: React.FC = () => {
       }
     }
     fetchStats();
-  }, [range]);
+  }, [range, dashboardData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

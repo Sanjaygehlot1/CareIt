@@ -10,10 +10,15 @@ import BurnoutBanner from '../components/dashboard/BurnoutBanner';
 import StickyNoteWidget from '../components/dashboard/StickyNoteWidget';
 import { getAuth } from '../context/authContext';
 
-const Dashboard: React.FC = () => {
-  const { user } = getAuth();
-  const burnoutLevel = (user as any)?.burnoutLevel ?? 'NONE';
-  const burnoutScore = (user as any)?.burnoutScore ?? 0;
+import { DashboardProvider, useDashboard } from '../context/dashboardContext';
+
+const DashboardContent: React.FC = () => {
+  const { user: authUser } = getAuth();
+  const { data, loading } = useDashboard();
+  
+  const user = data?.profile || authUser;
+  const burnoutLevel = data?.profile?.burnoutLevel ?? 'NONE';
+  const burnoutScore = data?.profile?.burnoutScore ?? 0;
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -40,7 +45,6 @@ const Dashboard: React.FC = () => {
             <DailyFocusBar />
           </div>
 
-        
           {burnoutLevel !== 'NONE' && (
             <div className="mb-6">
               <BurnoutBanner level={burnoutLevel} score={burnoutScore} />
@@ -63,5 +67,11 @@ const Dashboard: React.FC = () => {
     </div>
   );
 };
+
+const Dashboard: React.FC = () => (
+    <DashboardProvider>
+        <DashboardContent />
+    </DashboardProvider>
+);
 
 export default Dashboard;

@@ -10,6 +10,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AxiosInstance } from '../../axios/axiosInstance';
 import InfoTooltip from '../ui/InfoTooltip';
+import { useDashboard } from '../../context/dashboardContext';
 
 interface Note {
   id: number;
@@ -21,16 +22,27 @@ interface Note {
 }
 
 const StickyNoteWidget: React.FC = () => {
+  const { data: dashboardData, loading: dashboardLoading } = useDashboard();
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
-  const [isMaximized, setIsMaximized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const activeNote = notes.find(n => n.id === activeNoteId) || null;
+
+  useEffect(() => {
+    if (dashboardData?.notes) {
+      setNotes(dashboardData.notes);
+      if (dashboardData.notes.length > 0 && !activeNoteId) {
+        setActiveNoteId(dashboardData.notes[0].id);
+      }
+      setIsLoading(false);
+    }
+  }, [dashboardData]);
 
   const editor = useEditor({
     extensions: [
@@ -75,6 +87,9 @@ const StickyNoteWidget: React.FC = () => {
   }, []);
 
   const fetchNotes = async () => {
+    // If dashboard data is already loading/loaded, we don't need a separate fetch
+    if (dashboardData?.notes) return;
+
     try {
       const res = await AxiosInstance.get('/notes');
       const fetched: Note[] = res.data.data || [];

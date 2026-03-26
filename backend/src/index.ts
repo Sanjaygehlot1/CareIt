@@ -66,12 +66,15 @@ app.use((req, res, next) => {
   next();
 });
 
+import { router as DashBoardRoutes } from './routes/dashboard.routes';
+
 app.use('/api/v1/auth', UserRoutes);
 app.use('/api/v1/calendar', CalendarRoutes);
 app.use('/api/v1/reports', ReportRoutes);
 app.use('/api/v1/analytics', AnalyticsRoutes);
 app.use('/api/v1/goals', GoalRoutes);
 app.use('/api/v1/notes', NoteRoutes);
+app.use('/api/v1/dashboard', DashBoardRoutes);
 
 app.get('/', (req, res) => {
   res.send("hello")
