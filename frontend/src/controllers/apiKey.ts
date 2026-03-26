@@ -5,7 +5,7 @@ export const generateApiKey = async () => {
         const res = await AxiosInstance.get('/auth/generate-api-key')
         return res.data;
     } catch (error) {
-        console.log(error)
+        // console.log(error)
         throw error;
     }
 } 
@@ -14,7 +14,7 @@ export const getApiKey = async () => {
         const res = await AxiosInstance.get('/auth/get-api-key')
         return res.data;
     } catch (error) {
-        console.log(error)
+        // console.log(error)
         throw error;
     }
 } 

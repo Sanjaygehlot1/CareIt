@@ -47,7 +47,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             setData(res.data.data);
             setError(null);
         } catch (err: any) {
-            console.error('Failed to fetch dashboard summary:', err);
             setError(err.message || 'Failed to load dashboard');
         } finally {
             setLoading(false);

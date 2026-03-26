@@ -16,7 +16,6 @@ export default function AboutPage() {
   };
   return (
     <div className="relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)' }}>
-      {/* Background Magic Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-[100px] opacity-30" style={{ backgroundColor: '#f97316' }}></div>
         <div className="absolute top-[20%] right-[-10%] w-[400px] h-[400px] rounded-full mix-blend-multiply filter blur-[100px] opacity-20" style={{ backgroundColor: '#3b82f6' }}></div>

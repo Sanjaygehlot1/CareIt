@@ -7,7 +7,7 @@ export const getEvents = async () => {
             return response.data.data;
         }
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         throw error;
     }
 }

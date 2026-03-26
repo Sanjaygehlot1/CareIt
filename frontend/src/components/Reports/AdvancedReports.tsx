@@ -32,7 +32,6 @@ export default function AdvancedReports() {
                 setData(res.data.data);
             })
             .catch(err => {
-                console.error("Failed to load advanced reports:", err);
                 setError(extractErrorMessage(err, "Failed to load report data"));
             })
             .finally(() => setLoading(false));

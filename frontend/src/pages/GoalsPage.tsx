@@ -192,7 +192,7 @@ function AddGoalModal({ onClose, onSaved }: { onClose: () => void; onSaved: (g: 
             const created = await createGoal(form);
             if (created) onSaved(created);
         } catch (err) {
-            console.error('Create goal failed:', err);
+            // console.error('Create goal failed:', err);
             alert(extractErrorMessage(err, 'Failed to create goal'));
         } finally {
             setSaving(false);
@@ -385,7 +385,7 @@ const GoalsPage = () => {
             const data = await getGoals(activePeriod);
             setGoals(data);
         } catch (err) {
-            console.error('Fetch goals failed:', err);
+            // console.error('Fetch goals failed:', err);
         } finally {
             setLoading(false);
         }
@@ -398,7 +398,7 @@ const GoalsPage = () => {
             const ok = await deleteGoal(id);
             if (ok) setGoals(prev => prev.filter(g => g.id !== id));
         } catch (err) {
-            console.error('Delete goal failed:', err);
+            // console.error('Delete goal failed:', err);
             alert(extractErrorMessage(err, 'Failed to delete goal'));
         }
     };
@@ -410,7 +410,7 @@ const GoalsPage = () => {
             const updated = await updateGoal(id, { completed });
             if (updated) setGoals(prev => prev.map(g => g.id === id ? updated : g));
         } catch (err) {
-            console.error('Toggle status failed:', err);
+            // console.error('Toggle status failed:', err);
             alert(extractErrorMessage(err, 'Failed to update status'));
         }
     };
@@ -432,7 +432,7 @@ const GoalsPage = () => {
                 setTimeout(() => setAiSuccess(''), 5000);
             }
         } catch (err) {
-            console.error('AI Generate failed:', err);
+            // console.error('AI Generate failed:', err);
             setAiError(extractErrorMessage(err, 'AI generation failed. Please try again later.'));
         } finally {
             setAiLoading(false);

@@ -25,7 +25,7 @@ const SettingsPage: React.FC = () => {
       await AxiosInstance.delete('/auth/account');
       window.location.href = '/';
     } catch (err) {
-      console.error('Failed to delete account', err);
+      // console.error('Failed to delete account', err);
       showToast(extractErrorMessage(err, 'Could not delete account. Please try again.'), 'error');
       setIsDeleting(false);
     }
@@ -57,7 +57,7 @@ const SettingsPage: React.FC = () => {
         const data = await getApiKey();
         if (data.data.apiKey) setApiKey(data.data.apiKey);
       } catch (err) {
-        console.error('Failed to fetch API key', err);
+        // console.error('Failed to fetch API key', err);
       } finally {
         setApiKeyLoading(false);
       }
@@ -242,7 +242,7 @@ const SettingsPage: React.FC = () => {
         });
         window.location.href = `${BACKEND_BASE_URL}/auth/google/login`;
       } catch (err) {
-        console.error('Logout failed:', err);
+        // console.error('Logout failed:', err);
         alert(extractErrorMessage(err, 'Failed to log out. Please try again.'));
       }
     }
@@ -258,7 +258,7 @@ const SettingsPage: React.FC = () => {
           showToast(data.message);
         }
       } catch (e) {
-        console.error("Failed to generate key", e);
+        // console.error("Failed to generate key", e);
         showToast(extractErrorMessage(e, "Failed to generate key."), 'error');
       }
     }
@@ -291,7 +291,7 @@ const SettingsPage: React.FC = () => {
       await AxiosInstance.patch('/auth/preferences', { geminiApiKey: geminiKey || null });
       showToast('Gemini API Key updated!');
     } catch (err) {
-      console.error('Failed to save Gemini key', err);
+      // console.error('Failed to save Gemini key', err);
       showToast(extractErrorMessage(err, 'Failed to update API key'), 'error');
     } finally {
       setIsSavingGemini(false);

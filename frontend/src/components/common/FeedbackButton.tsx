@@ -37,7 +37,6 @@ const FeedbackButton: React.FC = () => {
         setMessage('');
       }, 3000);
     } catch (err) {
-      console.error("Feedback failed:", err);
     } finally {
       setIsSending(false);
     }

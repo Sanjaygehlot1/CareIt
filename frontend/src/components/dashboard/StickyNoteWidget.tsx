@@ -76,7 +76,6 @@ const StickyNoteWidget: React.FC = () => {
       });
       setIsDirty(false);
     } catch (err) {
-      console.error('Failed to save note:', err);
     } finally {
       setIsSaving(false);
     }
@@ -98,7 +97,6 @@ const StickyNoteWidget: React.FC = () => {
         setActiveNoteId(fetched[0].id);
       }
     } catch (err) {
-      console.error('Failed to fetch notes:', err);
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +145,6 @@ const StickyNoteWidget: React.FC = () => {
       setActiveNoteId(newNote.id);
       setTimeout(() => titleInputRef.current?.focus(), 100);
     } catch (err) {
-      console.error('Failed to create note:', err);
     }
   };
 
@@ -162,7 +159,6 @@ const StickyNoteWidget: React.FC = () => {
         return remaining;
       });
     } catch (err) {
-      console.error('Failed to delete note:', err);
     }
   };
 
@@ -177,7 +173,6 @@ const StickyNoteWidget: React.FC = () => {
     try {
       await AxiosInstance.patch(`/notes/${noteId}`, { isPinned: newPinned });
     } catch (err) {
-      console.error('Failed to toggle pin:', err);
     }
   };
 

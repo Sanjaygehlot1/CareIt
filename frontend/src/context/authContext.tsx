@@ -50,7 +50,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             sessionStorage.removeItem('careit_ai_coach_summary');
             await AxiosInstance.get('/auth/logout');
         } catch (error) {
-            console.log("Logout error:", error);
         }
         setUser(null);
     };

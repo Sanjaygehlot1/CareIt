@@ -7,7 +7,6 @@ export const getEditorStats = async (range: number = 7) => {
             return response.data.data;
         }
     } catch (error) {
-        console.error(error);
         throw error;
     }
 }

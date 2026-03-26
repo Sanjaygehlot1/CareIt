@@ -40,7 +40,6 @@ const ActivityTrendChart: React.FC = () => {
         const res = await getEditorStats(range);
         setStats(res);
       } catch (error) {
-        console.error("Failed to fetch activity stats:", error);
       } finally {
         setLoading(false);
       }

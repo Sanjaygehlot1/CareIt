@@ -38,7 +38,6 @@ export default function AiCoachSummary() {
         sessionStorage.setItem(SESSION_CACHE_KEY, newSummary);
       }
     } catch (err: any) {
-      console.error("Coach Summary failed:", err);
       const backendMessage = extractErrorMessage(err, "Unable to reach the AI Coach right now. Please try again later.");
       setSummary(backendMessage);
     } finally {

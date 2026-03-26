@@ -25,7 +25,6 @@ const Footer: React.FC = () => {
       try {
         await AxiosInstance.patch('/auth/preferences', { hasAcceptedTerms: true });
       } catch (e) {
-        console.error('Failed to accept terms', e);
       }
     }
   };

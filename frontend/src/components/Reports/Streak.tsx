@@ -116,7 +116,6 @@ const StreakCard = () => {
         const res = await getStreakInfo();
         setStreakStats(res.data);
       } catch (error) {
-        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -131,7 +130,6 @@ const StreakCard = () => {
       await toggleStreakReminder(newValue);
       setStreakStats(prev => ({ ...prev, streakEmailReminder: newValue }));
     } catch (error) {
-      console.error(error);
     } finally {
       setEmailToggleLoading(false);
     }

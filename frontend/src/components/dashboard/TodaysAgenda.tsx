@@ -29,7 +29,6 @@ const TodaysAgenda: React.FC = () => {
 
         setEvents(todaysEvents.slice(0, 5)); 
       } catch (err) {
-        console.error("Failed to load Agenda:", err);
       } finally {
         if (mounted) setLoading(false);
       }
