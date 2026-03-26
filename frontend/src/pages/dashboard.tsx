@@ -14,7 +14,7 @@ import { DashboardProvider, useDashboard } from '../context/dashboardContext';
 
 const DashboardContent: React.FC = () => {
   const { user: authUser } = getAuth();
-  const { data, loading } = useDashboard();
+  const { data } = useDashboard();
   
   const user = data?.profile || authUser;
   const burnoutLevel = data?.profile?.burnoutLevel ?? 'NONE';

@@ -22,7 +22,7 @@ interface Note {
 }
 
 const StickyNoteWidget: React.FC = () => {
-  const { data: dashboardData, loading: dashboardLoading } = useDashboard();
+  const { data: dashboardData } = useDashboard();
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
