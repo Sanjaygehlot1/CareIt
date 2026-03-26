@@ -599,7 +599,7 @@ const SettingsPage: React.FC = () => {
 
           <div style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }} className="p-6 rounded-xl shadow-card border space-y-5">
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--accent-primary)' }}>
                   <Key size={24} />
@@ -609,6 +609,17 @@ const SettingsPage: React.FC = () => {
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Use this key to track your coding activity in VS Code.</p>
                 </div>
               </div>
+
+              <a
+                href="https://marketplace.visualstudio.com/items?itemName=SanjayGehlot.careit-tracker"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:bg-orange-500/10 active:scale-95"
+                style={{ color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)' }}
+              >
+                <ExternalLink size={14} />
+                Get Extension
+              </a>
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
