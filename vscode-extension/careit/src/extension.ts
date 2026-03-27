@@ -18,9 +18,9 @@ let isSending = false;
 let batchTimer: NodeJS.Timeout | null = null;
 let breakReminderTimer: NodeJS.Timeout | null = null;
 
-const BATCH_INTERVAL = 60_000 * 5;       
-const IDLE_THRESHOLD = 2 * 60 * 1000;    
-let BREAK_THRESHOLD = 90 * 60 * 1000;    
+const BATCH_INTERVAL = 60_000 * 5;
+const IDLE_THRESHOLD = 2 * 60 * 1000;
+let BREAK_THRESHOLD = 90 * 60 * 1000;
 const SESSION_STORAGE_KEY = 'careit.pendingSessions';
 const BREAK_SHOWN_KEY = 'careit.breakShownAt';
 
@@ -36,14 +36,14 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('CareIt tracker activated');
   extensionContext = context;
 
-  
+
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.command = 'careit.sendNow';
   updateStatusBar();
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
-  
+
   const config = vscode.workspace.getConfiguration('careit');
   let apiKey = config.get<string>('apiKey') ?? '';
   let serverUrl = config.get<string>('serverUrl') ?? 'https://api.careit.sanjaycodes.dev';
@@ -105,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
- 
+
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(() => {
       onActivity();
@@ -141,7 +141,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   startBatchTimer(() => sendBatch(serverUrl, apiKey));
 
- 
+
   startBreakReminderTimer(context);
 
 
@@ -149,7 +149,7 @@ export function activate(context: vscode.ExtensionContext) {
     updateStatusBar();
   }, 30_000);
 
-  
+
   context.subscriptions.push({
     dispose: () => {
       recordCurrentSession();
@@ -180,13 +180,13 @@ function onActivity() {
   const now = Date.now();
   const wasIdle = now - lastActivityTime >= IDLE_THRESHOLD;
 
- 
+
   if (wasIdle) {
     recordCurrentSession(lastActivityTime);
     continuousCodingStart = now;
     currentSessionStart = now;
   }
-  
+
   lastActivityTime = now;
 }
 
@@ -202,12 +202,12 @@ function recordCurrentSession(forceEndTime?: number) {
 
   const durationMs = endTime - currentSessionStart;
 
- 
+
   if (durationMs >= 5000) {
     const durationSeconds = Math.round(durationMs / 1000);
     todayCodingSeconds += durationSeconds;
 
-    
+
     const existing = projectSessions.get(currentProject);
     if (existing) {
       existing.totalDuration += durationSeconds;
@@ -222,7 +222,7 @@ function recordCurrentSession(forceEndTime?: number) {
     updateStatusBar();
   }
 
-  currentSessionStart = now;
+  currentSessionStart = endTime;
 }
 
 
@@ -249,7 +249,7 @@ function startBatchTimer(sendFn: () => Promise<void>) {
     const now = Date.now();
     const idleTime = now - lastActivityTime;
 
-   
+
     if (idleTime >= IDLE_THRESHOLD) {
       console.log('[CareIt] User idle — skipping batch send.');
       return;
@@ -286,7 +286,7 @@ async function sendBatch(serverUrl: string, apiKey: string) {
   console.log('[CareIt] Sending batch', activities);
 
   try {
-    console.log(`${serverUrl.replace(/\/$/, '')}/api/v1/analytics/editor-activity`)
+    console.log(`${serverUrl.replace(/\/$/, '')}/api/v1/analytics/editor-activity`);
     await axios.post(
       `${serverUrl.replace(/\/$/, '')}/api/v1/analytics/editor-activity`,
       activities,
@@ -310,7 +310,7 @@ async function sendBatch(serverUrl: string, apiKey: string) {
       }
     }
 
-  
+
     persistSessions(extensionContext);
 
     statusBarItem.text = '$(check) CareIt';
@@ -333,7 +333,7 @@ async function sendBatch(serverUrl: string, apiKey: string) {
       setTimeout(() => updateStatusBar(), 5000);
     }
 
-    
+
   } finally {
     isSending = false;
   }
@@ -355,24 +355,24 @@ function restoreSessions(context: vscode.ExtensionContext) {
       todayCodingSeconds += session.totalDuration;
     }
     console.log(`[CareIt] Restored ${Object.keys(stored).length} pending session(s)`);
-    
+
     context.globalState.update(SESSION_STORAGE_KEY, undefined);
   }
 }
 
 
 function startBreakReminderTimer(context: vscode.ExtensionContext) {
-  
+
   breakReminderTimer = setInterval(() => {
     const now = Date.now();
     const idleTime = now - lastActivityTime;
 
-    
+
     if (idleTime >= IDLE_THRESHOLD) { return; }
 
     const continuousMs = now - continuousCodingStart;
     if (continuousMs >= BREAK_THRESHOLD) {
-      
+
       const lastShown = context.globalState.get<number>(BREAK_SHOWN_KEY) ?? 0;
       if (now - lastShown < 30 * 60 * 1000) { return; }
 
@@ -391,11 +391,11 @@ function startBreakReminderTimer(context: vscode.ExtensionContext) {
         )
         .then(selection => {
           if (selection === 'Take a Break') {
-         
+
             continuousCodingStart = Date.now();
             vscode.window.showInformationMessage('🧘 Enjoy your break! Your streak is safe.');
           }
-          
+
         });
     }
   }, 5 * 60_000);

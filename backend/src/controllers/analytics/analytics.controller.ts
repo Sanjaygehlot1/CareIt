@@ -13,6 +13,8 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
         const apiKey = req.headers["careit-api-key"] as string;
         if (!apiKey) return next(new UnauthorizedException("API key missing", ErrorCodes.UNAUTHORIZED_ACCESS));
 
+        console.log("[APIKEY]:",apiKey)
+
         let cached = userCache.get(apiKey);
         if (!cached || cached.expires < Date.now()) {
             const user = await prisma.user.findUnique({
@@ -29,6 +31,7 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
         const userId = cached.id;
 
         const activities = Array.isArray(req.body) ? req.body : [req.body];
+        console.log("[ACTIVITIES]:",activities)
         const values = activities.map(a => {
             const d = new Date(a.timestamp);
             d.setTime(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); 
@@ -36,7 +39,7 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
             return Prisma.sql`(${userId}, ${a.project}, ${d}, ${a.duration})`;  
         });
 
-            
+           console.log("[VALUES]:",values) 
         await prisma.$executeRaw`
             INSERT INTO "EditorActivity"
                 ("userId", "projectName", "date", "duration")

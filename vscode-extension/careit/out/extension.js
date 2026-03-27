@@ -181,7 +181,7 @@ function recordCurrentSession(forceEndTime) {
         console.log(`[CareIt] Recorded ${durationSeconds}s on: ${currentProject}`);
         updateStatusBar();
     }
-    currentSessionStart = now;
+    currentSessionStart = endTime;
 }
 function updateStatusBar() {
     const todayStr = new Date().toDateString();
