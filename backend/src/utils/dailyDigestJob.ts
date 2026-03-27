@@ -134,7 +134,9 @@ Output STRICTLY as a raw JSON format (no markdown blocks, no extra text):
         } catch (err) {
             console.error('[Daily Digest] Job error:', err);
         }
+    }, {
+        timezone: "Asia/Kolkata"
     });
 
-    console.log('[Daily Digest] Scheduled — runs daily at 9:00 PM');
+    console.log('[Daily Digest] Scheduled — runs daily at 9:00 PM (IST)');
 }

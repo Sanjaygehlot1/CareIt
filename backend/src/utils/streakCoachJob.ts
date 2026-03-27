@@ -262,7 +262,9 @@ export function startStreakCoachJob() {
         } catch (err) {
             console.error('[Streak Coach] Job error:', err);
         }
+    }, {
+        timezone: "Asia/Kolkata"
     });
 
-    console.log('[Streak Coach] Scheduled — runs every Sunday at 10:00 PM');
+    console.log('[Streak Coach] Scheduled — runs every Sunday at 10:00 PM (IST)');
 }

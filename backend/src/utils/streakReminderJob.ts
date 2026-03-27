@@ -61,7 +61,9 @@ export function startStreakReminderJob() {
         } catch (error) {
             console.error('[Streak Reminder Job] Error:', error);
         }
+    }, {
+        timezone: "Asia/Kolkata"
     });
 
-    console.log('[Streak Reminder Job] Scheduled — runs daily at 6:00 PM');
+    console.log('[Streak Reminder Job] Scheduled — runs daily at 6:00 PM (IST)');
 }

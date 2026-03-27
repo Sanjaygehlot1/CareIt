@@ -150,9 +150,11 @@ export function startBurnoutDetectionJob() {
         } catch (err) {
             console.error('[Burnout Detection] Job error:', err);
         }
+    }, {
+        timezone: "Asia/Kolkata"
     });
 
-    console.log('[Burnout Detection] Scheduled — runs every Monday at 8:00 AM');
+    console.log('[Burnout Detection] Scheduled — runs every Monday at 8:00 AM (IST)');
 }
 
 export async function refreshBurnoutScore(userId: number) {
