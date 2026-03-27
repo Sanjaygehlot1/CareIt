@@ -27,7 +27,9 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
                 dailyDigestEnabled: true,
                 aiSummary: true,
                 aiSummaryUpdatedAt: true,
-                geminiApiKey: true
+                geminiApiKey: true,
+                calendarError: true,
+                githubError: true
             }
         });
 
@@ -69,7 +71,10 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
             orderBy: [{ completed: 'asc' }, { createdAt: 'desc' }],
             take: 10 
         });
-        const syncedGoals = await Promise.all(goals.map(g => syncOneGoal(g, userId)));
+        const syncedGoals: any[] = [];
+        for (const g of goals) {
+            syncedGoals.push(await syncOneGoal(g, userId));
+        }
 
 
         const range = 7;
@@ -146,7 +151,9 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
         const summary = {
             profile: {
                 ...userRecord,
-                email: userRecord.email
+                email: userRecord.email,
+                calendarError: userRecord.calendarError,
+                githubError: userRecord.githubError
             },
             priority: todayRecord?.todayPriority || '',
             focusStats: dashboardFocusStats,

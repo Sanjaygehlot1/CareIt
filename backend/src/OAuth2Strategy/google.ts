@@ -69,6 +69,7 @@ passport.use(new CustomGoogleStrategy({
                         googleAccessToken: accessToken,
                         googleRefreshToken: refreshToken,
                         calendar: true,
+                        calendarError: false,
                         ...(currentUser.provider !== 'google' && {
                             googleProviderId: profile.id,
                             googleEmail: profile.emails![0].value
@@ -96,7 +97,8 @@ passport.use(new CustomGoogleStrategy({
                         googleAccessToken: accessToken,
                         googleRefreshToken: refreshToken || null,
                         googleProviderId : profile.id,
-                        calendar: hasCalendarScope
+                        calendar: hasCalendarScope,
+                        calendarError: false
                     }
                 });
 
@@ -108,6 +110,7 @@ passport.use(new CustomGoogleStrategy({
                         profileUrl: profile.photos?.[0].value,
                         name: profile.displayName,
                         googleAccessToken: accessToken,
+                        calendarError: false,
                         ...(refreshToken && { googleRefreshToken: refreshToken }),
                         ...(hasCalendarScope && { calendar : true})
                     }

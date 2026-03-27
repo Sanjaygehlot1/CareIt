@@ -4,6 +4,7 @@ import { Tooltip } from 'react-tooltip';
 import { getEvents } from '../../controllers/calendar';
 import type { ExtendedEvents } from '../../types/calendar';
 import EventDetailsModal from '../Modals/EventDetailsModal';
+import { getAuth } from '../../context/authContext';
 
 
 import { Maximize2, Minimize2, Calendar as CalendarIcon } from 'lucide-react';
@@ -12,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/calendar.css';
 
 const EventCalendar: React.FC = () => {
+    const { user } = getAuth();
     const [events, setEvents] = useState<ExtendedEvents[]>([]);
     const [modalDate, setModalDate] = useState<Date | null>(null);
     const [loading, setLoading] = useState(true);
@@ -135,6 +137,36 @@ const EventCalendar: React.FC = () => {
 
     return (
         <div className={`careit-calendar ${isMaximized ? 'calendar-maximized shadow-2xl z-[200]' : 'calendar-sidebar relative'}`}>
+            {!user?.calendar && !loading && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm rounded-xl text-center p-8 select-none border border-white/5"
+                >
+                    <motion.div 
+                        initial={{ scale: 0.9, y: 10 }}
+                        animate={{ scale: 1, y: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="flex flex-col items-center"
+                    >
+                        <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mb-6 border border-white/10 shadow-2xl">
+                            <CalendarIcon size={32} className="text-orange-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2 leading-none tracking-tight">Sync Your Schedule</h3>
+                        <p className="text-[11px] font-medium text-zinc-400 mb-8 max-w-[200px] leading-relaxed opacity-80">
+                            Connect your Google Calendar to manage your weekly focus and events seamlessly.
+                        </p>
+                        <a 
+                            href="/settings" 
+                            className="group flex items-center gap-3 bg-gradient-to-br from-orange-400 to-orange-600 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-orange-600/30"
+                        >
+                            <span>Connect Integration</span>
+                            <Maximize2 size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </a>
+                    </motion.div>
+                </motion.div>
+            )}
+
             {!isMaximized && (
                 <motion.div
                     layoutId="calendar-card"

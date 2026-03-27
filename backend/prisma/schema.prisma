@@ -28,6 +28,8 @@ model User {
   githubUsername          String?
   githubAppInstallationId Int?
   githubAppInstalled      Boolean          @default(false)
+  calendarError           Boolean          @default(false)
+  githubError             Boolean          @default(false)
 
   apiKey                  String?          @unique
 

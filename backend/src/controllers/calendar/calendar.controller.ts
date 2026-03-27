@@ -4,6 +4,7 @@ import { ErrorCodes } from '../../exceptions/root';
 import { google } from 'googleapis';
 import { GOOGLE_CALLBACK_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '../../secrets';
 import { apiResponse } from '../../utils/apiResponse';
+import { prisma } from '../../prisma';
 
 export const getCalendarEvents = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -11,7 +12,7 @@ export const getCalendarEvents = async (req: Request, res: Response, next: NextF
         const user = req.user as any;
 
         if (!user || !user.googleRefreshToken) {
-            next(new UnauthorizedException("Invalid user", ErrorCodes.UNAUTHORIZED_ACCESS))
+            return next(new UnauthorizedException("Invalid user", ErrorCodes.UNAUTHORIZED_ACCESS))
         }
 
         const OAuth2 = new google.auth.OAuth2(
@@ -57,6 +58,24 @@ export const getCalendarEvents = async (req: Request, res: Response, next: NextF
         ));
     } catch (error: any) {
         console.error("Failed to fetch calendar events", error);
+
+        if (error.code === 401 || error.response?.data?.error === 'invalid_grant' || error.message?.includes('invalid_grant')) {
+            const user = req.user as any;
+            if (user && user.id) {
+                console.warn(`[Calendar] Detecting expired/revoked token for user ${user.id}. Resetting connection.`);
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        calendar: false,
+                        googleAccessToken: null,
+                        googleRefreshToken: null,
+                        calendarError: true
+                    }
+                });
+            }
+            return next(new UnauthorizedException("Google Calendar session expired. Please reconnect.", ErrorCodes.UNAUTHORIZED_ACCESS));
+        }
+
         next(error);
     }
 }

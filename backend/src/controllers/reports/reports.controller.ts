@@ -32,7 +32,7 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
             return res.status(404).json(new apiResponse({}, "User not found", 404));
         }
 
-        
+
         const weekStatus = await getWeekStatus(user.id);
 
         const today = new Date();
@@ -67,7 +67,7 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
             hasStreak: todayCodingDuration >= STREAK_THRESHOLD,
         };
 
-        const isSameDay = lastUpdate && 
+        const isSameDay = lastUpdate &&
             lastUpdate.getFullYear() === now.getFullYear() &&
             lastUpdate.getMonth() === now.getMonth() &&
             lastUpdate.getDate() === now.getDate();
@@ -82,7 +82,7 @@ export const getStreak = async (req: Request, res: Response, next: NextFunction)
             }, "Streak retrieved", 200));
         }
 
-       
+
         await recalculateStreak(user.id);
 
         const updatedStreak = await prisma.user.findUnique({
@@ -110,9 +110,9 @@ async function getWeekStatus(userId: number): Promise<boolean[]> {
     const today = new Date();
     today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
-    const currentDay = today.getDay(); 
-    const mondayOffset = currentDay === 0 ? -6 : -(currentDay - 1); 
-    
+    const currentDay = today.getDay();
+    const mondayOffset = currentDay === 0 ? -6 : -(currentDay - 1);
+
     const monday = new Date(today);
     monday.setDate(monday.getDate() + mondayOffset);
 
@@ -147,7 +147,7 @@ async function getWeekStatus(userId: number): Promise<boolean[]> {
         return streak?.hasStreak || false;
     });
 
-    return weekStatus; 
+    return weekStatus;
 }
 
 async function recalculateStreak(userId: number) {
@@ -184,18 +184,18 @@ async function recalculateStreak(userId: number) {
     });
     const oneDayMs = 24 * 60 * 60 * 1000;
 
-    
+
     let currentStreak = 0;
     const mostRecentDate = dates[0];
-    
+
     if (mostRecentDate >= yesterday.getTime()) {
         let checkDate = mostRecentDate;
-        
+
         for (const date of dates) {
             const diffDays = Math.round(Math.abs(date - checkDate) / oneDayMs);
             if (diffDays === 0) {
                 currentStreak++;
-               
+
                 const nextCheck = new Date(checkDate);
                 nextCheck.setDate(nextCheck.getDate() - 1);
                 nextCheck.setTime(Date.UTC(nextCheck.getFullYear(), nextCheck.getMonth(), nextCheck.getDate()));
@@ -206,13 +206,13 @@ async function recalculateStreak(userId: number) {
         }
     }
 
-    
+
     let longestStreak = 0;
     let tempStreak = 1;
 
     for (let i = 1; i < dates.length; i++) {
         const diffDays = Math.round(Math.abs(dates[i - 1] - dates[i]) / oneDayMs);
-        
+
         if (diffDays === 1) {
             tempStreak++;
             longestStreak = Math.max(longestStreak, tempStreak);
@@ -272,7 +272,7 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
         const today = new Date();
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(today.getDate() - 30);
-        
+
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setDate(today.getDate() - 90);
 
@@ -295,7 +295,7 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
 
         const focusHours = focusTime7d / 3600;
         let codingHours = codingTime7d / 3600;
-        
+
         if (codingHours < focusHours) codingHours = focusHours;
         const generalCodingHours = codingHours - focusHours;
 
@@ -316,7 +316,7 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
                 });
 
                 const events = eventsRes.data.items ?? [];
-                
+
                 const meetings = events.filter(ev => {
                     const hasConferenceData = !!ev.hangoutLink || !!ev.conferenceData;
                     const textSearch = `${ev.location || ''} ${ev.summary || ''}`.toLowerCase();
@@ -333,8 +333,17 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
                     }
                     return sum;
                 }, 0);
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Google Calendar fetch failed for advanced reports:", err);
+
+              
+                if (err.code === 401 || err.response?.data?.error === 'invalid_grant' || err.message?.includes('invalid_grant')) {
+                    console.warn(`[Reports] Google Calendar token revoked for user ${user.id}. Resetting.`);
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { calendar: false, googleAccessToken: null, googleRefreshToken: null, calendarError: true }
+                    });
+                }
             }
         }
 
@@ -343,7 +352,7 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
             const dayOfWeek = new Date(f.date).getDay();
             daySums[dayOfWeek] += f.duration / 60;
         });
-        
+
         streakStats.filter(s => new Date(s.date) >= thirtyDaysAgo).forEach(s => {
             const dayOfWeek = new Date(s.date).getDay();
             daySums[dayOfWeek] += s.codingDuration / 60;
@@ -351,7 +360,7 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
 
         const daysOfWeekList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const productivityByDay = daysOfWeekList.map((day, idx) => ({
-            name: day.substring(0, 3), 
+            name: day.substring(0, 3),
             value: Math.round(daySums[idx] / 4)
         }));
 
@@ -404,16 +413,28 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
                     })
                 });
 
+                if (gqlResponse.status === 401) {
+                    console.warn(`[Reports] GitHub token revoked for user ${user.id}. Resetting connection.`);
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { githubConnected: false, githubAccessToken: null }
+                    });
+                    throw new Error("GitHub session expired");
+                }
+
                 const gqlData: any = await gqlResponse.json();
                 const weeks = gqlData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
-                
+
                 githubHeatmap = weeks.flatMap((w: any) => w.contributionDays).map((d: any) => ({
                     date: d.date,
                     count: d.contributionCount
                 })).slice(-90);
 
-            } catch (err) {
+            } catch (err: any) {
                 console.error("GitHub Heatmap fetch failed:", err);
+                if (err.message === "GitHub session expired") {
+                    
+                }
             }
         }
 
@@ -438,23 +459,24 @@ export const getAdvancedReports = async (req: Request, res: Response, next: Next
     }
 };
 
+
 export const getAiCoachSummary = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user as any;
         if (!user) return next(new UnauthorizedException("Unauthorized", ErrorCodes.UNAUTHORIZED_ACCESS));
 
-        const userRecord = await prisma.user.findUnique({ 
-            where: { id: user.id }, 
-            select: { 
+        const userRecord = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
                 id: true,
-                name: true, 
-                burnoutScore: true, 
-                aiSummary: true, 
+                name: true,
+                burnoutScore: true,
+                aiSummary: true,
                 aiSummaryUpdatedAt: true,
                 aiSummaryGenerationCount: true,
                 lastAiSummaryResetAt: true,
                 geminiApiKey: true
-            } 
+            }
         });
 
         if (!userRecord) return res.status(404).json(new apiResponse({}, "User not found", 404));
@@ -475,7 +497,6 @@ export const getAiCoachSummary = async (req: Request, res: Response, next: NextF
 
         const summaryUpdatedStr = userRecord.aiSummaryUpdatedAt ? userRecord.aiSummaryUpdatedAt.toISOString().split('T')[0] : '';
         const isForceRefresh = req.query.refresh === 'true';
-        console.log(isForceRefresh, req.query.refresh)
 
         if (userRecord.aiSummary && summaryUpdatedStr === todayStr && !isForceRefresh) {
             return res.status(200).json(new apiResponse({ summary: userRecord.aiSummary, cached: true }, "Cached AI Coach summary retrieved", 200));
@@ -483,8 +504,8 @@ export const getAiCoachSummary = async (req: Request, res: Response, next: NextF
 
         const isUsingPersonalKey = !!userRecord.geminiApiKey;
         if (!isUsingPersonalKey && currentCount >= 2) {
-            return res.status(429).json(new apiResponse({ 
-                summary: userRecord.aiSummary 
+            return res.status(429).json(new apiResponse({
+                summary: userRecord.aiSummary
             }, "Daily limit reached (2 generations per day). Add your own Gemini API key for unlimited coaching!", 429));
         }
 
@@ -545,7 +566,7 @@ Directives:
     } catch (error: any) {
         console.error("AI Coach Error:", error);
         if (error.message?.includes('API_KEY_INVALID')) {
-             return res.status(401).json(new apiResponse({}, "The provided Gemini API key is invalid.", 401));
+            return res.status(401).json(new apiResponse({}, "The provided Gemini API key is invalid.", 401));
         }
         next(error);
     }
@@ -573,3 +594,4 @@ export const updateGeminiApiKey = async (req: Request, res: Response, next: Next
         next(error);
     }
 };
+

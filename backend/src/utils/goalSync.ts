@@ -121,7 +121,9 @@ export function triggerGoalSync(userId: number, types: Array<'CODING_TIME' | 'ST
 
             if (goals.length === 0) return;
 
-            await Promise.allSettled(goals.map(g => syncOneGoal(g, userId)));
+            for (const g of goals) {
+                await syncOneGoal(g, userId);
+            }
 
             console.log(`[GoalSync] Synced ${goals.length} goal(s) for user #${userId} (types: ${types.join(', ')})`);
         } catch (err) {
