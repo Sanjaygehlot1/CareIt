@@ -50,8 +50,14 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
                 duration = "EditorActivity".duration + EXCLUDED.duration
         `;
 
-        
-        await updateUserStreak(userId);
+        const uniqueDates = Array.from(new Set(activities.map(a => {
+            const d = new Date(a.timestamp);
+            return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+        })));
+
+        for (const dateValue of uniqueDates) {
+            await updateUserStreak(userId, new Date(dateValue));
+        }
 
         triggerGoalSync(userId, ['CODING_TIME', 'STREAK']);
 
@@ -64,15 +70,15 @@ export const saveEditorActivity = async (req: Request, res: Response, next: Next
 };
 
             
-async function updateUserStreak(userId: number) {
+async function updateUserStreak(userId: number, targetDate?: Date) {
     const today = new Date();
     today.setTime(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
-    
+    const syncDate = targetDate || today;
     const todayActivity = await prisma.editorActivity.aggregate({
         where: { 
             userId, 
-            date: today 
+            date: syncDate 
         },
         _sum: { duration: true }
     });
@@ -85,7 +91,7 @@ async function updateUserStreak(userId: number) {
         
     await prisma.streakStats.upsert({
         where: { 
-            userId_date: { userId, date: today } 
+            userId_date: { userId, date: syncDate } 
         },
         update: { 
             hasStreak: hasStreakToday,
@@ -93,14 +99,13 @@ async function updateUserStreak(userId: number) {
         },
         create: { 
             userId, 
-            date: today, 
+            date: syncDate, 
             hasStreak: hasStreakToday, 
             codingDuration: totalToday 
         }
     });
 
-        
-    if (!hasStreakToday) {
+    if (syncDate.getTime() !== today.getTime() || !hasStreakToday) {
         return;     
     }
 

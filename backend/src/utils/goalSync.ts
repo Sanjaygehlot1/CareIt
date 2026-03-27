@@ -13,7 +13,7 @@ export function getWeekStart(): Date {
 
 export function getMonthStart(): Date {
     const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
+    return new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
 }
 
 export async function syncOneGoal(goal: any, userId: number): Promise<any> {
